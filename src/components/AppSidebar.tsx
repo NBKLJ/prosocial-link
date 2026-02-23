@@ -1,19 +1,13 @@
 import { useState } from "react";
 import {
-  LayoutDashboard,
   MessageCircle,
   BarChart3,
   Megaphone,
-  Bot,
-  CalendarDays,
-  TrendingUp,
   Users,
-  Link2,
   Settings,
   Search,
   ChevronDown,
   Zap,
-  Crown,
   Send,
   MessageSquarePlus,
   Mic,
@@ -32,7 +26,7 @@ interface SubItem {
 interface MenuItem {
   title: string;
   url: string;
-  icon: typeof LayoutDashboard;
+  icon: typeof MessageCircle;
   count?: number;
   expandable?: boolean;
   subItems?: SubItem[];
@@ -65,29 +59,30 @@ export function AppSidebar() {
   const toggleExpand = (title: string) => {
     setExpandedMenus((prev) => ({ ...prev, [title]: !prev[title] }));
   };
+
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-[260px] flex flex-col bg-card border-r border-border">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-[260px] flex flex-col bg-[hsl(var(--sidebar-background))] border-r border-[hsl(var(--sidebar-border))]">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 pt-6 pb-4">
         <div className="w-10 h-10 rounded-xl gradient-green flex items-center justify-center flex-shrink-0">
           <Zap className="w-5 h-5 text-primary-foreground" />
         </div>
         <div>
-          <span className="text-base font-bold text-foreground tracking-tight block leading-tight">Zap-Pro</span>
-          <span className="text-xs text-muted-foreground">WhatsApp Manager</span>
+          <span className="text-base font-bold text-[hsl(var(--sidebar-accent-foreground))] tracking-tight block leading-tight">Zap-Pro</span>
+          <span className="text-xs text-[hsl(var(--sidebar-foreground))]">WhatsApp Manager</span>
         </div>
       </div>
 
       {/* Search */}
       <div className="px-4 pb-2">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(var(--sidebar-foreground))]/60" />
           <input
             type="text"
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-muted/50 border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+            className="w-full bg-[hsl(var(--sidebar-accent))] border border-[hsl(var(--sidebar-border))] rounded-xl pl-9 pr-3 py-2.5 text-sm text-[hsl(var(--sidebar-accent-foreground))] placeholder:text-[hsl(var(--sidebar-foreground))]/50 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--sidebar-ring))]/20 focus:border-[hsl(var(--sidebar-ring))]/30 transition-all"
           />
         </div>
       </div>
@@ -107,18 +102,18 @@ export function AppSidebar() {
                   end={item.url === "/"}
                   className={cn(
                     "flex-1 flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                    "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    "text-[hsl(var(--sidebar-foreground))] hover:text-[hsl(var(--sidebar-accent-foreground))] hover:bg-[hsl(var(--sidebar-accent))]"
                   )}
-                  activeClassName="bg-primary/10 text-primary !font-semibold shadow-sm"
+                  activeClassName="bg-[hsl(var(--sidebar-primary))]/15 text-[hsl(var(--sidebar-primary))] !font-semibold"
                 >
-                  <item.icon className={cn("w-[22px] h-[22px] flex-shrink-0 stroke-[1.8]", isActive && "text-primary")} />
+                  <item.icon className={cn("w-[22px] h-[22px] flex-shrink-0 stroke-[1.8]", isActive && "text-[hsl(var(--sidebar-primary))]")} />
                   <span className="flex-1">{item.title}</span>
                   {item.count && (
                     <span className={cn(
                       "text-xs min-w-[22px] h-[22px] flex items-center justify-center rounded-md font-semibold",
                       isActive
-                        ? "bg-primary/20 text-primary"
-                        : "bg-muted text-muted-foreground"
+                        ? "bg-[hsl(var(--sidebar-primary))]/20 text-[hsl(var(--sidebar-primary))]"
+                        : "bg-[hsl(var(--sidebar-muted))] text-[hsl(var(--sidebar-foreground))]"
                     )}>
                       {item.count}
                     </span>
@@ -130,22 +125,22 @@ export function AppSidebar() {
                       e.preventDefault();
                       toggleExpand(item.title);
                     }}
-                    className="p-2 rounded-lg hover:bg-muted/60 transition-colors"
+                    className="p-2 rounded-lg hover:bg-[hsl(var(--sidebar-accent))] transition-colors"
                   >
                     <ChevronDown className={cn(
-                      "w-4 h-4 text-muted-foreground/50 transition-transform duration-200",
+                      "w-4 h-4 text-[hsl(var(--sidebar-foreground))]/50 transition-transform duration-200",
                       isExpanded && "rotate-180"
                     )} />
                   </button>
                 )}
                 {item.expandable && !hasSubItems && (
-                  <ChevronDown className="w-4 h-4 text-muted-foreground/50 mr-2" />
+                  <ChevronDown className="w-4 h-4 text-[hsl(var(--sidebar-foreground))]/50 mr-2" />
                 )}
               </div>
 
               {/* Sub Items */}
               {hasSubItems && isExpanded && (
-                <div className="ml-8 mt-1 space-y-0.5 border-l-2 border-border pl-3">
+                <div className="ml-8 mt-1 space-y-0.5 border-l-2 border-[hsl(var(--sidebar-border))] pl-3">
                   {item.subItems!.map((sub) => {
                     const isSubActive = location.pathname === sub.url;
                     return (
@@ -154,11 +149,11 @@ export function AppSidebar() {
                         to={sub.url}
                         className={cn(
                           "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200",
-                          "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                          "text-[hsl(var(--sidebar-foreground))] hover:text-[hsl(var(--sidebar-accent-foreground))] hover:bg-[hsl(var(--sidebar-accent))]"
                         )}
-                        activeClassName="text-primary !font-semibold"
+                        activeClassName="text-[hsl(var(--sidebar-primary))] !font-semibold"
                       >
-                        <sub.icon className={cn("w-4 h-4 flex-shrink-0 stroke-[1.8]", isSubActive && "text-primary")} />
+                        <sub.icon className={cn("w-4 h-4 flex-shrink-0 stroke-[1.8]", isSubActive && "text-[hsl(var(--sidebar-primary))]")} />
                         <span>{sub.title}</span>
                       </NavLink>
                     );
@@ -170,25 +165,23 @@ export function AppSidebar() {
         })}
       </nav>
 
-
-
       {/* Footer */}
-      <div className="border-t border-border px-4 py-4 space-y-3">
+      <div className="border-t border-[hsl(var(--sidebar-border))] px-4 py-4 space-y-3">
         <NavLink
           to="/configuracoes"
-          className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all"
-          activeClassName="bg-primary/10 text-primary !font-semibold"
+          className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[hsl(var(--sidebar-foreground))] hover:text-[hsl(var(--sidebar-accent-foreground))] hover:bg-[hsl(var(--sidebar-accent))] transition-all"
+          activeClassName="bg-[hsl(var(--sidebar-primary))]/15 text-[hsl(var(--sidebar-primary))] !font-semibold"
         >
           <Settings className="w-[22px] h-[22px] stroke-[1.8]" />
           <span>Configurações</span>
         </NavLink>
 
         <div className="flex items-center gap-3 px-3.5">
-          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold text-muted-foreground">
+          <div className="w-8 h-8 rounded-full bg-[hsl(var(--sidebar-muted))] flex items-center justify-center text-xs font-semibold text-[hsl(var(--sidebar-foreground))]">
             U
           </div>
-          <span className="text-sm font-medium text-foreground flex-1">Usuário</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-primary/10 text-primary">
+          <span className="text-sm font-medium text-[hsl(var(--sidebar-accent-foreground))] flex-1">Usuário</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-[hsl(var(--sidebar-primary))]/15 text-[hsl(var(--sidebar-primary))]">
             Basic
           </span>
         </div>

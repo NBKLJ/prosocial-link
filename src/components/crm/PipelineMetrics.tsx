@@ -30,7 +30,7 @@ export function PipelineMetrics({ pipelines }: PipelineMetricsProps) {
   return (
     <div className="grid grid-cols-4 gap-3">
       {metrics.map((m) => (
-        <div key={m.label} className="flex items-center gap-3 rounded-xl bg-card border border-border/50 px-4 py-3">
+        <div key={m.label} className="flex items-center gap-3 rounded-xl bg-card border border-border/50 px-4 py-3 shadow-sm">
           <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", m.bg)}>
             <m.icon className={cn("w-4 h-4", m.color)} />
           </div>

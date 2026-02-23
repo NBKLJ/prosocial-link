@@ -136,7 +136,7 @@ const Conversas = () => {
     <AppLayout fullHeight>
       <div className="animate-fade-in h-full flex overflow-hidden border-l border-border">
         {/* Contacts List */}
-        <div className="w-[340px] border-r border-border flex flex-col">
+        <div className="w-[340px] border-r border-border flex flex-col bg-card">
           <div className="p-4 border-b border-border space-y-3">
             <h2 className="text-lg font-semibold text-foreground">Conversas</h2>
             <div className="relative">
@@ -326,7 +326,7 @@ const Conversas = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-5 space-y-3">
+          <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-muted/30">
             {messages.map((msg) => (
               <div key={msg.id} className={cn("flex", msg.sent ? "justify-end" : "justify-start")}>
                 <div className={cn(
