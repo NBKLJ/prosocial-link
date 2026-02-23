@@ -14,16 +14,43 @@ import {
   ChevronDown,
   Zap,
   Crown,
+  Send,
+  MessageSquarePlus,
+  Mic,
+  Clock,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-const menuItems = [
+interface SubItem {
+  title: string;
+  url: string;
+  icon: typeof Send;
+}
+
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: typeof LayoutDashboard;
+  count?: number;
+  expandable?: boolean;
+  subItems?: SubItem[];
+}
+
+const menuItems: MenuItem[] = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Conversas", url: "/conversas", icon: MessageCircle, count: 12 },
   { title: "CRM", url: "/crm", icon: BarChart3 },
-  { title: "Disparos", url: "/disparos", icon: Megaphone, count: 3, expandable: true },
+  {
+    title: "Disparos", url: "/disparos", icon: Megaphone, count: 3, expandable: true,
+    subItems: [
+      { title: "Disparo de Mensagens", url: "/disparos", icon: Send },
+      { title: "Recepção Automática", url: "/disparos/recepcao", icon: MessageSquarePlus },
+      { title: "Áudio Programado", url: "/disparos/audio", icon: Mic },
+      { title: "Agendamento", url: "/disparos/agendamento", icon: Clock },
+    ],
+  },
   { title: "Automações", url: "/automacoes", icon: Bot, expandable: true },
   { title: "Agendamentos", url: "/agendamentos", icon: CalendarDays, count: 5, expandable: true },
   { title: "Relatórios", url: "/relatorios", icon: TrendingUp, expandable: true },
@@ -34,11 +61,15 @@ const menuItems = [
 export function AppSidebar() {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
   const filteredItems = menuItems.filter((item) =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const toggleExpand = (title: string) => {
+    setExpandedMenus((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-[260px] flex flex-col bg-card border-r border-border">
       {/* Logo */}
@@ -70,36 +101,81 @@ export function AppSidebar() {
       <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
         {filteredItems.map((item) => {
           const isActive = item.url === "/" ? location.pathname === "/" : location.pathname.startsWith(item.url);
+          const isExpanded = expandedMenus[item.title];
+          const hasSubItems = item.subItems && item.subItems.length > 0;
+
           return (
-            <NavLink
-              key={item.title}
-              to={item.url}
-              end={item.url === "/"}
-              className={cn(
-                "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            <div key={item.title}>
+              <div className="flex items-center">
+                <NavLink
+                  to={item.url}
+                  end={item.url === "/"}
+                  className={cn(
+                    "flex-1 flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                    "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  )}
+                  activeClassName="bg-primary/10 text-primary !font-semibold shadow-sm"
+                >
+                  <item.icon className={cn("w-[22px] h-[22px] flex-shrink-0 stroke-[1.8]", isActive && "text-primary")} />
+                  <span className="flex-1">{item.title}</span>
+                  {item.count && (
+                    <span className={cn(
+                      "text-xs min-w-[22px] h-[22px] flex items-center justify-center rounded-md font-semibold",
+                      isActive
+                        ? "bg-primary/20 text-primary"
+                        : "bg-muted text-muted-foreground"
+                    )}>
+                      {item.count}
+                    </span>
+                  )}
+                </NavLink>
+                {hasSubItems && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleExpand(item.title);
+                    }}
+                    className="p-2 rounded-lg hover:bg-muted/60 transition-colors"
+                  >
+                    <ChevronDown className={cn(
+                      "w-4 h-4 text-muted-foreground/50 transition-transform duration-200",
+                      isExpanded && "rotate-180"
+                    )} />
+                  </button>
+                )}
+                {item.expandable && !hasSubItems && (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground/50 mr-2" />
+                )}
+              </div>
+
+              {/* Sub Items */}
+              {hasSubItems && isExpanded && (
+                <div className="ml-8 mt-1 space-y-0.5 border-l-2 border-border pl-3">
+                  {item.subItems!.map((sub) => {
+                    const isSubActive = location.pathname === sub.url;
+                    return (
+                      <NavLink
+                        key={sub.title}
+                        to={sub.url}
+                        className={cn(
+                          "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200",
+                          "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                        )}
+                        activeClassName="text-primary !font-semibold"
+                      >
+                        <sub.icon className={cn("w-4 h-4 flex-shrink-0 stroke-[1.8]", isSubActive && "text-primary")} />
+                        <span>{sub.title}</span>
+                      </NavLink>
+                    );
+                  })}
+                </div>
               )}
-              activeClassName="bg-primary/10 text-primary !font-semibold shadow-sm"
-            >
-              <item.icon className={cn("w-[22px] h-[22px] flex-shrink-0 stroke-[1.8]", isActive && "text-primary")} />
-              <span className="flex-1">{item.title}</span>
-              {item.count && (
-                <span className={cn(
-                  "text-xs min-w-[22px] h-[22px] flex items-center justify-center rounded-md font-semibold",
-                  isActive
-                    ? "bg-primary/20 text-primary"
-                    : "bg-muted text-muted-foreground"
-                )}>
-                  {item.count}
-                </span>
-              )}
-              {item.expandable && (
-                <ChevronDown className="w-4 h-4 text-muted-foreground/50" />
-              )}
-            </NavLink>
+            </div>
           );
         })}
       </nav>
+
+
 
       {/* Footer */}
       <div className="border-t border-border px-4 py-4 space-y-3">
