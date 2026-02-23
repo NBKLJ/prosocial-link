@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState, useRef, DragEvent } from "react";
 import { cn } from "@/lib/utils";
-import { Plus, MoreHorizontal, Phone, Clock, DollarSign, Users, TrendingUp, GripVertical } from "lucide-react";
+import { Plus, MoreHorizontal, Phone, Clock, Users, GripVertical, Search } from "lucide-react";
 
 interface Lead {
   id: string;
@@ -77,7 +77,21 @@ const CRM = () => {
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [draggedLead, setDraggedLead] = useState<{ lead: Lead; fromColumnId: string } | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const dragCounter = useRef<Record<string, number>>({});
+
+  const filteredColumns = columns.map((col) => ({
+    ...col,
+    leads: col.leads.filter((lead) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        lead.name.toLowerCase().includes(q) ||
+        lead.value.toLowerCase().includes(q) ||
+        (lead.tag && lead.tag.toLowerCase().includes(q))
+      );
+    }),
+  }));
 
   const totalLeads = columns.reduce((sum, col) => sum + col.leads.length, 0);
   const totalValue = columns.reduce(
@@ -153,6 +167,16 @@ const CRM = () => {
             <h1 className="text-2xl font-bold text-foreground">CRM</h1>
             <p className="text-muted-foreground mt-1">Gerencie seus leads no Kanban</p>
           </div>
+          <div className="relative w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Buscar por nome, valor ou tag..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-lg border border-input bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
           <button className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors shadow-sm">
             <Plus className="w-4 h-4" />
             Novo Lead
@@ -161,7 +185,7 @@ const CRM = () => {
 
         {/* Kanban */}
         <div className="flex gap-4 overflow-x-auto pb-4">
-          {columns.map((column) => (
+          {filteredColumns.map((column) => (
             <div
               key={column.id}
               className={cn(
