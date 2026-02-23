@@ -207,7 +207,7 @@ const Contatos = () => {
         <div className="glass-card rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border bg-muted/30">
+              <tr className="border-b border-border bg-muted/50">
                 <th className="w-12 px-4 py-3">
                   <input
                     type="checkbox"
