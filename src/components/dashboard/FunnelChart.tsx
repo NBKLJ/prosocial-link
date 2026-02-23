@@ -9,10 +9,10 @@ import {
 } from "recharts";
 
 const data = [
-  { name: "Novo Lead", value: 184, fill: "hsl(145, 63%, 49%)" },
-  { name: "Negociação", value: 92, fill: "hsl(200, 70%, 50%)" },
-  { name: "Fechado", value: 47, fill: "hsl(35, 90%, 55%)" },
-  { name: "Perdido", value: 28, fill: "hsl(0, 72%, 51%)" },
+  { name: "Novo Lead", value: 184, fill: "hsl(262, 83%, 58%)" },
+  { name: "Negociação", value: 92, fill: "hsl(211, 100%, 50%)" },
+  { name: "Fechado", value: 47, fill: "hsl(160, 84%, 39%)" },
+  { name: "Perdido", value: 28, fill: "hsl(0, 84%, 60%)" },
 ];
 
 export function FunnelChart() {

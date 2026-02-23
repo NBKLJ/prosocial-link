@@ -21,6 +21,7 @@ const Dashboard = () => {
             change="+12.5%"
             positive
             icon={Send}
+            color="blue"
           />
           <MetricCard
             title="Mensagens Recebidas"
@@ -28,6 +29,7 @@ const Dashboard = () => {
             change="+8.2%"
             positive
             icon={MessageSquare}
+            color="teal"
           />
           <MetricCard
             title="Novos Leads"
@@ -35,6 +37,7 @@ const Dashboard = () => {
             change="+23.1%"
             positive
             icon={UserPlus}
+            color="violet"
           />
           <MetricCard
             title="Conversões"
@@ -42,6 +45,7 @@ const Dashboard = () => {
             change="-3.2%"
             positive={false}
             icon={TrendingUp}
+            color="emerald"
           />
         </div>
 
