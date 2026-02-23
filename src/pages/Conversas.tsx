@@ -3,9 +3,11 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   Search, Phone, Check, CheckCheck, Mic, X, Send as SendIcon,
-  Smile, Paperclip, Image, FileText, Sticker, Plus,
+  Smile, Image, FileText, Sticker, Plus, Tag, UserRoundPlus,
 } from "lucide-react";
 import { getAudioStore, type AudioItem } from "@/pages/DisparoAudio";
+
+type ConversationStatus = "aguardando" | "atendendo" | "aguardando_doc" | "finalizado";
 
 interface Conversation {
   id: string;
@@ -16,15 +18,27 @@ interface Conversation {
   unread: number;
   avatar: string;
   status: "online" | "offline";
+  atendimentoStatus: ConversationStatus;
+  tags: string[];
 }
 
 const conversations: Conversation[] = [
-  { id: "1", name: "João Silva", phone: "(11) 99999-1234", lastMessage: "Olá, gostaria de saber mais sobre o produto...", time: "10:32", unread: 3, avatar: "JS", status: "online" },
-  { id: "2", name: "Maria Souza", phone: "(21) 98888-5678", lastMessage: "Ok, pode enviar o orçamento", time: "09:15", unread: 0, avatar: "MS", status: "online" },
-  { id: "3", name: "Carlos Lima", phone: "(31) 97777-9012", lastMessage: "Perfeito, vamos fechar então!", time: "Ontem", unread: 0, avatar: "CL", status: "offline" },
-  { id: "4", name: "Ana Costa", phone: "(41) 96666-3456", lastMessage: "Preciso de mais informações", time: "Ontem", unread: 1, avatar: "AC", status: "offline" },
-  { id: "5", name: "Pedro Rocha", phone: "(51) 95555-7890", lastMessage: "Obrigado pelo atendimento!", time: "23/02", unread: 0, avatar: "PR", status: "offline" },
+  { id: "1", name: "João Silva", phone: "(11) 99999-1234", lastMessage: "Olá, gostaria de saber mais sobre o produto...", time: "10:32", unread: 3, avatar: "JS", status: "online", atendimentoStatus: "aguardando", tags: ["Lead Quente"] },
+  { id: "2", name: "Maria Souza", phone: "(21) 98888-5678", lastMessage: "Ok, pode enviar o orçamento", time: "09:15", unread: 0, avatar: "MS", status: "online", atendimentoStatus: "atendendo", tags: [] },
+  { id: "3", name: "Carlos Lima", phone: "(31) 97777-9012", lastMessage: "Perfeito, vamos fechar então!", time: "Ontem", unread: 0, avatar: "CL", status: "offline", atendimentoStatus: "aguardando_doc", tags: ["Cliente VIP"] },
+  { id: "4", name: "Ana Costa", phone: "(41) 96666-3456", lastMessage: "Preciso de mais informações", time: "Ontem", unread: 1, avatar: "AC", status: "offline", atendimentoStatus: "aguardando", tags: [] },
+  { id: "5", name: "Pedro Rocha", phone: "(51) 95555-7890", lastMessage: "Obrigado pelo atendimento!", time: "23/02", unread: 0, avatar: "PR", status: "offline", atendimentoStatus: "finalizado", tags: ["Parceiro"] },
 ];
+
+const statusFilters: { value: ConversationStatus | "todos"; label: string }[] = [
+  { value: "aguardando", label: "Aguardando" },
+  { value: "atendendo", label: "Atendendo" },
+  { value: "aguardando_doc", label: "Aguard. Doc." },
+  { value: "finalizado", label: "Finalizados" },
+];
+
+const availableTags = ["Lead Quente", "Cliente VIP", "Suporte", "Parceiro", "Inativo"];
+const availableUsers = ["Ana (Suporte)", "Carlos (Vendas)", "Julia (Financeiro)"];
 
 interface Message {
   id: string;
@@ -45,22 +59,49 @@ const messages: Message[] = [
 const Conversas = () => {
   const [selected, setSelected] = useState<string>("1");
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<ConversationStatus | "todos">("todos");
   const [showAudioList, setShowAudioList] = useState(false);
   const [showAttach, setShowAttach] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [showTagMenu, setShowTagMenu] = useState(false);
+  const [showTransferMenu, setShowTransferMenu] = useState(false);
+  const [convTags, setConvTags] = useState<Record<string, string[]>>({
+    "1": ["Lead Quente"],
+    "3": ["Cliente VIP"],
+    "5": ["Parceiro"],
+  });
 
-  const filtered = conversations.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = conversations.filter((c) => {
+    const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === "todos" || c.atendimentoStatus === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const statusCounts = {
+    aguardando: conversations.filter((c) => c.atendimentoStatus === "aguardando").length,
+    atendendo: conversations.filter((c) => c.atendimentoStatus === "atendendo").length,
+    aguardando_doc: conversations.filter((c) => c.atendimentoStatus === "aguardando_doc").length,
+    finalizado: conversations.filter((c) => c.atendimentoStatus === "finalizado").length,
+  };
+
+  const toggleConvTag = (tag: string) => {
+    const current = convTags[selected] || [];
+    const updated = current.includes(tag)
+      ? current.filter((t) => t !== tag)
+      : [...current, tag];
+    setConvTags({ ...convTags, [selected]: updated });
+  };
+
+  const selectedConv = conversations.find((c) => c.id === selected);
 
   return (
     <AppLayout fullHeight>
       <div className="animate-fade-in h-full flex overflow-hidden border-l border-border">
         {/* Contacts List */}
         <div className="w-[340px] border-r border-border flex flex-col">
-          <div className="p-4 border-b border-border">
-            <h2 className="text-lg font-semibold text-foreground mb-3">Conversas</h2>
+          <div className="p-4 border-b border-border space-y-3">
+            <h2 className="text-lg font-semibold text-foreground">Conversas</h2>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
@@ -71,7 +112,33 @@ const Conversas = () => {
                 className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
               />
             </div>
+
+            {/* Status filters */}
+            <div className="flex gap-1.5">
+              {statusFilters.map((sf) => {
+                const count = statusCounts[sf.value as ConversationStatus] ?? 0;
+                const isActive = statusFilter === sf.value;
+                return (
+                  <button
+                    key={sf.value}
+                    onClick={() => setStatusFilter(isActive ? "todos" : sf.value)}
+                    className={cn(
+                      "flex-1 flex flex-col items-center py-2 px-1 rounded-lg text-center transition-all",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    )}
+                  >
+                    <span className="text-[11px] font-medium leading-tight">{sf.label}</span>
+                    <span className={cn("text-sm font-bold", isActive ? "text-primary-foreground" : "text-foreground")}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
           <div className="flex-1 overflow-y-auto">
             {filtered.map((conv) => (
               <button
@@ -96,6 +163,16 @@ const Conversas = () => {
                     <span className="text-xs text-muted-foreground flex-shrink-0">{conv.time}</span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate mt-0.5">{conv.lastMessage}</p>
+                  {/* Tags inline */}
+                  {(convTags[conv.id] || []).length > 0 && (
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {(convTags[conv.id] || []).map((tag) => (
+                        <span key={tag} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {conv.unread > 0 && (
                   <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center flex-shrink-0">
@@ -109,17 +186,99 @@ const Conversas = () => {
 
         {/* Chat Area */}
         <div className="flex-1 flex flex-col">
+          {/* Chat header */}
           <div className="flex items-center justify-between px-5 py-3 border-b border-border">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full gradient-green flex items-center justify-center text-xs font-bold text-primary-foreground">
-                JS
+                {selectedConv?.avatar || "?"}
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">João Silva</p>
-                <p className="text-xs text-primary">Online</p>
+                <p className="text-sm font-semibold text-foreground">{selectedConv?.name || "Selecione"}</p>
+                <p className="text-xs text-primary">{selectedConv?.status === "online" ? "Online" : "Offline"}</p>
               </div>
             </div>
-            <Phone className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+            <div className="flex items-center gap-1 relative">
+              {/* Tag button */}
+              <button
+                onClick={() => { setShowTagMenu(!showTagMenu); setShowTransferMenu(false); }}
+                className={cn(
+                  "p-2 rounded-lg transition-colors",
+                  showTagMenu ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+                title="Classificar tag"
+              >
+                <Tag className="w-5 h-5" />
+              </button>
+
+              {/* Transfer button */}
+              <button
+                onClick={() => { setShowTransferMenu(!showTransferMenu); setShowTagMenu(false); }}
+                className={cn(
+                  "p-2 rounded-lg transition-colors",
+                  showTransferMenu ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+                title="Transferir conversa"
+              >
+                <UserRoundPlus className="w-5 h-5" />
+              </button>
+
+              <Phone className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors ml-1" />
+
+              {/* Tag dropdown */}
+              {showTagMenu && (
+                <div className="absolute top-full right-0 mt-2 bg-card border border-border rounded-xl shadow-lg z-20 w-52">
+                  <div className="px-4 py-3 border-b border-border">
+                    <span className="text-sm font-semibold text-foreground">Classificar Tag</span>
+                  </div>
+                  <div className="py-1">
+                    {availableTags.map((tag) => {
+                      const isSelected = (convTags[selected] || []).includes(tag);
+                      return (
+                        <button
+                          key={tag}
+                          onClick={() => toggleConvTag(tag)}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors",
+                            isSelected ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-muted/50"
+                          )}
+                        >
+                          <div className={cn(
+                            "w-4 h-4 rounded border flex items-center justify-center",
+                            isSelected ? "bg-primary border-primary" : "border-border"
+                          )}>
+                            {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                          </div>
+                          {tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Transfer dropdown */}
+              {showTransferMenu && (
+                <div className="absolute top-full right-0 mt-2 bg-card border border-border rounded-xl shadow-lg z-20 w-56">
+                  <div className="px-4 py-3 border-b border-border">
+                    <span className="text-sm font-semibold text-foreground">Transferir para</span>
+                  </div>
+                  <div className="py-1">
+                    {availableUsers.map((user) => (
+                      <button
+                        key={user}
+                        onClick={() => setShowTransferMenu(false)}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm text-foreground hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                          {user.charAt(0)}
+                        </div>
+                        {user}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-5 space-y-3">
@@ -146,7 +305,7 @@ const Conversas = () => {
             {showAudioList && (
               <div className="absolute bottom-full left-5 right-5 mb-2 bg-card border border-border rounded-xl shadow-lg max-h-60 overflow-y-auto z-10">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                  <span className="text-sm font-semibold text-foreground">Áudios Salvos</span>
+                  <span className="text-sm font-semibold text-foreground">Áudios Programados</span>
                   <button onClick={() => setShowAudioList(false)} className="p-1 rounded hover:bg-muted">
                     <X className="w-4 h-4 text-muted-foreground" />
                   </button>
@@ -221,7 +380,6 @@ const Conversas = () => {
             )}
 
             <div className="flex gap-2 items-center">
-              {/* Attach button */}
               <button
                 onClick={() => { setShowAttach(!showAttach); setShowEmoji(false); setShowAudioList(false); }}
                 className={cn(
@@ -233,7 +391,6 @@ const Conversas = () => {
                 <Plus className="w-5 h-5" />
               </button>
 
-              {/* Emoji button */}
               <button
                 onClick={() => { setShowEmoji(!showEmoji); setShowAttach(false); setShowAudioList(false); }}
                 className={cn(
@@ -245,14 +402,12 @@ const Conversas = () => {
                 <Smile className="w-5 h-5" />
               </button>
 
-              {/* Input */}
               <input
                 type="text"
                 placeholder="Digite uma mensagem..."
                 className="flex-1 bg-muted rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
               />
 
-              {/* Mic button - gravar áudio */}
               <button
                 onClick={() => setIsRecording(!isRecording)}
                 className={cn(
@@ -264,7 +419,6 @@ const Conversas = () => {
                 <Mic className="w-5 h-5" />
               </button>
 
-              {/* Send */}
               <button className="p-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0">
                 <SendIcon className="w-5 h-5" />
               </button>
