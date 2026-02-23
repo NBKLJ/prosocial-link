@@ -1,9 +1,10 @@
 import { AppLayout } from "@/components/AppLayout";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import {
   Search, Phone, Check, CheckCheck, Mic, X, Send as SendIcon,
   Smile, Image, FileText, Sticker, Plus, Tag, UserRoundPlus,
+  Trash2, Pause, Play, CircleStop,
 } from "lucide-react";
 import { getAudioStore, type AudioItem } from "@/pages/DisparoAudio";
 import { getTagStore, getTagColor } from "@/lib/tagStore";
@@ -63,6 +64,9 @@ const Conversas = () => {
   const [showAttach, setShowAttach] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [recordTime, setRecordTime] = useState(0);
+  const recordInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const [showTagMenu, setShowTagMenu] = useState(false);
   const [showTransferMenu, setShowTransferMenu] = useState(false);
   const [convTags, setConvTags] = useState<Record<string, string[]>>({
@@ -93,6 +97,40 @@ const Conversas = () => {
   };
 
   const selectedConv = conversations.find((c) => c.id === selected);
+
+  const startRecording = () => {
+    setIsRecording(true);
+    setIsPaused(false);
+    setRecordTime(0);
+    recordInterval.current = setInterval(() => {
+      setRecordTime((t) => t + 1);
+    }, 1000);
+  };
+
+  const pauseRecording = () => {
+    setIsPaused(true);
+    if (recordInterval.current) clearInterval(recordInterval.current);
+  };
+
+  const resumeRecording = () => {
+    setIsPaused(false);
+    recordInterval.current = setInterval(() => {
+      setRecordTime((t) => t + 1);
+    }, 1000);
+  };
+
+  const stopRecording = () => {
+    setIsRecording(false);
+    setIsPaused(false);
+    setRecordTime(0);
+    if (recordInterval.current) clearInterval(recordInterval.current);
+  };
+
+  const formatRecordTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
 
   return (
     <AppLayout fullHeight>
@@ -386,50 +424,112 @@ const Conversas = () => {
               </div>
             )}
 
-            <div className="flex gap-2 items-center">
-              <button
-                onClick={() => { setShowAttach(!showAttach); setShowEmoji(false); setShowAudioList(false); }}
-                className={cn(
-                  "p-2.5 rounded-lg transition-colors flex-shrink-0",
-                  showAttach ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-                title="Anexar"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
+            {isRecording ? (
+              /* ===== RECORDING BAR ===== */
+              <div className="flex gap-2 items-center">
+                {/* Cancelar label */}
+                <span className="text-xs text-muted-foreground mr-1 cursor-pointer hover:text-foreground transition-colors" onClick={stopRecording}>Cancelar</span>
 
-              <button
-                onClick={() => { setShowEmoji(!showEmoji); setShowAttach(false); setShowAudioList(false); }}
-                className={cn(
-                  "p-2.5 rounded-lg transition-colors flex-shrink-0",
-                  showEmoji ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-                title="Emoji"
-              >
-                <Smile className="w-5 h-5" />
-              </button>
+                {/* Delete */}
+                <button
+                  onClick={stopRecording}
+                  className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive transition-colors flex-shrink-0"
+                  title="Descartar"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
 
-              <input
-                type="text"
-                placeholder="Digite uma mensagem..."
-                className="flex-1 bg-muted rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-              />
+                {/* Red dot + timer */}
+                <div className="flex items-center gap-2 px-3">
+                  <div className={cn("w-2.5 h-2.5 rounded-full bg-destructive", !isPaused && "animate-pulse")} />
+                  <span className="text-sm font-mono font-semibold text-foreground min-w-[36px]">{formatRecordTime(recordTime)}</span>
+                </div>
 
-              <button
-                onClick={() => setIsRecording(!isRecording)}
-                className={cn(
-                  "p-2.5 rounded-lg transition-colors flex-shrink-0",
-                  isRecording ? "bg-destructive text-destructive-foreground animate-pulse" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-                title={isRecording ? "Parar gravação" : "Gravar áudio"}
-              >
-                <Mic className="w-5 h-5" />
-              </button>
+                {/* Waveform visualization */}
+                <div className="flex-1 flex items-center justify-center gap-[3px] h-8 overflow-hidden">
+                  {Array.from({ length: 30 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={cn("w-[3px] rounded-full bg-muted-foreground/40 transition-all", !isPaused && "animate-pulse")}
+                      style={{
+                        height: `${Math.max(4, Math.random() * 24 + 4)}px`,
+                        animationDelay: `${i * 50}ms`,
+                      }}
+                    />
+                  ))}
+                </div>
 
-              <button className="p-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0">
-                <SendIcon className="w-5 h-5" />
-              </button>
-            </div>
+                {/* Pause / Resume */}
+                <button
+                  onClick={isPaused ? resumeRecording : pauseRecording}
+                  className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors flex-shrink-0"
+                  title={isPaused ? "Continuar" : "Pausar"}
+                >
+                  {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                </button>
+
+                {/* Stop */}
+                <button
+                  onClick={stopRecording}
+                  className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors flex-shrink-0"
+                  title="Parar"
+                >
+                  <CircleStop className="w-4 h-4" />
+                </button>
+
+                {/* Send */}
+                <button
+                  onClick={stopRecording}
+                  className="w-10 h-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center flex-shrink-0"
+                  title="Enviar áudio"
+                >
+                  <SendIcon className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              /* ===== NORMAL INPUT BAR ===== */
+              <div className="flex gap-2 items-center">
+                <button
+                  onClick={() => { setShowAttach(!showAttach); setShowEmoji(false); setShowAudioList(false); }}
+                  className={cn(
+                    "p-2.5 rounded-lg transition-colors flex-shrink-0",
+                    showAttach ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                  title="Anexar"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+
+                <button
+                  onClick={() => { setShowEmoji(!showEmoji); setShowAttach(false); setShowAudioList(false); }}
+                  className={cn(
+                    "p-2.5 rounded-lg transition-colors flex-shrink-0",
+                    showEmoji ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                  title="Emoji"
+                >
+                  <Smile className="w-5 h-5" />
+                </button>
+
+                <input
+                  type="text"
+                  placeholder="Digite uma mensagem..."
+                  className="flex-1 bg-muted rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                />
+
+                <button
+                  onClick={startRecording}
+                  className="p-2.5 rounded-lg transition-colors flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                  title="Gravar áudio"
+                >
+                  <Mic className="w-5 h-5" />
+                </button>
+
+                <button className="p-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0">
+                  <SendIcon className="w-5 h-5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
