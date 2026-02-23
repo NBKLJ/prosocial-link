@@ -21,7 +21,7 @@ const DisparoRecepcao = () => {
 
   return (
     <AppLayout>
-      <div className="space-y-6 animate-fade-in max-w-2xl">
+      <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Recepção Automática</h1>
