@@ -39,7 +39,6 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Conversas", url: "/conversas", icon: MessageCircle, count: 12 },
   { title: "CRM", url: "/crm", icon: BarChart3 },
   {
@@ -51,11 +50,7 @@ const menuItems: MenuItem[] = [
       { title: "Agendamento", url: "/disparos/agendamento", icon: Clock },
     ],
   },
-  { title: "Automações", url: "/automacoes", icon: Bot, expandable: true },
-  { title: "Agendamentos", url: "/agendamentos", icon: CalendarDays, count: 5, expandable: true },
-  { title: "Relatórios", url: "/relatorios", icon: TrendingUp, expandable: true },
   { title: "Contatos", url: "/contatos", icon: Users },
-  { title: "Conexões", url: "/conexoes", icon: Link2, expandable: true },
 ];
 
 export function AppSidebar() {

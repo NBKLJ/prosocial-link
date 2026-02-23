@@ -24,18 +24,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Conversas />} />
           <Route path="/crm" element={<CRM />} />
           <Route path="/conversas" element={<Conversas />} />
           <Route path="/disparos" element={<Disparos />} />
           <Route path="/disparos/recepcao" element={<Disparos />} />
           <Route path="/disparos/audio" element={<Disparos />} />
           <Route path="/disparos/agendamento" element={<Disparos />} />
-          <Route path="/automacoes" element={<Automacoes />} />
-          <Route path="/agendamentos" element={<Agendamentos />} />
-          <Route path="/relatorios" element={<Relatorios />} />
           <Route path="/contatos" element={<Contatos />} />
-          <Route path="/conexoes" element={<Conexoes />} />
           <Route path="/configuracoes" element={<Configuracoes />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
