@@ -1,7 +1,8 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Search, Phone, Check, CheckCheck } from "lucide-react";
+import { Search, Phone, Check, CheckCheck, Mic, X, Send as SendIcon } from "lucide-react";
+import { getAudioStore, type AudioItem } from "@/pages/DisparoAudio";
 
 interface Conversation {
   id: string;
@@ -41,6 +42,7 @@ const messages: Message[] = [
 const Conversas = () => {
   const [selected, setSelected] = useState<string>("1");
   const [search, setSearch] = useState("");
+  const [showAudioList, setShowAudioList] = useState(false);
 
   const filtered = conversations.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase())
@@ -133,8 +135,50 @@ const Conversas = () => {
             ))}
           </div>
 
-          <div className="px-5 py-3 border-t border-border">
-            <div className="flex gap-3">
+          <div className="px-5 py-3 border-t border-border relative">
+            {/* Audio list popup */}
+            {showAudioList && (
+              <div className="absolute bottom-full left-5 right-5 mb-2 bg-card border border-border rounded-xl shadow-lg max-h-60 overflow-y-auto z-10">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                  <span className="text-sm font-semibold text-foreground">Áudios Salvos</span>
+                  <button onClick={() => setShowAudioList(false)} className="p-1 rounded hover:bg-muted">
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
+                {getAudioStore().length === 0 ? (
+                  <p className="px-4 py-6 text-sm text-muted-foreground text-center">Nenhum áudio salvo</p>
+                ) : (
+                  getAudioStore().map((audio) => (
+                    <button
+                      key={audio.id}
+                      onClick={() => setShowAudioList(false)}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Mic className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{audio.title}</p>
+                        <p className="text-xs text-muted-foreground">{audio.duration}</p>
+                      </div>
+                      <SendIcon className="w-4 h-4 text-primary flex-shrink-0" />
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-3 items-center">
+              <button
+                onClick={() => setShowAudioList(!showAudioList)}
+                className={cn(
+                  "p-2.5 rounded-lg transition-colors flex-shrink-0",
+                  showAudioList ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
+                )}
+                title="Áudios salvos"
+              >
+                <Mic className="w-5 h-5" />
+              </button>
               <input
                 type="text"
                 placeholder="Digite uma mensagem..."
