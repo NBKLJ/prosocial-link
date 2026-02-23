@@ -50,11 +50,12 @@ export function PipelineColumn({
   return (
     <div
       className={cn(
-        "flex-shrink-0 w-[310px] flex flex-col rounded-xl transition-all duration-200 h-full",
+        "flex-shrink-0 w-[310px] flex flex-col rounded-xl h-full",
         "bg-muted/30 dark:bg-muted/10",
-        isDropTarget && "ring-2 ring-primary/40 bg-primary/5",
-        isDraggingColumn && "opacity-50 scale-[0.97]",
-        isColumnDropTarget && "ring-2 ring-accent-violet/40 translate-x-1"
+        "transition-[transform,opacity,box-shadow,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        isDropTarget && "ring-2 ring-primary/40 bg-primary/5 scale-[1.01]",
+        isDraggingColumn && "opacity-40 scale-[0.96] rotate-[0.5deg]",
+        isColumnDropTarget && "ring-2 ring-accent-violet/40 scale-[1.02] shadow-lg shadow-accent-violet/10"
       )}
       onDragEnter={(e) => onDragEnter(e, pipeline.id)}
       onDragLeave={(e) => onDragLeave(e, pipeline.id)}
@@ -100,7 +101,7 @@ export function PipelineColumn({
       </div>
 
       {/* Cards */}
-      <div className="flex-1 overflow-y-auto space-y-2 px-2 pb-3 min-h-[80px]">
+      <div className="flex-1 overflow-y-auto space-y-2 px-2 pb-3 min-h-[80px] transition-all duration-300">
         {pipeline.leads.map((lead) => (
           <LeadCard
             key={lead.id}
