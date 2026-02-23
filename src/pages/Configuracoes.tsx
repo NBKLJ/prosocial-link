@@ -16,6 +16,7 @@ import {
   Trash2,
   CreditCard,
   Wifi,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getTagStore, setTagStore, tagColors, type TagItem } from "@/lib/tagStore";
@@ -30,8 +31,8 @@ const tabs: { key: TabKey; label: string; icon: typeof CreditCard }[] = [
 ];
 
 const conexoes = [
-  { id: "1", number: "(11) 99999-1234", name: "Comercial 1", status: "connected" as const, lastSync: "Agora" },
-  { id: "2", number: "(21) 98888-5678", name: "Suporte", status: "disconnected" as const, lastSync: "2h atrás" },
+  { id: "1", number: "BR 6699665813", name: "Contabilidade Positivo", description: "Serviços Contábeis pess...", status: "connected" as const, lastSync: "19/02/26 11:44" },
+  { id: "2", number: "BR 2188885678", name: "Suporte Geral", description: "Atendimento ao cliente...", status: "disconnected" as const, lastSync: "18/02/26 09:30" },
 ];
 
 interface UserItem {
@@ -151,11 +152,11 @@ const Configuracoes = () => {
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
               {conexoes.map((c) => (
-                <div key={c.id} className="glass-card rounded-2xl p-0 overflow-hidden">
-                  {/* Header com nome e status */}
+                <div key={c.id} className="rounded-2xl overflow-hidden" style={{ background: 'hsl(220 25% 10%)' }}>
+                  {/* Header: nome + check */}
                   <div className="flex items-center justify-between px-5 pt-5 pb-3">
-                    <div className="flex items-center gap-2.5">
-                      <h3 className="text-base font-bold text-foreground">{c.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-bold text-base">{c.name}</span>
                       {c.status === "connected" ? (
                         <CheckCircle2 className="w-5 h-5 text-primary" />
                       ) : (
@@ -164,49 +165,65 @@ const Configuracoes = () => {
                     </div>
                   </div>
 
-                  {/* Número com ícone WhatsApp */}
-                  <div className="px-5 pb-3">
-                    <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2.5">
-                      <Smartphone className="w-4 h-4 text-primary shrink-0" />
-                      <span className="text-sm font-medium text-foreground tracking-wide overflow-hidden whitespace-nowrap">
-                        <span className="inline-block animate-[marquee_8s_linear_infinite]">{c.number}</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Status da conexão */}
-                  <div className="px-5 pb-3">
+                  {/* Barra do número */}
+                  <div className="mx-5 mb-4 flex items-center justify-between rounded-lg px-3 py-2.5" style={{ background: 'hsl(220 20% 15%)' }}>
                     <div className="flex items-center gap-2">
-                      {c.status === "connected" ? (
-                        <>
-                          <CheckCircle2 className="w-4 h-4 text-primary" />
-                          <span className="text-sm font-medium text-primary">Conexão estabelecida!</span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="w-4 h-4 text-destructive" />
-                          <span className="text-sm font-medium text-destructive">Desconectado</span>
-                        </>
-                      )}
+                      <Smartphone className="w-4 h-4 text-primary shrink-0" />
+                      <span className="text-sm font-medium text-white tracking-wide">{c.number}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button className="p-1.5 rounded-md hover:bg-white/10 transition-colors">
+                        <Pencil className="w-3.5 h-3.5 text-white/70" />
+                      </button>
+                      <button className="p-1.5 rounded-md hover:bg-white/10 transition-colors">
+                        <Trash2 className="w-3.5 h-3.5 text-destructive/70" />
+                      </button>
                     </div>
                   </div>
 
-                  {/* Botão conectar/desconectar */}
-                  <div className="px-5 pb-3">
+                  {/* Avatar + info */}
+                  <div className="flex items-center gap-3 px-5 pb-4">
+                    <div className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center text-sm font-bold text-white/70 border border-white/10">
+                      {c.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">{c.name.split(" ")[0]}</p>
+                      <p className="text-xs text-white/50">{c.description}</p>
+                    </div>
+                    <Settings className="w-4 h-4 text-orange-400 ml-auto" />
+                  </div>
+
+                  {/* Status */}
+                  <div className="flex items-center gap-2 px-5 pb-3">
                     {c.status === "connected" ? (
-                      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-border text-sm font-semibold text-foreground hover:bg-muted transition-colors uppercase tracking-wider">
+                      <>
+                        <CheckCircle2 className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-semibold text-primary">Conexão estabelecida!</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4 text-destructive" />
+                        <span className="text-sm font-semibold text-destructive">Desconectado</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Botão */}
+                  <div className="px-5 pb-3 flex justify-center">
+                    {c.status === "connected" ? (
+                      <button className="px-6 py-2 rounded-md border border-white/20 text-xs font-bold text-white uppercase tracking-widest hover:bg-white/10 transition-colors">
                         Desconectar
                       </button>
                     ) : (
-                      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
-                        <QrCode className="w-4 h-4" /> Conectar via QR Code
+                      <button className="px-6 py-2 rounded-md bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest hover:bg-primary/90 transition-colors flex items-center gap-2">
+                        <QrCode className="w-3.5 h-3.5" /> Conectar
                       </button>
                     )}
                   </div>
 
                   {/* Última atualização */}
-                  <div className="px-5 pb-5 pt-1">
-                    <p className="text-xs text-muted-foreground text-center">Última atualização: {c.lastSync}</p>
+                  <div className="px-5 pb-5 pt-2">
+                    <p className="text-[11px] text-white/40 text-center">Última atualização: {c.lastSync}</p>
                   </div>
                 </div>
               ))}
