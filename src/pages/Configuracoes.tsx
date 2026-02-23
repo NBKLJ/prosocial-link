@@ -149,30 +149,65 @@ const Configuracoes = () => {
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground font-medium bg-muted px-3 py-1 rounded-full">{conexoes.length}/2 números</span>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-5 sm:grid-cols-2">
               {conexoes.map((c) => (
-                <div key={c.id} className="glass-card rounded-xl p-6 space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center", c.status === "connected" ? "bg-primary/10" : "bg-muted")}>
-                        <Smartphone className={cn("w-7 h-7", c.status === "connected" ? "text-primary" : "text-muted-foreground")} />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-semibold text-foreground">{c.name}</h3>
-                        <p className="text-sm text-muted-foreground">{c.number}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Última sinc.: {c.lastSync}</p>
-                      </div>
+                <div key={c.id} className="glass-card rounded-2xl p-0 overflow-hidden">
+                  {/* Header com nome e status */}
+                  <div className="flex items-center justify-between px-5 pt-5 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="text-base font-bold text-foreground">{c.name}</h3>
+                      {c.status === "connected" ? (
+                        <CheckCircle2 className="w-5 h-5 text-primary" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-destructive" />
+                      )}
                     </div>
-                    <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full", c.status === "connected" ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive")}>
-                      {c.status === "connected" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-                      {c.status === "connected" ? "Conectado" : "Desconectado"}
-                    </span>
                   </div>
-                  {c.status === "disconnected" && (
-                    <button className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
-                      <QrCode className="w-4 h-4" /> Reconectar via QR Code
-                    </button>
-                  )}
+
+                  {/* Número com ícone WhatsApp */}
+                  <div className="px-5 pb-3">
+                    <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2.5">
+                      <Smartphone className="w-4 h-4 text-primary shrink-0" />
+                      <span className="text-sm font-medium text-foreground tracking-wide overflow-hidden whitespace-nowrap">
+                        <span className="inline-block animate-[marquee_8s_linear_infinite]">{c.number}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Status da conexão */}
+                  <div className="px-5 pb-3">
+                    <div className="flex items-center gap-2">
+                      {c.status === "connected" ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-medium text-primary">Conexão estabelecida!</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-4 h-4 text-destructive" />
+                          <span className="text-sm font-medium text-destructive">Desconectado</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Botão conectar/desconectar */}
+                  <div className="px-5 pb-3">
+                    {c.status === "connected" ? (
+                      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-border text-sm font-semibold text-foreground hover:bg-muted transition-colors uppercase tracking-wider">
+                        Desconectar
+                      </button>
+                    ) : (
+                      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
+                        <QrCode className="w-4 h-4" /> Conectar via QR Code
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Última atualização */}
+                  <div className="px-5 pb-5 pt-1">
+                    <p className="text-xs text-muted-foreground text-center">Última atualização: {c.lastSync}</p>
+                  </div>
                 </div>
               ))}
             </div>
