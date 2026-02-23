@@ -85,6 +85,15 @@ const Configuracoes = () => {
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
+        {/* Banner Upgrade */}
+        <div className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center gap-3">
+          <Crown className="w-4 h-4 text-primary-foreground" />
+          <span className="text-sm font-semibold text-primary-foreground">Fazer upgrade de plano</span>
+          <button className="ml-2 px-3 py-1 rounded-lg bg-primary-foreground/20 text-primary-foreground text-xs font-bold hover:bg-primary-foreground/30 transition-colors backdrop-blur-sm">
+            Upgrade
+          </button>
+        </div>
+
         <div>
           <h1 className="text-2xl font-bold text-foreground">Configurações</h1>
           <p className="text-muted-foreground mt-1">Gerencie sua conta, conexões, etiquetas e equipe</p>
