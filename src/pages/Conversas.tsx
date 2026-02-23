@@ -48,6 +48,7 @@ const Conversas = () => {
   const [showAudioList, setShowAudioList] = useState(false);
   const [showAttach, setShowAttach] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
 
   const filtered = conversations.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase())
@@ -180,7 +181,7 @@ const Conversas = () => {
                   {[
                     { icon: Image, label: "Imagem", color: "text-blue-500" },
                     { icon: FileText, label: "Documento", color: "text-orange-500" },
-                    { icon: Mic, label: "Áudio", color: "text-primary", action: () => { setShowAttach(false); setShowAudioList(true); } },
+                    { icon: Mic, label: "Áudios Programados", color: "text-primary", action: () => { setShowAttach(false); setShowAudioList(true); } },
                     { icon: Sticker, label: "Figurinha", color: "text-pink-500" },
                   ].map((item) => (
                     <button
@@ -251,14 +252,14 @@ const Conversas = () => {
                 className="flex-1 bg-muted rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
               />
 
-              {/* Mic button */}
+              {/* Mic button - gravar áudio */}
               <button
-                onClick={() => { setShowAudioList(!showAudioList); setShowAttach(false); setShowEmoji(false); }}
+                onClick={() => setIsRecording(!isRecording)}
                 className={cn(
                   "p-2.5 rounded-lg transition-colors flex-shrink-0",
-                  showAudioList ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  isRecording ? "bg-destructive text-destructive-foreground animate-pulse" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
-                title="Áudios salvos"
+                title={isRecording ? "Parar gravação" : "Gravar áudio"}
               >
                 <Mic className="w-5 h-5" />
               </button>
