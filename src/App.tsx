@@ -8,7 +8,7 @@ import NotFound from "./pages/NotFound";
 import CRM from "./pages/CRM";
 import Conversas from "./pages/Conversas";
 import Disparos from "./pages/Disparos";
-import Automacoes from "./pages/Automacoes";
+import DisparoRecepcao from "./pages/DisparoRecepcao";
 import Agendamentos from "./pages/Agendamentos";
 import Relatorios from "./pages/Relatorios";
 import Contatos from "./pages/Contatos";
@@ -28,7 +28,7 @@ const App = () => (
           <Route path="/crm" element={<CRM />} />
           <Route path="/conversas" element={<Conversas />} />
           <Route path="/disparos" element={<Disparos />} />
-          <Route path="/disparos/recepcao" element={<Disparos />} />
+          <Route path="/disparos/recepcao" element={<DisparoRecepcao />} />
           <Route path="/disparos/audio" element={<Disparos />} />
           <Route path="/disparos/agendamento" element={<Disparos />} />
           <Route path="/contatos" element={<Contatos />} />
