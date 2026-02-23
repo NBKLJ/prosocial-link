@@ -4,7 +4,7 @@ import { Plus, Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Pipeline, Lead } from "@/components/crm/types";
 import { initialPipelines } from "@/components/crm/data";
 import { PipelineColumn } from "@/components/crm/PipelineColumn";
-import { PipelineMetrics } from "@/components/crm/PipelineMetrics";
+
 
 const CRM = () => {
   const [pipelines, setPipelines] = useState<Pipeline[]>(initialPipelines);
@@ -150,11 +150,6 @@ const CRM = () => {
               Novo Lead
             </button>
           </div>
-        </div>
-
-        {/* Metrics */}
-        <div className="flex-shrink-0">
-          <PipelineMetrics pipelines={pipelines} />
         </div>
 
         {/* Kanban Board */}
