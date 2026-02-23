@@ -11,40 +11,22 @@ import {
   Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getTagStore, setTagStore, tagColors, type TagItem } from "@/lib/tagStore";
 
 const conexoes = [
   { id: "1", number: "(11) 99999-1234", name: "Comercial 1", status: "connected" as const },
   { id: "2", number: "(21) 98888-5678", name: "Suporte", status: "disconnected" as const },
 ];
 
-const tagColors = [
-  { name: "Vermelho", value: "#ef4444" },
-  { name: "Laranja", value: "#f97316" },
-  { name: "Amarelo", value: "#eab308" },
-  { name: "Verde", value: "#22c55e" },
-  { name: "Azul", value: "#3b82f6" },
-  { name: "Roxo", value: "#8b5cf6" },
-  { name: "Rosa", value: "#ec4899" },
-  { name: "Ciano", value: "#06b6d4" },
-];
-
-interface TagItem {
-  name: string;
-  color: string;
-}
-
-const defaultTags: TagItem[] = [
-  { name: "Lead Quente", color: "#ef4444" },
-  { name: "Cliente VIP", color: "#eab308" },
-  { name: "Suporte", color: "#3b82f6" },
-  { name: "Parceiro", color: "#22c55e" },
-  { name: "Inativo", color: "#8b5cf6" },
-];
-
 const Configuracoes = () => {
-  const [tags, setTags] = useState<TagItem[]>(defaultTags);
+  const [tags, setTagsState] = useState<TagItem[]>(getTagStore());
   const [newTag, setNewTag] = useState("");
   const [newColor, setNewColor] = useState(tagColors[0].value);
+
+  const setTags = (updated: TagItem[]) => {
+    setTagsState(updated);
+    setTagStore(updated);
+  };
 
   const addTag = () => {
     if (newTag.trim() && !tags.some((t) => t.name === newTag.trim())) {

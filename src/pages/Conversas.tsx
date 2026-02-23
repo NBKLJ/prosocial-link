@@ -6,6 +6,7 @@ import {
   Smile, Image, FileText, Sticker, Plus, Tag, UserRoundPlus,
 } from "lucide-react";
 import { getAudioStore, type AudioItem } from "@/pages/DisparoAudio";
+import { getTagStore, getTagColor } from "@/lib/tagStore";
 
 type ConversationStatus = "aguardando" | "atendendo" | "aguardando_doc" | "finalizado";
 
@@ -36,7 +37,6 @@ const statusFilters: { value: ConversationStatus | "todos"; label: string }[] = 
   { value: "aguardando_doc", label: "Aguard. Doc." },
 ];
 
-const availableTags = ["Lead Quente", "Cliente VIP", "Suporte", "Parceiro", "Inativo"];
 const availableUsers = ["Ana (Suporte)", "Carlos (Vendas)", "Julia (Financeiro)"];
 
 interface Message {
@@ -166,7 +166,11 @@ const Conversas = () => {
                   {(convTags[conv.id] || []).length > 0 && (
                     <div className="flex gap-1 mt-1 flex-wrap">
                       {(convTags[conv.id] || []).map((tag) => (
-                        <span key={tag} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                        <span
+                          key={tag}
+                          className="text-[10px] font-medium px-1.5 py-0.5 rounded text-white"
+                          style={{ backgroundColor: getTagColor(tag) }}
+                        >
                           {tag}
                         </span>
                       ))}
@@ -230,24 +234,28 @@ const Conversas = () => {
                     <span className="text-sm font-semibold text-foreground">Classificar Tag</span>
                   </div>
                   <div className="py-1">
-                    {availableTags.map((tag) => {
-                      const isSelected = (convTags[selected] || []).includes(tag);
+                    {getTagStore().map((tagItem) => {
+                      const isSelected = (convTags[selected] || []).includes(tagItem.name);
                       return (
                         <button
-                          key={tag}
-                          onClick={() => toggleConvTag(tag)}
+                          key={tagItem.name}
+                          onClick={() => toggleConvTag(tagItem.name)}
                           className={cn(
                             "w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors",
-                            isSelected ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-muted/50"
+                            isSelected ? "font-medium" : "text-foreground hover:bg-muted/50"
                           )}
                         >
-                          <div className={cn(
-                            "w-4 h-4 rounded border flex items-center justify-center",
-                            isSelected ? "bg-primary border-primary" : "border-border"
-                          )}>
-                            {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                          <div
+                            className="w-4 h-4 rounded border flex items-center justify-center"
+                            style={isSelected ? { backgroundColor: tagItem.color, borderColor: tagItem.color } : {}}
+                          >
+                            {isSelected && <Check className="w-3 h-3 text-white" />}
                           </div>
-                          {tag}
+                          <span
+                            className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: tagItem.color }}
+                          />
+                          {tagItem.name}
                         </button>
                       );
                     })}

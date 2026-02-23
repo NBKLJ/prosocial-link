@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
+import { getTagStore, getTagColor } from "@/lib/tagStore";
 import {
   CalendarDays,
   Plus,
@@ -37,7 +38,7 @@ interface Agendamento {
   status: "agendado" | "enviado";
 }
 
-const availableTags = ["Lead Quente", "Cliente VIP", "Suporte", "Parceiro", "Inativo"];
+
 
 const contentTypes: { value: ContentType; label: string; icon: typeof Type }[] = [
   { value: "texto", label: "Texto", icon: Type },
@@ -375,18 +376,19 @@ const DisparoAgendamento = () => {
 
                 {targetType === "tags" && (
                   <div className="flex flex-wrap gap-2 pt-1">
-                    {availableTags.map((tag) => (
+                    {getTagStore().map((tagItem) => (
                       <button
-                        key={tag}
-                        onClick={() => toggleTag(tag)}
+                        key={tagItem.name}
+                        onClick={() => toggleTag(tagItem.name)}
                         className={cn(
                           "text-xs font-medium px-3 py-1.5 rounded-full border transition-colors",
-                          selectedTags.includes(tag)
-                            ? "bg-primary/10 text-primary border-primary/30"
+                          selectedTags.includes(tagItem.name)
+                            ? "text-white border-transparent"
                             : "bg-muted text-muted-foreground border-border hover:border-primary/20"
                         )}
+                        style={selectedTags.includes(tagItem.name) ? { backgroundColor: tagItem.color } : {}}
                       >
-                        {tag}
+                        {tagItem.name}
                       </button>
                     ))}
                   </div>
