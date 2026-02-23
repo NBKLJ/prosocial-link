@@ -159,39 +159,6 @@ const CRM = () => {
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="glass-card rounded-xl p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Users className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Total de Leads</p>
-              <p className="text-lg font-bold text-foreground">{totalLeads}</p>
-            </div>
-          </div>
-          <div className="glass-card rounded-xl p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-chart-4" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Valor Total</p>
-              <p className="text-lg font-bold text-foreground">
-                R$ {totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}
-              </p>
-            </div>
-          </div>
-          <div className="glass-card rounded-xl p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-chart-2/10 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-chart-2" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Fechados</p>
-              <p className="text-lg font-bold text-foreground">{closedLeads}</p>
-            </div>
-          </div>
-        </div>
-
         {/* Kanban */}
         <div className="flex gap-4 overflow-x-auto pb-4">
           {columns.map((column) => (
