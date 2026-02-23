@@ -34,7 +34,6 @@ const statusFilters: { value: ConversationStatus | "todos"; label: string }[] = 
   { value: "aguardando", label: "Aguardando" },
   { value: "atendendo", label: "Atendendo" },
   { value: "aguardando_doc", label: "Aguard. Doc." },
-  { value: "finalizado", label: "Finalizados" },
 ];
 
 const availableTags = ["Lead Quente", "Cliente VIP", "Suporte", "Parceiro", "Inativo"];
