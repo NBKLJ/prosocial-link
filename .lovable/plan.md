@@ -1,76 +1,90 @@
 
+## Paleta de Cores Mais Diversificada
 
-## Redesign Visual: Mais Profundidade e Separacao
+Atualmente o sistema usa praticamente uma unica cor de destaque (azul) em todos os lugares -- icones, badges, graficos, botoes. Isso faz tudo parecer monotono. Vou introduzir cores semanticas distintas para cada area, mantendo o visual profissional.
 
-O problema principal e que o background (`98% luminosidade`), os cards (`100% branco puro`) e o muted (`96%`) sao todos quase identicos - nao ha contraste entre eles. Vou criar uma hierarquia visual clara com 3 camadas distintas.
+### Estrategia de Cores
 
-### Mudancas Planejadas
+Cada tipo de metrica/funcionalidade tera sua propria cor:
 
-**1. Paleta de Cores (src/index.css)**
+- **Mensagens Enviadas**: Azul (comunicacao)
+- **Mensagens Recebidas**: Ciano/Teal (recepcao)
+- **Novos Leads**: Violeta/Roxo (oportunidade)
+- **Conversoes**: Esmeralda/Verde (sucesso)
+- **Alertas/Perdidos**: Coral/Vermelho (atencao)
+- **Agendamentos/Tempo**: Ambar/Laranja (urgencia)
 
-Ajustar os tokens CSS para criar camadas visuais bem definidas:
+### Arquivos a serem editados
 
-- **Background principal**: Mudar de branco quase puro para um cinza azulado suave (`220 20% 93%`) - isso cria a "base" visual
-- **Cards**: Manter branco puro mas com sombra sutil para "flutuar" sobre o fundo
-- **Muted/Secondary**: Tom intermediario entre o fundo e os cards (`220 16% 96%`)
-- **Bordas**: Ligeiramente mais visiveis (`220 15% 87%`) para separar elementos
-- **Sidebar**: Escurecer um pouco mais para maior contraste lateral (`220 18% 10%`)
+**1. `src/index.css` - Novos tokens de cor**
 
-Tambem vou:
-- Adicionar uma sombra padrao sutil nos cards via `.glass-card`
-- Refinar o `--input` para campos de formulario ficarem mais distintos
+Adicionar variaveis semanticas para uso consistente:
+- `--success`: verde esmeralda (160 84% 39%)
+- `--warning`: ambar (38 92% 50%)
+- `--info`: ciano (190 90% 50%)
+- `--accent-violet`: roxo (262 83% 58%)
+- `--accent-orange`: laranja (25 95% 53%)
+- `--accent-teal`: teal (168 76% 42%)
 
-**2. Sidebar (src/components/AppSidebar.tsx)**
+Atualizar os chart tokens para cores mais vibrantes e distintas entre si.
 
-- Trocar o fundo de `bg-card` para um fundo escuro constante usando as variaveis do sidebar
-- Textos e icones adaptados para contrastar com fundo escuro
-- Isso cria a separacao clara que falta entre menu e conteudo
+**2. `src/components/dashboard/MetricCard.tsx` - Cores individuais por card**
 
-**3. Layout Principal (src/components/AppLayout.tsx)**
+Cada MetricCard recebera uma prop `color` para definir a cor do icone e do badge de variacao, em vez de usar `primary` para todos.
 
-- Adicionar um background sutil na area de conteudo para reforcar a hierarquia
+**3. `src/pages/Index.tsx` - Aplicar cores nos cards do dashboard**
 
-**4. Componentes de Pagina**
+Passar cores distintas para cada MetricCard:
+- Enviadas: azul
+- Recebidas: teal
+- Novos Leads: violeta
+- Conversoes: esmeralda
 
-Ajustes pontuais nos seguintes arquivos para aproveitar o novo contraste:
+**4. `src/components/dashboard/MessagesChart.tsx` - Gradientes mais vivos**
 
-- **CRM (PipelineColumn, PipelineMetrics)**: Cards dos leads e metricas com sombras sutis
-- **Conversas**: Area de chat com fundo ligeiramente diferente da lista de contatos
-- **Contatos e Configuracoes**: Tabelas com headers mais marcados
+Trocar os gradientes de verde/azul desaturados por cores mais vibrantes e contrastantes entre si (azul royal + teal).
 
----
+**5. `src/components/dashboard/FunnelChart.tsx` - Barras com cores mais diversas**
+
+Atualizar as cores das barras do funil para usar a nova paleta: violeta, azul, esmeralda, coral.
+
+**6. `tailwind.config.ts` - Registrar novas cores no Tailwind**
+
+Adicionar as cores semanticas (`success`, `warning`, `info`, `accent-violet`, `accent-orange`, `accent-teal`) ao config para uso com classes utilitarias.
 
 ### Detalhes Tecnicos
 
-**src/index.css - Novos tokens light mode:**
+**MetricCard - nova interface:**
+```typescript
+interface MetricCardProps {
+  title: string;
+  value: string;
+  change: string;
+  positive: boolean;
+  icon: LucideIcon;
+  color?: "blue" | "teal" | "violet" | "emerald" | "amber" | "rose";
+}
 ```
---background: 220 20% 93%;
---card: 0 0% 100%;
---muted: 220 16% 96%;
---border: 220 15% 87%;
---input: 220 15% 91%;
---sidebar-background: 220 20% 10%;
+
+Cada cor mapeia para classes Tailwind especificas (ex: `color="violet"` gera `bg-violet-500/10 text-violet-500`).
+
+**Tokens CSS adicionados ao `:root`:**
+```css
+--success: 160 84% 39%;
+--warning: 38 92% 50%;
+--info: 190 90% 50%;
+--accent-violet: 262 83% 58%;
+--accent-orange: 25 95% 53%;
+--accent-teal: 168 76% 42%;
 ```
 
-**src/components/AppSidebar.tsx:**
-- Classe da `aside`: trocar `bg-card border-r border-border` para `bg-[hsl(var(--sidebar-background))]` com textos claros
-- Search input, nav items, footer - todos adaptados para fundo escuro
-- Logo area com melhor contraste
+**Chart tokens atualizados:**
+```css
+--chart-1: 211 100% 50%;   /* azul */
+--chart-2: 168 76% 42%;    /* teal */
+--chart-3: 262 83% 58%;    /* violeta */
+--chart-4: 38 92% 50%;     /* ambar */
+--chart-5: 0 84% 60%;      /* coral */
+```
 
-**src/index.css - Utilidades atualizadas:**
-- `.glass-card` recebe `shadow-sm` por padrao
-- Nova classe `.surface-elevated` para elementos que precisam se destacar
-
-**Arquivos que serao editados:**
-1. `src/index.css` - Tokens de cor
-2. `src/components/AppSidebar.tsx` - Sidebar escura
-3. `src/components/AppLayout.tsx` - Background do layout
-4. `src/components/crm/PipelineColumn.tsx` - Sombras nos cards
-5. `src/components/crm/PipelineMetrics.tsx` - Sombras nas metricas
-6. `src/pages/Conversas.tsx` - Separacao visual das areas
-7. `src/pages/Contatos.tsx` - Headers de tabela mais marcados
-8. `src/pages/Configuracoes.tsx` - Tabs e cards com mais contraste
-9. `src/pages/Disparos.tsx` - Tabela com headers mais marcados
-
-O resultado final sera um sistema com hierarquia visual clara: fundo cinza -> cards brancos flutuantes -> sidebar escura, mantendo o estilo minimalista Apple.
-
+O resultado sera um sistema visualmente mais rico e facil de interpretar, onde cada area funcional tem identidade cromatica propria.
