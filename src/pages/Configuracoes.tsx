@@ -166,28 +166,6 @@ const Configuracoes = () => {
           </div>
         </div>
 
-        {/* Anotações Internas */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <StickyNote className="w-5 h-5 text-primary" />
-            <h2 className="text-base font-semibold text-foreground">Anotações Internas</h2>
-          </div>
-
-          <div className="glass-card rounded-xl p-5">
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Escreva suas anotações aqui..."
-              rows={5}
-              className="w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all resize-none"
-            />
-            <div className="flex justify-end mt-3">
-              <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
-                Salvar Anotações
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </AppLayout>
   );
