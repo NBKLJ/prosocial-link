@@ -1,7 +1,10 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Search, Phone, Check, CheckCheck, Mic, X, Send as SendIcon } from "lucide-react";
+import {
+  Search, Phone, Check, CheckCheck, Mic, X, Send as SendIcon,
+  Smile, Paperclip, Image, FileText, Sticker, Plus,
+} from "lucide-react";
 import { getAudioStore, type AudioItem } from "@/pages/DisparoAudio";
 
 interface Conversation {
@@ -43,6 +46,8 @@ const Conversas = () => {
   const [selected, setSelected] = useState<string>("1");
   const [search, setSearch] = useState("");
   const [showAudioList, setShowAudioList] = useState(false);
+  const [showAttach, setShowAttach] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
 
   const filtered = conversations.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase())
@@ -168,24 +173,99 @@ const Conversas = () => {
               </div>
             )}
 
-            <div className="flex gap-3 items-center">
+            {/* Attach popup */}
+            {showAttach && (
+              <div className="absolute bottom-full left-5 mb-2 bg-card border border-border rounded-xl shadow-lg z-10 w-56">
+                <div className="py-2">
+                  {[
+                    { icon: Image, label: "Imagem", color: "text-blue-500" },
+                    { icon: FileText, label: "Documento", color: "text-orange-500" },
+                    { icon: Mic, label: "Áudio", color: "text-primary", action: () => { setShowAttach(false); setShowAudioList(true); } },
+                    { icon: Sticker, label: "Figurinha", color: "text-pink-500" },
+                  ].map((item) => (
+                    <button
+                      key={item.label}
+                      onClick={() => { item.action?.(); if (!item.action) setShowAttach(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <item.icon className={cn("w-5 h-5", item.color)} />
+                      <span className="text-sm font-medium text-foreground">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Emoji picker popup */}
+            {showEmoji && (
+              <div className="absolute bottom-full right-5 mb-2 bg-card border border-border rounded-xl shadow-lg z-10 p-4 w-72">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-semibold text-foreground">Emojis</span>
+                  <button onClick={() => setShowEmoji(false)} className="p-1 rounded hover:bg-muted">
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-8 gap-1">
+                  {["😀","😂","😍","🥰","😎","🤩","😢","😡","👍","👎","❤️","🔥","🎉","✅","⭐","💬","📞","📸","🎁","💰","🙏","👋","🤝","💪","🏆","🎯","📌","⏰","📅","💡","🚀","✨"].map((emoji) => (
+                    <button
+                      key={emoji}
+                      onClick={() => setShowEmoji(false)}
+                      className="w-8 h-8 flex items-center justify-center text-lg hover:bg-muted rounded transition-colors"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2 items-center">
+              {/* Attach button */}
               <button
-                onClick={() => setShowAudioList(!showAudioList)}
+                onClick={() => { setShowAttach(!showAttach); setShowEmoji(false); setShowAudioList(false); }}
                 className={cn(
                   "p-2.5 rounded-lg transition-colors flex-shrink-0",
-                  showAudioList ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
+                  showAttach ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
-                title="Áudios salvos"
+                title="Anexar"
               >
-                <Mic className="w-5 h-5" />
+                <Plus className="w-5 h-5" />
               </button>
+
+              {/* Emoji button */}
+              <button
+                onClick={() => { setShowEmoji(!showEmoji); setShowAttach(false); setShowAudioList(false); }}
+                className={cn(
+                  "p-2.5 rounded-lg transition-colors flex-shrink-0",
+                  showEmoji ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+                title="Emoji"
+              >
+                <Smile className="w-5 h-5" />
+              </button>
+
+              {/* Input */}
               <input
                 type="text"
                 placeholder="Digite uma mensagem..."
                 className="flex-1 bg-muted rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
               />
-              <button className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
-                Enviar
+
+              {/* Mic button */}
+              <button
+                onClick={() => { setShowAudioList(!showAudioList); setShowAttach(false); setShowEmoji(false); }}
+                className={cn(
+                  "p-2.5 rounded-lg transition-colors flex-shrink-0",
+                  showAudioList ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+                title="Áudios salvos"
+              >
+                <Mic className="w-5 h-5" />
+              </button>
+
+              {/* Send */}
+              <button className="p-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0">
+                <SendIcon className="w-5 h-5" />
               </button>
             </div>
           </div>
