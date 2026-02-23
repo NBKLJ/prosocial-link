@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import {
   Search, Phone, Check, CheckCheck, Mic, X, Send as SendIcon,
   Smile, Image, FileText, Sticker, Plus, Tag, UserRoundPlus,
-  Trash2, Pause, Play, CircleStop,
+  Trash2, Pause, Play, CircleStop, Crown,
 } from "lucide-react";
 import { getAudioStore, type AudioItem } from "@/pages/DisparoAudio";
 import { getTagStore, getTagColor } from "@/lib/tagStore";
@@ -134,7 +134,16 @@ const Conversas = () => {
 
   return (
     <AppLayout fullHeight>
-      <div className="animate-fade-in h-full flex overflow-hidden border-l border-border">
+      <div className="animate-fade-in h-full flex flex-col overflow-hidden border-l border-border">
+        {/* Banner Upgrade */}
+        <div className="w-full px-4 py-2.5 bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center gap-3 shrink-0">
+          <Crown className="w-4 h-4 text-primary-foreground" />
+          <span className="text-sm font-semibold text-primary-foreground">Fazer upgrade de plano</span>
+          <button className="ml-2 px-3 py-1 rounded-lg bg-primary-foreground/20 text-primary-foreground text-xs font-bold hover:bg-primary-foreground/30 transition-colors backdrop-blur-sm">
+            Upgrade
+          </button>
+        </div>
+        <div className="flex-1 flex overflow-hidden">
         {/* Contacts List */}
         <div className="w-[340px] border-r border-border flex flex-col">
           <div className="p-4 border-b border-border space-y-3">
@@ -531,6 +540,7 @@ const Conversas = () => {
               </div>
             )}
           </div>
+        </div>
         </div>
       </div>
     </AppLayout>
