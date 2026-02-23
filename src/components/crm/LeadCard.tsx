@@ -27,13 +27,30 @@ export function LeadCard({ lead, columnId, onDragStart, onDragEnd }: LeadCardPro
   return (
     <div
       draggable
-      onDragStart={(e) => onDragStart(e, lead, columnId)}
-      onDragEnd={onDragEnd}
+      onDragStart={(e) => {
+        onDragStart(e, lead, columnId);
+        requestAnimationFrame(() => {
+          if (e.currentTarget instanceof HTMLElement) {
+            e.currentTarget.style.transition = "transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease";
+            e.currentTarget.style.opacity = "0.35";
+            e.currentTarget.style.transform = "scale(0.97) rotate(1deg)";
+          }
+        });
+      }}
+      onDragEnd={(e) => {
+        if (e.currentTarget instanceof HTMLElement) {
+          e.currentTarget.style.transition = "transform 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease";
+          e.currentTarget.style.opacity = "1";
+          e.currentTarget.style.transform = "scale(1) rotate(0deg)";
+        }
+        onDragEnd(e);
+      }}
       className={cn(
         "bg-card rounded-lg p-3.5 cursor-grab active:cursor-grabbing",
         "border border-border/60 hover:border-primary/30",
-        "hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 group",
-        "select-none relative"
+        "hover:shadow-lg hover:shadow-primary/5 group select-none relative",
+        "transition-[transform,opacity,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        "active:scale-[0.98] active:shadow-xl active:shadow-primary/10"
       )}
     >
       {/* Header */}
