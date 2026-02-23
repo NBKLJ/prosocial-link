@@ -15,6 +15,12 @@ interface PipelineColumnProps {
   onDragLeave: (e: DragEvent, columnId: string) => void;
   onDragOver: (e: DragEvent) => void;
   onDrop: (e: DragEvent, columnId: string) => void;
+  isDraggingColumn?: boolean;
+  isColumnDropTarget?: boolean;
+  onColumnDragStart?: (e: DragEvent, columnId: string) => void;
+  onColumnDragOver?: (e: DragEvent, columnId: string) => void;
+  onColumnDrop?: (e: DragEvent, columnId: string) => void;
+  onColumnDragEnd?: () => void;
 }
 
 const formatCurrency = (value: number) =>
@@ -30,6 +36,12 @@ export function PipelineColumn({
   onDragLeave,
   onDragOver,
   onDrop,
+  isDraggingColumn,
+  isColumnDropTarget,
+  onColumnDragStart,
+  onColumnDragOver,
+  onColumnDrop,
+  onColumnDragEnd,
 }: PipelineColumnProps) {
   const colors = stageColors[pipeline.id] || stageColors.qualified;
   const totalValue = pipeline.leads.reduce((sum, l) => sum + l.value, 0);
@@ -40,18 +52,34 @@ export function PipelineColumn({
       className={cn(
         "flex-shrink-0 w-[310px] flex flex-col rounded-xl transition-all duration-200 h-full",
         "bg-muted/30 dark:bg-muted/10",
-        isDropTarget && "ring-2 ring-primary/40 bg-primary/5"
+        isDropTarget && "ring-2 ring-primary/40 bg-primary/5",
+        isDraggingColumn && "opacity-50 scale-[0.97]",
+        isColumnDropTarget && "ring-2 ring-accent-violet/40 translate-x-1"
       )}
       onDragEnter={(e) => onDragEnter(e, pipeline.id)}
       onDragLeave={(e) => onDragLeave(e, pipeline.id)}
-      onDragOver={onDragOver}
-      onDrop={(e) => onDrop(e, pipeline.id)}
+      onDragOver={(e) => {
+        onDragOver(e);
+        onColumnDragOver?.(e, pipeline.id);
+      }}
+      onDrop={(e) => {
+        onDrop(e, pipeline.id);
+        onColumnDrop?.(e, pipeline.id);
+      }}
     >
       {/* Column top bar */}
       <div className={cn("h-1 rounded-t-xl", colors.bar)} />
 
-      {/* Header */}
-      <div className="px-3 py-3">
+      {/* Header - draggable for column reorder */}
+      <div
+        className="px-3 py-3 cursor-grab active:cursor-grabbing"
+        draggable
+        onDragStart={(e) => {
+          e.stopPropagation();
+          onColumnDragStart?.(e, pipeline.id);
+        }}
+        onDragEnd={() => onColumnDragEnd?.()}
+      >
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <h3 className="text-[13px] font-semibold text-foreground">{pipeline.title}</h3>

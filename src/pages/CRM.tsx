@@ -13,6 +13,10 @@ const CRM = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const dragCounter = useRef<Record<string, number>>({});
 
+  // Column reorder state
+  const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null);
+  const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
+
   const filteredPipelines = pipelines.map((p) => ({
     ...p,
     leads: p.leads.filter((lead) => {
@@ -77,6 +81,42 @@ const CRM = () => {
     dragCounter.current = {};
   };
 
+  // Column reorder handlers
+  const handleColumnDragStart = (e: DragEvent, columnId: string) => {
+    setDraggedColumnId(columnId);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", columnId);
+  };
+
+  const handleColumnDragOver = (e: DragEvent, columnId: string) => {
+    e.preventDefault();
+    if (!draggedColumnId || draggedColumnId === columnId) return;
+    setDragOverColumnId(columnId);
+  };
+
+  const handleColumnDrop = (e: DragEvent, targetColumnId: string) => {
+    e.preventDefault();
+    if (!draggedColumnId || draggedColumnId === targetColumnId) return;
+
+    setPipelines((prev) => {
+      const fromIndex = prev.findIndex((p) => p.id === draggedColumnId);
+      const toIndex = prev.findIndex((p) => p.id === targetColumnId);
+      if (fromIndex === -1 || toIndex === -1) return prev;
+      const updated = [...prev];
+      const [moved] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, moved);
+      return updated;
+    });
+
+    setDraggedColumnId(null);
+    setDragOverColumnId(null);
+  };
+
+  const handleColumnDragEnd = () => {
+    setDraggedColumnId(null);
+    setDragOverColumnId(null);
+  };
+
   return (
     <AppLayout>
       <div className="space-y-5 animate-fade-in h-[calc(100vh-4rem)] flex flex-col">
@@ -131,6 +171,12 @@ const CRM = () => {
               onDragLeave={handleDragLeave}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
+              isDraggingColumn={draggedColumnId === pipeline.id}
+              isColumnDropTarget={dragOverColumnId === pipeline.id && draggedColumnId !== pipeline.id}
+              onColumnDragStart={handleColumnDragStart}
+              onColumnDragOver={handleColumnDragOver}
+              onColumnDrop={handleColumnDrop}
+              onColumnDragEnd={handleColumnDragEnd}
             />
           ))}
 
