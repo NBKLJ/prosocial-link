@@ -47,8 +47,8 @@ const Conversas = () => {
   );
 
   return (
-    <AppLayout>
-      <div className="animate-fade-in h-[calc(100vh-3rem)] flex rounded-xl overflow-hidden glass-card">
+    <AppLayout fullHeight>
+      <div className="animate-fade-in h-full flex overflow-hidden border-l border-border">
         {/* Contacts List */}
         <div className="w-[340px] border-r border-border flex flex-col">
           <div className="p-4 border-b border-border">
