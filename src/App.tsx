@@ -10,6 +10,7 @@ import Conversas from "./pages/Conversas";
 import Disparos from "./pages/Disparos";
 import DisparoRecepcao from "./pages/DisparoRecepcao";
 import DisparoAudio from "./pages/DisparoAudio";
+import DisparoAgendamento from "./pages/DisparoAgendamento";
 import Relatorios from "./pages/Relatorios";
 import Contatos from "./pages/Contatos";
 import Conexoes from "./pages/Conexoes";
@@ -30,7 +31,7 @@ const App = () => (
           <Route path="/disparos" element={<Disparos />} />
           <Route path="/disparos/recepcao" element={<DisparoRecepcao />} />
           <Route path="/disparos/audio" element={<DisparoAudio />} />
-          <Route path="/disparos/agendamento" element={<Disparos />} />
+          <Route path="/disparos/agendamento" element={<DisparoAgendamento />} />
           <Route path="/contatos" element={<Contatos />} />
           <Route path="/configuracoes" element={<Configuracoes />} />
           <Route path="*" element={<NotFound />} />
