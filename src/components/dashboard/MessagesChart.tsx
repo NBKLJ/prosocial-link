@@ -27,12 +27,12 @@ export function MessagesChart() {
           <AreaChart data={data}>
             <defs>
               <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(145, 63%, 49%)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="hsl(145, 63%, 49%)" stopOpacity={0} />
+                <stop offset="5%" stopColor="hsl(211, 100%, 50%)" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="hsl(211, 100%, 50%)" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(200, 70%, 50%)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="hsl(200, 70%, 50%)" stopOpacity={0} />
+                <stop offset="5%" stopColor="hsl(168, 76%, 42%)" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="hsl(168, 76%, 42%)" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 90%)" strokeOpacity={0.3} />
@@ -47,8 +47,8 @@ export function MessagesChart() {
                 fontSize: "13px",
               }}
             />
-            <Area type="monotone" dataKey="enviadas" stroke="hsl(145, 63%, 49%)" fill="url(#greenGrad)" strokeWidth={2} />
-            <Area type="monotone" dataKey="recebidas" stroke="hsl(200, 70%, 50%)" fill="url(#blueGrad)" strokeWidth={2} />
+            <Area type="monotone" dataKey="enviadas" stroke="hsl(211, 100%, 50%)" fill="url(#greenGrad)" strokeWidth={2} />
+            <Area type="monotone" dataKey="recebidas" stroke="hsl(168, 76%, 42%)" fill="url(#blueGrad)" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
       </div>

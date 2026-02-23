@@ -37,10 +37,17 @@
     --sidebar-muted: 220 12% 22%;
 
     --chart-1: 211 100% 50%;
-    --chart-2: 168 70% 45%;
-    --chart-3: 262 60% 55%;
-    --chart-4: 35 92% 55%;
+    --chart-2: 168 76% 42%;
+    --chart-3: 262 83% 58%;
+    --chart-4: 38 92% 50%;
     --chart-5: 0 84% 60%;
+
+    --success: 160 84% 39%;
+    --warning: 38 92% 50%;
+    --info: 190 90% 50%;
+    --accent-violet: 262 83% 58%;
+    --accent-orange: 25 95% 53%;
+    --accent-teal: 168 76% 42%;
 
     --whatsapp: 211 100% 50%;
     --whatsapp-dark: 211 100% 40%;

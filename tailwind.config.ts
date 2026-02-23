@@ -72,6 +72,24 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+        },
+        "accent-violet": {
+          DEFAULT: "hsl(var(--accent-violet))",
+        },
+        "accent-orange": {
+          DEFAULT: "hsl(var(--accent-orange))",
+        },
+        "accent-teal": {
+          DEFAULT: "hsl(var(--accent-teal))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
