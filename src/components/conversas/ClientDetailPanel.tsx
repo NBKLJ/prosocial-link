@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getTagStore, getTagColor } from "@/lib/tagStore";
-import { initialPipelines } from "@/components/crm/data";
+import { getTagStore } from "@/lib/tagStore";
+import { initialPipelines, stageColors } from "@/components/crm/data";
 import {
-  Tag, StickyNote, BarChart3, CalendarClock, Check, Plus, X, Send as SendIcon,
+  getPipelineStore, upsertLeadToStage, findLeadByName, findLeadStage, removeLeadFromPipeline,
+} from "@/lib/crmStore";
+import {
+  Tag, StickyNote, BarChart3, CalendarClock, Check, Plus, X,
+  Send as SendIcon, ChevronRight, DollarSign, Mail, Building2, Percent,
 } from "lucide-react";
 
 interface Note {
@@ -26,25 +30,60 @@ interface ClientDetailPanelProps {
   } | null;
   tags: string[];
   onToggleTag: (tag: string) => void;
+  onCrmUpdate?: () => void;
 }
 
 export function ClientDetailPanel({
-  open, onOpenChange, contact, tags, onToggleTag,
+  open, onOpenChange, contact, tags, onToggleTag, onCrmUpdate,
 }: ClientDetailPanelProps) {
   const [notes, setNotes] = useState<Note[]>([
     { id: "1", text: "Cliente interessado no plano Premium. Retornar na sexta.", date: "24/02/2026" },
   ]);
   const [newNote, setNewNote] = useState("");
-  const [crmStage, setCrmStage] = useState<string>("qualified");
   const [scheduledMessages] = useState([
     { id: "1", text: "Lembrete de follow-up", date: "25/02/2026 14:00" },
     { id: "2", text: "Enviar proposta comercial", date: "27/02/2026 10:00" },
   ]);
 
+  // CRM form state
+  const [selectedStage, setSelectedStage] = useState<string | null>(null);
+  const [showCrmForm, setShowCrmForm] = useState(false);
+  const [crmForm, setCrmForm] = useState({
+    value: "",
+    email: "",
+    company: "",
+    probability: "",
+    tag: "",
+  });
+
+  const stages = initialPipelines.map((p) => ({ id: p.id, title: p.title }));
+
+  // Sync CRM stage when panel opens
+  useEffect(() => {
+    if (open && contact) {
+      const existingLead = findLeadByName(contact.name);
+      if (existingLead) {
+        const stage = findLeadStage(existingLead.id);
+        setSelectedStage(stage);
+        setCrmForm({
+          value: existingLead.value?.toString() || "",
+          email: existingLead.email || "",
+          company: existingLead.company || "",
+          probability: existingLead.probability?.toString() || "",
+          tag: existingLead.tag || "",
+        });
+      } else {
+        setSelectedStage(null);
+        setCrmForm({ value: "", email: "", company: "", probability: "", tag: "" });
+      }
+      setShowCrmForm(false);
+    }
+  }, [open, contact]);
+
   const addNote = () => {
     if (!newNote.trim()) return;
     setNotes([
-      { id: Date.now().toString(), text: newNote, date: new Date().toLocaleDateString("pt-BR"), },
+      { id: Date.now().toString(), text: newNote, date: new Date().toLocaleDateString("pt-BR") },
       ...notes,
     ]);
     setNewNote("");
@@ -54,13 +93,54 @@ export function ClientDetailPanel({
     setNotes(notes.filter((n) => n.id !== id));
   };
 
-  const stages = initialPipelines.map((p) => ({ id: p.id, title: p.title }));
+  const handleStageClick = (stageId: string) => {
+    setSelectedStage(stageId);
+    setShowCrmForm(true);
+  };
+
+  const handleSaveToPipeline = () => {
+    if (!selectedStage || !contact) return;
+
+    const existingLead = findLeadByName(contact.name);
+    const leadId = existingLead?.id || `conv-${Date.now()}`;
+
+    const lead = {
+      id: leadId,
+      name: contact.name,
+      phone: contact.phone,
+      value: parseFloat(crmForm.value) || 0,
+      email: crmForm.email || undefined,
+      company: crmForm.company || undefined,
+      probability: parseInt(crmForm.probability) || 0,
+      tag: crmForm.tag || undefined,
+      lastContact: "Agora",
+    };
+
+    upsertLeadToStage(selectedStage, lead);
+    setShowCrmForm(false);
+    onCrmUpdate?.();
+  };
+
+  const handleRemoveFromPipeline = () => {
+    if (!contact) return;
+    const existingLead = findLeadByName(contact.name);
+    if (existingLead) {
+      removeLeadFromPipeline(existingLead.id);
+      setSelectedStage(null);
+      setShowCrmForm(false);
+      onCrmUpdate?.();
+    }
+  };
 
   if (!contact) return null;
 
+  const currentStageName = selectedStage
+    ? stages.find((s) => s.id === selectedStage)?.title
+    : null;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[380px] sm:max-w-[380px] p-0 flex flex-col">
+      <SheetContent side="right" className="w-[400px] sm:max-w-[400px] p-0 flex flex-col">
         <SheetHeader className="px-5 pt-5 pb-4 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full gradient-green flex items-center justify-center text-sm font-bold text-primary-foreground">
@@ -107,32 +187,158 @@ export function ClientDetailPanel({
 
             {/* === CRM CLASSIFICATION === */}
             <section>
-              <div className="flex items-center gap-2 mb-3">
-                <BarChart3 className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-semibold text-foreground">Classificação CRM</h3>
-              </div>
-              <div className="space-y-1">
-                {stages.map((stage) => (
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">Classificação CRM</h3>
+                </div>
+                {currentStageName && (
                   <button
-                    key={stage.id}
-                    onClick={() => setCrmStage(stage.id)}
-                    className={cn(
-                      "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all text-left",
-                      crmStage === stage.id
-                        ? "bg-primary/10 text-primary font-medium ring-1 ring-primary/20"
-                        : "text-foreground hover:bg-muted"
-                    )}
+                    onClick={handleRemoveFromPipeline}
+                    className="text-[11px] text-muted-foreground hover:text-destructive transition-colors"
                   >
-                    <div
-                      className={cn(
-                        "w-2 h-2 rounded-full",
-                        crmStage === stage.id ? "bg-primary" : "bg-muted-foreground/30"
-                      )}
-                    />
-                    {stage.title}
+                    Remover
                   </button>
-                ))}
+                )}
               </div>
+
+              {/* Current stage indicator */}
+              {currentStageName && !showCrmForm && (
+                <div className="mb-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Estágio atual</p>
+                      <p className="text-sm font-semibold text-primary">{currentStageName}</p>
+                    </div>
+                    <button
+                      onClick={() => setShowCrmForm(true)}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Editar
+                    </button>
+                  </div>
+                  {crmForm.value && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Valor: R$ {parseFloat(crmForm.value).toLocaleString("pt-BR")}
+                      {crmForm.probability && ` • ${crmForm.probability}% prob.`}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Stage selector */}
+              <div className="space-y-1">
+                {stages.map((stage) => {
+                  const colors = stageColors[stage.id];
+                  const isSelected = selectedStage === stage.id;
+                  return (
+                    <button
+                      key={stage.id}
+                      onClick={() => handleStageClick(stage.id)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all text-left group",
+                        isSelected
+                          ? `${colors?.bg || "bg-primary/10"} font-medium ring-1 ring-primary/20`
+                          : "text-foreground hover:bg-muted"
+                      )}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className={cn(
+                          "w-2.5 h-2.5 rounded-full",
+                          isSelected ? (colors?.bar || "bg-primary") : "bg-muted-foreground/20"
+                        )} />
+                        <span className={isSelected ? (colors?.text || "text-primary") : ""}>
+                          {stage.title}
+                        </span>
+                      </div>
+                      <ChevronRight className={cn(
+                        "w-3.5 h-3.5 transition-opacity",
+                        isSelected ? "opacity-60" : "opacity-0 group-hover:opacity-40"
+                      )} />
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* CRM Form */}
+              {showCrmForm && selectedStage && (
+                <div className="mt-3 p-4 rounded-lg border border-border bg-card space-y-3 animate-in slide-in-from-top-2 duration-200">
+                  <p className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                    Dados do Lead — {stages.find((s) => s.id === selectedStage)?.title}
+                  </p>
+
+                  <div className="space-y-2.5">
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+                      <input
+                        type="number"
+                        placeholder="Valor do orçamento"
+                        value={crmForm.value}
+                        onChange={(e) => setCrmForm({ ...crmForm, value: e.target.value })}
+                        className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+                      <input
+                        type="email"
+                        placeholder="E-mail"
+                        value={crmForm.email}
+                        onChange={(e) => setCrmForm({ ...crmForm, email: e.target.value })}
+                        className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+                      <input
+                        type="text"
+                        placeholder="Empresa"
+                        value={crmForm.company}
+                        onChange={(e) => setCrmForm({ ...crmForm, company: e.target.value })}
+                        className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <Percent className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        placeholder="Probabilidade de fechamento (%)"
+                        value={crmForm.probability}
+                        onChange={(e) => setCrmForm({ ...crmForm, probability: e.target.value })}
+                        className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      />
+                    </div>
+
+                    <input
+                      type="text"
+                      placeholder="Etiqueta do lead (ex: Quente, VIP)"
+                      value={crmForm.tag}
+                      onChange={(e) => setCrmForm({ ...crmForm, tag: e.target.value })}
+                      className="w-full bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={() => setShowCrmForm(false)}
+                      className="flex-1 px-3 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleSaveToPipeline}
+                      className="flex-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      Salvar no Pipeline
+                    </button>
+                  </div>
+                </div>
+              )}
             </section>
 
             {/* === NOTES === */}
@@ -158,10 +364,7 @@ export function ClientDetailPanel({
               </div>
               <div className="space-y-2">
                 {notes.map((note) => (
-                  <div
-                    key={note.id}
-                    className="bg-muted/50 rounded-lg px-3 py-2.5 group relative"
-                  >
+                  <div key={note.id} className="bg-muted/50 rounded-lg px-3 py-2.5 group relative">
                     <p className="text-sm text-foreground pr-6">{note.text}</p>
                     <span className="text-[10px] text-muted-foreground mt-1 block">{note.date}</span>
                     <button
@@ -186,10 +389,7 @@ export function ClientDetailPanel({
               </div>
               <div className="space-y-2">
                 {scheduledMessages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className="bg-muted/50 rounded-lg px-3 py-2.5 flex items-start gap-3"
-                  >
+                  <div key={msg.id} className="bg-muted/50 rounded-lg px-3 py-2.5 flex items-start gap-3">
                     <SendIcon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-foreground">{msg.text}</p>
