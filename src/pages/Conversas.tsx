@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { getAudioStore, type AudioItem } from "@/pages/DisparoAudio";
 import { getTagStore, getTagColor } from "@/lib/tagStore";
+import { ClientDetailPanel } from "@/components/conversas/ClientDetailPanel";
 
 type ConversationStatus = "aguardando" | "atendendo" | "aguardando_doc" | "finalizado";
 
@@ -74,6 +75,7 @@ const Conversas = () => {
     "3": ["Cliente VIP"],
     "5": ["Parceiro"],
   });
+  const [showClientPanel, setShowClientPanel] = useState(false);
 
   const filtered = conversations.filter((c) => {
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase());
@@ -233,10 +235,10 @@ const Conversas = () => {
               <div className="w-9 h-9 rounded-full gradient-green flex items-center justify-center text-xs font-bold text-primary-foreground">
                 {selectedConv?.avatar || "?"}
               </div>
-              <div>
+              <button onClick={() => setShowClientPanel(true)} className="text-left hover:opacity-80 transition-opacity">
                 <p className="text-sm font-semibold text-foreground">{selectedConv?.name || "Selecione"}</p>
                 <p className="text-xs text-primary">{selectedConv?.status === "online" ? "Online" : "Offline"}</p>
-              </div>
+              </button>
             </div>
             <div className="flex items-center gap-1 relative">
               {/* Tag button */}
@@ -532,6 +534,15 @@ const Conversas = () => {
             )}
           </div>
         </div>
+
+        {/* Client Detail Panel */}
+        <ClientDetailPanel
+          open={showClientPanel}
+          onOpenChange={setShowClientPanel}
+          contact={selectedConv ? { name: selectedConv.name, phone: selectedConv.phone, avatar: selectedConv.avatar } : null}
+          tags={convTags[selected] || []}
+          onToggleTag={toggleConvTag}
+        />
       </div>
     </AppLayout>
   );
