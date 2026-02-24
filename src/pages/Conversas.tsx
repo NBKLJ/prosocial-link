@@ -1,12 +1,12 @@
 import { AppLayout } from "@/components/AppLayout";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import {
-  Search, Phone, Check, CheckCheck, Mic, X, Send as SendIcon,
-  Smile, Image, FileText, Sticker, Plus, Tag, UserRoundPlus,
-  Trash2, Pause, Play, CircleStop,
+  Search, Check, CheckCheck, Mic, X, Send as SendIcon,
+  Smile, Image, FileText, Sticker, Plus,
+  Trash2, Pause, Play, CircleStop, ArrowRightLeft, ChevronDown, CircleX,
 } from "lucide-react";
-import { getAudioStore, type AudioItem } from "@/pages/DisparoAudio";
+import { getAudioStore } from "@/pages/DisparoAudio";
 import { getTagStore, getTagColor } from "@/lib/tagStore";
 import { ClientDetailPanel } from "@/components/conversas/ClientDetailPanel";
 
@@ -230,102 +230,146 @@ const Conversas = () => {
         {/* Chat Area */}
         <div className="flex-1 flex flex-col">
           {/* Chat header */}
-          <div className="flex items-center justify-between px-5 py-3 border-b border-border">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full gradient-green flex items-center justify-center text-xs font-bold text-primary-foreground">
-                {selectedConv?.avatar || "?"}
+          <div className="border-b border-border">
+            {/* Main header row */}
+            <div className="flex items-center justify-between px-5 py-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <button onClick={() => setShowClientPanel(true)} className="flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full gradient-green flex items-center justify-center text-xs font-bold text-primary-foreground">
+                    {selectedConv?.avatar || "?"}
+                  </div>
+                </button>
+                <button onClick={() => setShowClientPanel(true)} className="text-left hover:opacity-80 transition-opacity min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">{selectedConv?.name || "Selecione"}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {selectedConv?.phone}
+                    {selectedConv && <span className="text-muted-foreground/60"> • Atendente</span>}
+                  </p>
+                </button>
+
+                {/* Status badge */}
+                {selectedConv && (
+                  <span className={cn(
+                    "ml-2 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border flex-shrink-0",
+                    selectedConv.atendimentoStatus === "atendendo"
+                      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                      : selectedConv.atendimentoStatus === "aguardando"
+                        ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                        : "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                  )}>
+                    {selectedConv.atendimentoStatus === "atendendo" ? "Em Atendimento" :
+                     selectedConv.atendimentoStatus === "aguardando" ? "Aguardando" : "Aguard. Doc."}
+                  </span>
+                )}
               </div>
-              <button onClick={() => setShowClientPanel(true)} className="text-left hover:opacity-80 transition-opacity">
-                <p className="text-sm font-semibold text-foreground">{selectedConv?.name || "Selecione"}</p>
-                <p className="text-xs text-primary">{selectedConv?.status === "online" ? "Online" : "Offline"}</p>
-              </button>
-            </div>
-            <div className="flex items-center gap-1 relative">
-              {/* Tag button */}
-              <button
-                onClick={() => { setShowTagMenu(!showTagMenu); setShowTransferMenu(false); }}
-                className={cn(
-                  "p-2 rounded-lg transition-colors",
-                  showTagMenu ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-                title="Classificar tag"
-              >
-                <Tag className="w-5 h-5" />
-              </button>
 
-              {/* Transfer button */}
-              <button
-                onClick={() => { setShowTransferMenu(!showTransferMenu); setShowTagMenu(false); }}
-                className={cn(
-                  "p-2 rounded-lg transition-colors",
-                  showTransferMenu ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-                title="Transferir conversa"
-              >
-                <UserRoundPlus className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2 flex-shrink-0 relative">
+                {/* Transfer */}
+                <button
+                  onClick={() => { setShowTransferMenu(!showTransferMenu); setShowTagMenu(false); }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors",
+                    showTransferMenu
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border text-foreground hover:bg-muted"
+                  )}
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
+                  Transferir
+                </button>
 
-              <Phone className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors ml-1" />
+                {/* Status dropdown */}
+                <button
+                  onClick={() => { setShowTagMenu(!showTagMenu); setShowTransferMenu(false); }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors",
+                    showTagMenu
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border text-foreground hover:bg-muted"
+                  )}
+                >
+                  Status
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
 
-              {/* Tag dropdown */}
-              {showTagMenu && (
-                <div className="absolute top-full right-0 mt-2 bg-card border border-border rounded-xl shadow-lg z-20 w-52">
-                  <div className="px-4 py-3 border-b border-border">
-                    <span className="text-sm font-semibold text-foreground">Classificar Tag</span>
-                  </div>
-                  <div className="py-1">
-                    {getTagStore().map((tagItem) => {
-                      const isSelected = (convTags[selected] || []).includes(tagItem.name);
-                      return (
-                        <button
-                          key={tagItem.name}
-                          onClick={() => toggleConvTag(tagItem.name)}
-                          className={cn(
-                            "w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors",
-                            isSelected ? "font-medium" : "text-foreground hover:bg-muted/50"
-                          )}
-                        >
-                          <div
-                            className="w-4 h-4 rounded border flex items-center justify-center"
-                            style={isSelected ? { backgroundColor: tagItem.color, borderColor: tagItem.color } : {}}
+                {/* Finalizar */}
+                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors">
+                  <CircleX className="w-4 h-4" />
+                  Finalizar
+                </button>
+
+                {/* Tag/Status dropdown */}
+                {showTagMenu && (
+                  <div className="absolute top-full right-0 mt-2 bg-card border border-border rounded-xl shadow-lg z-20 w-52">
+                    <div className="px-4 py-3 border-b border-border">
+                      <span className="text-sm font-semibold text-foreground">Classificar Tag</span>
+                    </div>
+                    <div className="py-1">
+                      {getTagStore().map((tagItem) => {
+                        const isSelected = (convTags[selected] || []).includes(tagItem.name);
+                        return (
+                          <button
+                            key={tagItem.name}
+                            onClick={() => toggleConvTag(tagItem.name)}
+                            className={cn(
+                              "w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors",
+                              isSelected ? "font-medium" : "text-foreground hover:bg-muted/50"
+                            )}
                           >
-                            {isSelected && <Check className="w-3 h-3 text-white" />}
-                          </div>
-                          <span
-                            className="w-2 h-2 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: tagItem.color }}
-                          />
-                          {tagItem.name}
-                        </button>
-                      );
-                    })}
+                            <div
+                              className="w-4 h-4 rounded border flex items-center justify-center"
+                              style={isSelected ? { backgroundColor: tagItem.color, borderColor: tagItem.color } : {}}
+                            >
+                              {isSelected && <Check className="w-3 h-3 text-white" />}
+                            </div>
+                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: tagItem.color }} />
+                            {tagItem.name}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Transfer dropdown */}
-              {showTransferMenu && (
-                <div className="absolute top-full right-0 mt-2 bg-card border border-border rounded-xl shadow-lg z-20 w-56">
-                  <div className="px-4 py-3 border-b border-border">
-                    <span className="text-sm font-semibold text-foreground">Transferir para</span>
+                {/* Transfer dropdown */}
+                {showTransferMenu && (
+                  <div className="absolute top-full right-0 mt-2 bg-card border border-border rounded-xl shadow-lg z-20 w-56">
+                    <div className="px-4 py-3 border-b border-border">
+                      <span className="text-sm font-semibold text-foreground">Transferir para</span>
+                    </div>
+                    <div className="py-1">
+                      {availableUsers.map((user) => (
+                        <button
+                          key={user}
+                          onClick={() => setShowTransferMenu(false)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm text-foreground hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                            {user.charAt(0)}
+                          </div>
+                          {user}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="py-1">
-                    {availableUsers.map((user) => (
-                      <button
-                        key={user}
-                        onClick={() => setShowTransferMenu(false)}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm text-foreground hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
-                          {user.charAt(0)}
-                        </div>
-                        {user}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
+
+            {/* Tags row */}
+            {(convTags[selected] || []).length > 0 && (
+              <div className="px-5 pb-2.5 flex items-center gap-1.5">
+                {(convTags[selected] || []).map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-[11px] font-medium px-2 py-0.5 rounded-full text-white"
+                    style={{ backgroundColor: getTagColor(tag) }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-muted/30">
