@@ -7,7 +7,7 @@ import {
   Trash2, Pause, Play, CircleStop, ArrowRightLeft, ChevronDown, CircleX,
 } from "lucide-react";
 import { getAudioStore } from "@/pages/DisparoAudio";
-import { getTagStore, getTagColor } from "@/lib/tagStore";
+import { getTagColor } from "@/lib/tagStore";
 import { ClientDetailPanel } from "@/components/conversas/ClientDetailPanel";
 
 type ConversationStatus = "aguardando" | "atendendo" | "aguardando_doc" | "finalizado";
@@ -68,26 +68,36 @@ const Conversas = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [recordTime, setRecordTime] = useState(0);
   const recordInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [showTagMenu, setShowTagMenu] = useState(false);
+  const [showTagMenu, setShowTagMenu] = useState(false); // kept for closing other menus
   const [showTransferMenu, setShowTransferMenu] = useState(false);
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [convTags, setConvTags] = useState<Record<string, string[]>>({
     "1": ["Lead Quente"],
     "3": ["Cliente VIP"],
     "5": ["Parceiro"],
   });
+  const [convStatuses, setConvStatuses] = useState<Record<string, ConversationStatus>>({
+    "1": "aguardando",
+    "2": "atendendo",
+    "3": "aguardando_doc",
+    "4": "aguardando",
+    "5": "finalizado",
+  });
   const [showClientPanel, setShowClientPanel] = useState(false);
+
+  const getConvStatus = (id: string) => convStatuses[id] || conversations.find((c) => c.id === id)?.atendimentoStatus || "aguardando";
 
   const filtered = conversations.filter((c) => {
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === "todos" || c.atendimentoStatus === statusFilter;
+    const matchesStatus = statusFilter === "todos" || getConvStatus(c.id) === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const statusCounts = {
-    aguardando: conversations.filter((c) => c.atendimentoStatus === "aguardando").length,
-    atendendo: conversations.filter((c) => c.atendimentoStatus === "atendendo").length,
-    aguardando_doc: conversations.filter((c) => c.atendimentoStatus === "aguardando_doc").length,
-    finalizado: conversations.filter((c) => c.atendimentoStatus === "finalizado").length,
+    aguardando: conversations.filter((c) => getConvStatus(c.id) === "aguardando").length,
+    atendendo: conversations.filter((c) => getConvStatus(c.id) === "atendendo").length,
+    aguardando_doc: conversations.filter((c) => getConvStatus(c.id) === "aguardando_doc").length,
+    finalizado: conversations.filter((c) => getConvStatus(c.id) === "finalizado").length,
   };
 
   const toggleConvTag = (tag: string) => {
@@ -248,25 +258,27 @@ const Conversas = () => {
                 </button>
 
                 {/* Status badge */}
-                {selectedConv && (
-                  <span className={cn(
-                    "ml-2 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border flex-shrink-0",
-                    selectedConv.atendimentoStatus === "atendendo"
-                      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                      : selectedConv.atendimentoStatus === "aguardando"
-                        ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                        : "bg-blue-500/10 text-blue-600 border-blue-500/20"
-                  )}>
-                    {selectedConv.atendimentoStatus === "atendendo" ? "Em Atendimento" :
-                     selectedConv.atendimentoStatus === "aguardando" ? "Aguardando" : "Aguard. Doc."}
-                  </span>
-                )}
+                {selectedConv && (() => {
+                  const s = getConvStatus(selected);
+                  const statusConfig = {
+                    atendendo: { label: "Em Atendimento", classes: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
+                    aguardando: { label: "Aguardando", classes: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+                    aguardando_doc: { label: "Aguard. Doc.", classes: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+                    finalizado: { label: "Finalizado", classes: "bg-muted text-muted-foreground border-border" },
+                  };
+                  const cfg = statusConfig[s] || statusConfig.aguardando;
+                  return (
+                    <span className={cn("ml-2 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border flex-shrink-0", cfg.classes)}>
+                      {cfg.label}
+                    </span>
+                  );
+                })()}
               </div>
 
               <div className="flex items-center gap-2 flex-shrink-0 relative">
                 {/* Transfer */}
                 <button
-                  onClick={() => { setShowTransferMenu(!showTransferMenu); setShowTagMenu(false); }}
+                  onClick={() => { setShowTransferMenu(!showTransferMenu); setShowStatusMenu(false); setShowTagMenu(false); }}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors",
                     showTransferMenu
@@ -278,12 +290,12 @@ const Conversas = () => {
                   Transferir
                 </button>
 
-                {/* Status dropdown */}
+                {/* Status dropdown button */}
                 <button
-                  onClick={() => { setShowTagMenu(!showTagMenu); setShowTransferMenu(false); }}
+                  onClick={() => { setShowStatusMenu(!showStatusMenu); setShowTransferMenu(false); setShowTagMenu(false); }}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors",
-                    showTagMenu
+                    showStatusMenu
                       ? "bg-primary text-primary-foreground border-primary"
                       : "border-border text-foreground hover:bg-muted"
                   )}
@@ -293,37 +305,46 @@ const Conversas = () => {
                 </button>
 
                 {/* Finalizar */}
-                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors">
+                <button
+                  onClick={() => {
+                    setConvStatuses({ ...convStatuses, [selected]: "finalizado" });
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors"
+                >
                   <CircleX className="w-4 h-4" />
                   Finalizar
                 </button>
 
-                {/* Tag/Status dropdown */}
-                {showTagMenu && (
+                {/* Status dropdown */}
+                {showStatusMenu && (
                   <div className="absolute top-full right-0 mt-2 bg-card border border-border rounded-xl shadow-lg z-20 w-52">
                     <div className="px-4 py-3 border-b border-border">
-                      <span className="text-sm font-semibold text-foreground">Classificar Tag</span>
+                      <span className="text-sm font-semibold text-foreground">Alterar Status</span>
                     </div>
                     <div className="py-1">
-                      {getTagStore().map((tagItem) => {
-                        const isSelected = (convTags[selected] || []).includes(tagItem.name);
+                      {([
+                        { value: "aguardando" as ConversationStatus, label: "Aguardando", color: "bg-amber-500" },
+                        { value: "atendendo" as ConversationStatus, label: "Em Atendimento", color: "bg-emerald-500" },
+                        { value: "aguardando_doc" as ConversationStatus, label: "Aguard. Documento", color: "bg-blue-500" },
+                        { value: "finalizado" as ConversationStatus, label: "Finalizado", color: "bg-muted-foreground" },
+                      ]).map((status) => {
+                        const currentStatus = convStatuses[selected] || selectedConv?.atendimentoStatus;
+                        const isActive = currentStatus === status.value;
                         return (
                           <button
-                            key={tagItem.name}
-                            onClick={() => toggleConvTag(tagItem.name)}
+                            key={status.value}
+                            onClick={() => {
+                              setConvStatuses({ ...convStatuses, [selected]: status.value });
+                              setShowStatusMenu(false);
+                            }}
                             className={cn(
-                              "w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors",
-                              isSelected ? "font-medium" : "text-foreground hover:bg-muted/50"
+                              "w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors",
+                              isActive ? "bg-muted font-medium" : "text-foreground hover:bg-muted/50"
                             )}
                           >
-                            <div
-                              className="w-4 h-4 rounded border flex items-center justify-center"
-                              style={isSelected ? { backgroundColor: tagItem.color, borderColor: tagItem.color } : {}}
-                            >
-                              {isSelected && <Check className="w-3 h-3 text-white" />}
-                            </div>
-                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: tagItem.color }} />
-                            {tagItem.name}
+                            <div className={cn("w-2.5 h-2.5 rounded-full", status.color)} />
+                            {status.label}
+                            {isActive && <Check className="w-3.5 h-3.5 ml-auto text-primary" />}
                           </button>
                         );
                       })}
