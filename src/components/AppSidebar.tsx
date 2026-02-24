@@ -68,7 +68,7 @@ export function AppSidebar() {
           <Zap className="w-5 h-5 text-primary-foreground" />
         </div>
         <div>
-          <span className="text-base font-bold text-[hsl(var(--sidebar-accent-foreground))] tracking-tight block leading-tight">Zap-Pro</span>
+          <span className="text-base font-bold text-[hsl(var(--sidebar-accent-foreground))] tracking-tight block leading-tight">ZapProBR</span>
           <span className="text-xs text-[hsl(var(--sidebar-foreground))]">WhatsApp Manager</span>
         </div>
       </div>
