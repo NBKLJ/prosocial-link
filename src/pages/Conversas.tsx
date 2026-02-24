@@ -60,7 +60,7 @@ const messages: Message[] = [
 const Conversas = () => {
   const [selected, setSelected] = useState<string>("1");
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ConversationStatus | "todos">("todos");
+  const [statusFilter, setStatusFilter] = useState<ConversationStatus | "todos">("atendendo");
   const [showAudioList, setShowAudioList] = useState(false);
   const [showAttach, setShowAttach] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
