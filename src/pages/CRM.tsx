@@ -1,13 +1,12 @@
 import { AppLayout } from "@/components/AppLayout";
-import { useState, useRef, DragEvent } from "react";
+import { useState, useRef, useCallback, DragEvent } from "react";
 import { Plus, Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Pipeline, Lead } from "@/components/crm/types";
-import { initialPipelines } from "@/components/crm/data";
+import { getPipelineStore, setPipelineStore } from "@/lib/crmStore";
 import { PipelineColumn } from "@/components/crm/PipelineColumn";
 
-
 const CRM = () => {
-  const [pipelines, setPipelines] = useState<Pipeline[]>(initialPipelines);
+  const [pipelines, setPipelines] = useState<Pipeline[]>(getPipelineStore());
   const [draggedLead, setDraggedLead] = useState<{ lead: Lead; fromColumnId: string } | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,6 +15,20 @@ const CRM = () => {
   // Column reorder state
   const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null);
   const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
+
+  // Sync with shared store whenever local state changes
+  const updatePipelines = useCallback((updater: (prev: Pipeline[]) => Pipeline[]) => {
+    setPipelines((prev) => {
+      const next = updater(prev);
+      setPipelineStore(next);
+      return next;
+    });
+  }, []);
+
+  // Re-read from store (called when panel updates CRM)
+  const refreshFromStore = useCallback(() => {
+    setPipelines([...getPipelineStore()]);
+  }, []);
 
   const filteredPipelines = pipelines.map((p) => ({
     ...p,
@@ -68,7 +81,7 @@ const CRM = () => {
     e.preventDefault();
     if (!draggedLead || draggedLead.fromColumnId === toColumnId) return;
 
-    setPipelines((prev) =>
+    updatePipelines((prev) =>
       prev.map((p) => {
         if (p.id === draggedLead.fromColumnId) return { ...p, leads: p.leads.filter((l) => l.id !== draggedLead.lead.id) };
         if (p.id === toColumnId) return { ...p, leads: [...p.leads, draggedLead.lead] };
@@ -98,7 +111,7 @@ const CRM = () => {
     e.preventDefault();
     if (!draggedColumnId || draggedColumnId === targetColumnId) return;
 
-    setPipelines((prev) => {
+    updatePipelines((prev) => {
       const fromIndex = prev.findIndex((p) => p.id === draggedColumnId);
       const toIndex = prev.findIndex((p) => p.id === targetColumnId);
       if (fromIndex === -1 || toIndex === -1) return prev;
