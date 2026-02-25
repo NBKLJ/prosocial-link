@@ -1,90 +1,101 @@
 
-## Paleta de Cores Mais Diversificada
 
-Atualmente o sistema usa praticamente uma unica cor de destaque (azul) em todos os lugares -- icones, badges, graficos, botoes. Isso faz tudo parecer monotono. Vou introduzir cores semanticas distintas para cada area, mantendo o visual profissional.
+## Audit and Fix: Non-Functional Buttons Across the System
 
-### Estrategia de Cores
+After reviewing every page in the application, here is a comprehensive inventory of buttons that currently do nothing or need functionality, organized by page.
 
-Cada tipo de metrica/funcionalidade tera sua propria cor:
+---
 
-- **Mensagens Enviadas**: Azul (comunicacao)
-- **Mensagens Recebidas**: Ciano/Teal (recepcao)
-- **Novos Leads**: Violeta/Roxo (oportunidade)
-- **Conversoes**: Esmeralda/Verde (sucesso)
-- **Alertas/Perdidos**: Coral/Vermelho (atencao)
-- **Agendamentos/Tempo**: Ambar/Laranja (urgencia)
+### Summary of Issues Found
 
-### Arquivos a serem editados
+| Page | Non-functional buttons | Priority |
+|------|----------------------|----------|
+| **Conversas** | 6 buttons (send, emoji insert, attach, transfer feedback, input state, agendar mensagem) | High |
+| **CRM** | 6 buttons (Novo Lead, Filtros, Pipeline dropdown, column +, column ..., Adicionar Estágio) | High |
+| **Contatos** | 5 buttons (Novo Contato, Excluir, Exportar, Importar, Editar) | High |
+| **Disparos** | 2 buttons (Novo Disparo, row click) | Medium |
+| **Automacoes** | 2 buttons (Nova Automacao, toggle ativo/inativo) | Medium |
+| **Configuracoes** | 4 buttons (Upgrade, Desconectar/Conectar, Edit/Delete conexao) | Medium |
+| **Relatorios** | 1 button (Exportar) | Low |
+| **Agendamentos** | 1 button (Novo Agendamento) | Low |
+| **DisparoRecepcao** | 1 button (Salvar - no feedback) | Low |
+| **ClientDetailPanel** | 1 button (Agendar mensagem) | Low |
 
-**1. `src/index.css` - Novos tokens de cor**
+---
 
-Adicionar variaveis semanticas para uso consistente:
-- `--success`: verde esmeralda (160 84% 39%)
-- `--warning`: ambar (38 92% 50%)
-- `--info`: ciano (190 90% 50%)
-- `--accent-violet`: roxo (262 83% 58%)
-- `--accent-orange`: laranja (25 95% 53%)
-- `--accent-teal`: teal (168 76% 42%)
+### Implementation Plan
 
-Atualizar os chart tokens para cores mais vibrantes e distintas entre si.
+#### 1. Conversas - Chat Functionality (High Priority)
 
-**2. `src/components/dashboard/MetricCard.tsx` - Cores individuais por card**
+- **Text input**: Add controlled state (`messageText`) so typed text is tracked
+- **Send button**: On click (or Enter key), add the typed message to the messages array and clear input
+- **Emoji picker**: Clicking an emoji appends it to the input field instead of just closing the picker
+- **Attach menu items** (Image, Document, Sticker): Show a toast notification "Funcionalidade em breve" since there's no backend
+- **Transfer button**: After selecting a user, show a toast confirming "Conversa transferida para [user]"
+- **Finalizar button**: Show toast confirmation "Conversa finalizada"
 
-Cada MetricCard recebera uma prop `color` para definir a cor do icone e do badge de variacao, em vez de usar `primary` para todos.
+#### 2. CRM - Pipeline Actions (High Priority)
 
-**3. `src/pages/Index.tsx` - Aplicar cores nos cards do dashboard**
+- **Novo Lead**: Open a modal form to create a new lead (name, phone, value, company, email, probability, tag) and add it to the first pipeline stage
+- **Column "+" button**: Same modal but pre-selects that column's stage
+- **Column "..." button**: Show a dropdown with "Renomear" and "Limpar" options
+- **Adicionar Estágio**: Open a simple input modal to add a new pipeline column
+- **Filtros button**: Toggle a filter panel (by tag, value range)
+- **Pipeline dropdown**: Show toast "Pipeline padrão" (single pipeline for now)
 
-Passar cores distintas para cada MetricCard:
-- Enviadas: azul
-- Recebidas: teal
-- Novos Leads: violeta
-- Conversoes: esmeralda
+#### 3. Contatos - Contact Management (High Priority)
 
-**4. `src/components/dashboard/MessagesChart.tsx` - Gradientes mais vivos**
+- **Novo Contato**: Open a modal form (name, phone, email, tags) and add to the contacts list
+- **Editar (Pencil)**: Open the same modal pre-filled with contact data for editing
+- **Excluir**: Remove selected contacts from the list with a confirmation toast
+- **Exportar**: Generate a CSV download of the filtered contacts
+- **Importar**: Show toast "Funcionalidade em breve"
 
-Trocar os gradientes de verde/azul desaturados por cores mais vibrantes e contrastantes entre si (azul royal + teal).
+#### 4. Disparos (Medium Priority)
 
-**5. `src/components/dashboard/FunnelChart.tsx` - Barras com cores mais diversas**
+- **Novo Disparo**: Open a modal form (title, type, contacts count) to create a new campaign entry
+- **Row click**: Expand or show details of that campaign
 
-Atualizar as cores das barras do funil para usar a nova paleta: violeta, azul, esmeralda, coral.
+#### 5. Automacoes (Medium Priority)
 
-**6. `tailwind.config.ts` - Registrar novas cores no Tailwind**
+- **Nova Automacao**: Open a modal to create a new automation (name, trigger, action)
+- **Toggle Ativo/Inativo**: Make the toggle actually switch the automation's active state in local state
 
-Adicionar as cores semanticas (`success`, `warning`, `info`, `accent-violet`, `accent-orange`, `accent-teal`) ao config para uso com classes utilitarias.
+#### 6. Configuracoes (Medium Priority)
 
-### Detalhes Tecnicos
+- **Upgrade buttons**: Show toast "Redirecionando para planos..." (placeholder)
+- **Desconectar/Conectar**: Toggle the connection status in local state with toast feedback
+- **Edit connection**: Show toast "Editando conexão..."
+- **Delete connection**: Remove from list with confirmation
 
-**MetricCard - nova interface:**
-```typescript
-interface MetricCardProps {
-  title: string;
-  value: string;
-  change: string;
-  positive: boolean;
-  icon: LucideIcon;
-  color?: "blue" | "teal" | "violet" | "emerald" | "amber" | "rose";
-}
-```
+#### 7. Remaining Pages (Low Priority)
 
-Cada cor mapeia para classes Tailwind especificas (ex: `color="violet"` gera `bg-violet-500/10 text-violet-500`).
+- **Relatorios Exportar**: Show toast "Relatório exportado" (placeholder)
+- **Agendamentos Novo Agendamento**: Redirect to the DisparoAgendamento page which already works
+- **DisparoRecepcao Salvar**: Show toast "Configuração salva com sucesso"
+- **ClientDetailPanel Agendar mensagem**: Open a simple inline form with date/time/message fields
 
-**Tokens CSS adicionados ao `:root`:**
-```css
---success: 160 84% 39%;
---warning: 38 92% 50%;
---info: 190 90% 50%;
---accent-violet: 262 83% 58%;
---accent-orange: 25 95% 53%;
---accent-teal: 168 76% 42%;
-```
+---
 
-**Chart tokens atualizados:**
-```css
---chart-1: 211 100% 50%;   /* azul */
---chart-2: 168 76% 42%;    /* teal */
---chart-3: 262 83% 58%;    /* violeta */
---chart-4: 38 92% 50%;     /* ambar */
---chart-5: 0 84% 60%;      /* coral */
-```
+### Technical Approach
 
-O resultado sera um sistema visualmente mais rico e facil de interpretar, onde cada area funcional tem identidade cromatica propria.
+- Use `sonner` toast (already installed) for all user feedback notifications
+- Add controlled state and local array mutations for CRUD operations (no backend)
+- Create reusable modal patterns consistent with existing modals (DisparoAgendamento, Configuracoes users)
+- CSV export for Contatos using `Blob` + `URL.createObjectURL`
+- All changes are local state only - data resets on page refresh (consistent with current pattern)
+
+### Files to be Modified
+
+- `src/pages/Conversas.tsx` - Chat send, emoji insert, transfer/finalizar feedback
+- `src/pages/CRM.tsx` - Novo Lead modal, column actions, add stage
+- `src/components/crm/PipelineColumn.tsx` - Column header button callbacks
+- `src/pages/Contatos.tsx` - CRUD modal, export CSV, delete
+- `src/pages/Disparos.tsx` - Novo Disparo modal
+- `src/pages/Automacoes.tsx` - Nova Automacao modal, toggle state
+- `src/pages/Configuracoes.tsx` - Connection toggle, upgrade toast
+- `src/pages/Relatorios.tsx` - Export toast
+- `src/pages/Agendamentos.tsx` - Redirect to DisparoAgendamento
+- `src/pages/DisparoRecepcao.tsx` - Save feedback toast
+- `src/components/conversas/ClientDetailPanel.tsx` - Agendar mensagem form
+
