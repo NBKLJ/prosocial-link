@@ -10,7 +10,7 @@ import { getAudioStore } from "@/pages/DisparoAudio";
 import { getTagColor } from "@/lib/tagStore";
 import { ClientDetailPanel } from "@/components/conversas/ClientDetailPanel";
 
-type ConversationStatus = "aguardando" | "atendendo" | "aguardando_doc" | "finalizado";
+type ConversationStatus = "aguardando" | "atendendo" | "finalizado";
 
 interface Conversation {
   id: string;
@@ -28,15 +28,15 @@ interface Conversation {
 const conversations: Conversation[] = [
   { id: "1", name: "João Silva", phone: "(11) 99999-1234", lastMessage: "Olá, gostaria de saber mais sobre o produto...", time: "10:32", unread: 3, avatar: "JS", status: "online", atendimentoStatus: "aguardando", tags: ["Lead Quente"] },
   { id: "2", name: "Maria Souza", phone: "(21) 98888-5678", lastMessage: "Ok, pode enviar o orçamento", time: "09:15", unread: 0, avatar: "MS", status: "online", atendimentoStatus: "atendendo", tags: [] },
-  { id: "3", name: "Carlos Lima", phone: "(31) 97777-9012", lastMessage: "Perfeito, vamos fechar então!", time: "Ontem", unread: 0, avatar: "CL", status: "offline", atendimentoStatus: "aguardando_doc", tags: ["Cliente VIP"] },
+  { id: "3", name: "Carlos Lima", phone: "(31) 97777-9012", lastMessage: "Perfeito, vamos fechar então!", time: "Ontem", unread: 0, avatar: "CL", status: "offline", atendimentoStatus: "finalizado", tags: ["Cliente VIP"] },
   { id: "4", name: "Ana Costa", phone: "(41) 96666-3456", lastMessage: "Preciso de mais informações", time: "Ontem", unread: 1, avatar: "AC", status: "offline", atendimentoStatus: "aguardando", tags: [] },
   { id: "5", name: "Pedro Rocha", phone: "(51) 95555-7890", lastMessage: "Obrigado pelo atendimento!", time: "23/02", unread: 0, avatar: "PR", status: "offline", atendimentoStatus: "finalizado", tags: ["Parceiro"] },
 ];
 
 const statusFilters: { value: ConversationStatus | "todos"; label: string }[] = [
-  { value: "aguardando", label: "Aguardando" },
   { value: "atendendo", label: "Atendendo" },
-  { value: "aguardando_doc", label: "Aguard. Doc." },
+  { value: "aguardando", label: "Aguardando" },
+  { value: "finalizado", label: "Finalizado" },
 ];
 
 const availableUsers = ["Ana (Suporte)", "Carlos (Vendas)", "Julia (Financeiro)"];
@@ -79,7 +79,7 @@ const Conversas = () => {
   const [convStatuses, setConvStatuses] = useState<Record<string, ConversationStatus>>({
     "1": "aguardando",
     "2": "atendendo",
-    "3": "aguardando_doc",
+    "3": "finalizado",
     "4": "aguardando",
     "5": "finalizado",
   });
@@ -96,7 +96,7 @@ const Conversas = () => {
   const statusCounts = {
     aguardando: conversations.filter((c) => getConvStatus(c.id) === "aguardando").length,
     atendendo: conversations.filter((c) => getConvStatus(c.id) === "atendendo").length,
-    aguardando_doc: conversations.filter((c) => getConvStatus(c.id) === "aguardando_doc").length,
+    
     finalizado: conversations.filter((c) => getConvStatus(c.id) === "finalizado").length,
   };
 
@@ -263,7 +263,7 @@ const Conversas = () => {
                   const statusConfig = {
                     atendendo: { label: "Em Atendimento", classes: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
                     aguardando: { label: "Aguardando", classes: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
-                    aguardando_doc: { label: "Aguard. Doc.", classes: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+                    
                     finalizado: { label: "Finalizado", classes: "bg-muted text-muted-foreground border-border" },
                   };
                   const cfg = statusConfig[s] || statusConfig.aguardando;
@@ -323,9 +323,8 @@ const Conversas = () => {
                     </div>
                     <div className="py-1">
                       {([
-                        { value: "aguardando" as ConversationStatus, label: "Aguardando", color: "bg-amber-500" },
                         { value: "atendendo" as ConversationStatus, label: "Em Atendimento", color: "bg-emerald-500" },
-                        { value: "aguardando_doc" as ConversationStatus, label: "Aguard. Documento", color: "bg-blue-500" },
+                        { value: "aguardando" as ConversationStatus, label: "Aguardando", color: "bg-amber-500" },
                         { value: "finalizado" as ConversationStatus, label: "Finalizado", color: "bg-muted-foreground" },
                       ]).map((status) => {
                         const currentStatus = convStatuses[selected] || selectedConv?.atendimentoStatus;
