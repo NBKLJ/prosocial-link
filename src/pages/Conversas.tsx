@@ -343,7 +343,7 @@ const Conversas = () => {
                     )}
                   </div>
                   {/* Right: time + attendant + connection */}
-                  <div className="flex flex-col items-end flex-shrink-0 border-l border-border/50 pl-3 ml-2 gap-1 min-w-[170px]">
+                  <div className="flex flex-col items-end flex-shrink-0 pl-3 ml-2 gap-1 min-w-[170px]">
                     <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                       <Clock className="w-3 h-3" />
                       <span>{conv.time}</span>
