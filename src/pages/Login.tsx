@@ -17,6 +17,12 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const USERS = [
+    { email: "basic@email.com", password: "123456", plan: "basic" },
+    { email: "pro@email.com", password: "123456", plan: "pro" },
+    { email: "premium@email.com", password: "123456", plan: "premium" },
+  ];
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -29,9 +35,19 @@ const Login = () => {
       return;
     }
 
+    const user = USERS.find(
+      (u) => u.email === email.toLowerCase().trim() && u.password === password
+    );
+
+    if (!user) {
+      toast.error("E-mail ou senha incorretos");
+      return;
+    }
+
     setLoading(true);
     setTimeout(() => {
       localStorage.setItem("zapprobr_auth", "true");
+      localStorage.setItem("zapprobr_user", JSON.stringify({ email: user.email, plan: user.plan }));
       toast.success("Login realizado com sucesso!");
       navigate("/conversas", { replace: true });
     }, 600);
