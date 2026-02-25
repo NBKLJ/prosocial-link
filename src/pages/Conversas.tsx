@@ -6,7 +6,7 @@ import {
   Search, Check, CheckCheck, Mic, X, Send as SendIcon,
   Smile, Image, FileText, Sticker, Plus,
   Trash2, Pause, Play, CircleStop, ArrowRightLeft, ChevronDown, CircleX,
-  Phone, Filter,
+  Phone, Filter, Clock, User, MessageCircle,
 } from "lucide-react";
 import { getAudioStore } from "@/pages/DisparoAudio";
 import { getTagColor, getTagStore } from "@/lib/tagStore";
@@ -318,17 +318,18 @@ const Conversas = () => {
                     <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-primary border-2 border-card" />
                   )}
                 </div>
-                <div className="flex-1 min-w-0 flex gap-2">
+                <div className="flex-1 min-w-0 flex gap-0">
                   {/* Left: client info + tags */}
                   <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-foreground truncate block">{conv.name}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold text-foreground truncate">{conv.name}</span>
+                    </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      {conv.unread > 0 && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
+                      {conv.status === "online" && <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
                       <p className="text-xs text-muted-foreground truncate">{conv.lastMessage}</p>
-                      <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-auto">{conv.time}</span>
                     </div>
                     {(convTags[conv.id] || []).length > 0 && (
-                      <div className="flex gap-1 mt-1 flex-wrap">
+                      <div className="flex gap-1 mt-1.5 flex-wrap">
                         {(convTags[conv.id] || []).map((tag) => (
                           <span
                             key={tag}
@@ -341,23 +342,28 @@ const Conversas = () => {
                       </div>
                     )}
                   </div>
-                  {/* Right: attendant + connection */}
-                  <div className="flex flex-col items-end flex-shrink-0 ml-1 border-l border-border/50 pl-2 gap-0.5 min-w-[140px] max-w-[180px]">
+                  {/* Right: time + attendant + connection */}
+                  <div className="flex flex-col items-end flex-shrink-0 border-l border-border/50 pl-3 ml-2 gap-1 min-w-[170px]">
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <Clock className="w-3 h-3" />
+                      <span>{conv.time}</span>
+                      {conv.unread > 0 && (
+                        <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center ml-1">
+                          {conv.unread}
+                        </span>
+                      )}
+                    </div>
                     {conv.attendant && (
-                      <span className="text-[10px] text-muted-foreground truncate w-full text-right">
-                        👤 {conv.attendant}{conv.department ? ` - ${conv.department}` : ""}
-                      </span>
+                      <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <User className="w-3 h-3 text-accent-foreground" />
+                        <span className="truncate max-w-[150px]">{conv.attendant}{conv.department ? ` - ${conv.department}` : ""}</span>
+                      </div>
                     )}
                     {conv.connection && (
-                      <span className="inline-flex items-center gap-1 text-[10px] text-primary truncate w-full justify-end">
-                        <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                        {conv.connection}
-                      </span>
-                    )}
-                    {conv.unread > 0 && (
-                      <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                        {conv.unread}
-                      </span>
+                      <div className="flex items-center gap-1 text-[11px] text-primary">
+                        <MessageCircle className="w-3 h-3" />
+                        <span className="truncate max-w-[150px]">{conv.connection}</span>
+                      </div>
                     )}
                   </div>
                 </div>
