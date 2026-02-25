@@ -318,46 +318,48 @@ const Conversas = () => {
                     <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-primary border-2 border-card" />
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start">
-                    <div className="min-w-0">
-                      <span className="text-sm font-medium text-foreground truncate block">{conv.name}</span>
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">{conv.lastMessage}</p>
+                <div className="flex-1 min-w-0 flex gap-2">
+                  {/* Left: client info + tags */}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-foreground truncate block">{conv.name}</span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {conv.unread > 0 && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
+                      <p className="text-xs text-muted-foreground truncate">{conv.lastMessage}</p>
+                      <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-auto">{conv.time}</span>
                     </div>
-                    <div className="flex flex-col items-end flex-shrink-0 ml-2 gap-0.5">
-                      <span className="text-[10px] text-muted-foreground">{conv.time}</span>
-                      {conv.unread > 0 && (
-                        <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                          {conv.unread}
-                        </span>
-                      )}
-                    </div>
+                    {(convTags[conv.id] || []).length > 0 && (
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        {(convTags[conv.id] || []).map((tag) => (
+                          <span
+                            key={tag}
+                            className="text-[10px] font-medium px-1.5 py-0.5 rounded text-white"
+                            style={{ backgroundColor: getTagColor(tag) }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {/* Connection, attendant, department */}
-                  <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                  {/* Right: attendant + connection */}
+                  <div className="flex flex-col items-end flex-shrink-0 ml-1 border-l border-border/50 pl-2 gap-0.5 min-w-[140px] max-w-[180px]">
+                    {conv.attendant && (
+                      <span className="text-[10px] text-muted-foreground truncate w-full text-right">
+                        👤 {conv.attendant}{conv.department ? ` - ${conv.department}` : ""}
+                      </span>
+                    )}
                     {conv.connection && (
-                      <span className="inline-flex items-center gap-1 bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
-                        <Phone className="w-2.5 h-2.5" />
+                      <span className="inline-flex items-center gap-1 text-[10px] text-primary truncate w-full justify-end">
+                        <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
                         {conv.connection}
                       </span>
                     )}
-                    {conv.attendant && (
-                      <span className="truncate">👤 {conv.attendant} - {conv.department || "Geral"}</span>
+                    {conv.unread > 0 && (
+                      <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                        {conv.unread}
+                      </span>
                     )}
                   </div>
-                  {(convTags[conv.id] || []).length > 0 && (
-                    <div className="flex gap-1 mt-1 flex-wrap">
-                      {(convTags[conv.id] || []).map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-[10px] font-medium px-1.5 py-0.5 rounded text-white"
-                          style={{ backgroundColor: getTagColor(tag) }}
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </button>
             ))}
