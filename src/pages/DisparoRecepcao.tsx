@@ -1,8 +1,13 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
-import { MessageSquarePlus, Save, ToggleRight, Mic, Type, Upload, Plus, X, Megaphone } from "lucide-react";
+import { MessageSquarePlus, Save, ToggleRight, Mic, Type, Upload, Plus, X, Megaphone, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+const CONEXOES = [
+  { id: "1", name: "Comercial 1", number: "(11) 99999-1234" },
+  { id: "2", name: "Suporte", number: "(21) 98888-5678" },
+];
 
 type ResponseType = "text" | "audio" | "both";
 
@@ -16,6 +21,7 @@ interface AdRule {
 
 const DisparoRecepcao = () => {
   const [active, setActive] = useState(true);
+  const [selectedConexao, setSelectedConexao] = useState(CONEXOES[0].id);
   const [responseType, setResponseType] = useState<ResponseType>("text");
   const [message, setMessage] = useState(
     "Olá! Obrigado por entrar em contato. Em breve um de nossos atendentes irá te responder. 😊"
@@ -84,6 +90,22 @@ const DisparoRecepcao = () => {
 
         {active && (
           <>
+            {/* Conexão */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-foreground">Conexão</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {CONEXOES.map(c => (
+                  <button key={c.id} onClick={() => setSelectedConexao(c.id)} className={cn("glass-card rounded-xl p-4 flex items-center gap-3 transition-all", selectedConexao === c.id ? "ring-2 ring-primary bg-primary/5" : "hover:bg-muted/60")}>
+                    <Smartphone className={cn("w-5 h-5", selectedConexao === c.id ? "text-primary" : "text-muted-foreground")} />
+                    <div className="text-left">
+                      <span className={cn("text-sm font-medium block", selectedConexao === c.id ? "text-primary" : "text-foreground")}>{c.name}</span>
+                      <span className="text-xs text-muted-foreground">{c.number}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Tipo de resposta */}
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-foreground">Tipo de resposta</h3>

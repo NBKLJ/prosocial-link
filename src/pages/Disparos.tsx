@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState } from "react";
-import { Megaphone, Plus, Clock, CheckCircle2, AlertCircle, X, Type, Mic, Image, Users, Tag, Send } from "lucide-react";
+import { Megaphone, Plus, Clock, CheckCircle2, AlertCircle, X, Type, Mic, Image, Users, Tag, Send, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getTagStore, getTagColor } from "@/lib/tagStore";
@@ -11,6 +11,11 @@ import { Button } from "@/components/ui/button";
 
 type ContentType = "texto" | "audio" | "imagem";
 
+const CONEXOES = [
+  { id: "1", name: "Comercial 1", number: "(11) 99999-1234" },
+  { id: "2", name: "Suporte", number: "(21) 98888-5678" },
+];
+
 interface Disparo {
   id: string;
   title: string;
@@ -18,6 +23,7 @@ interface Disparo {
   contacts: number;
   status: string;
   date: string;
+  conexao?: string;
 }
 
 const statusConfig: Record<string, { icon: typeof CheckCircle2; label: string; class: string }> = {
@@ -39,6 +45,7 @@ const Disparos = () => {
   const [message, setMessage] = useState("");
   const [targetType, setTargetType] = useState<"todos" | "tags">("todos");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedConexao, setSelectedConexao] = useState(CONEXOES[0].id);
 
   const toggleContentType = (type: ContentType) => {
     setContentTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
@@ -54,6 +61,7 @@ const Disparos = () => {
     setMessage("");
     setTargetType("todos");
     setSelectedTags([]);
+    setSelectedConexao(CONEXOES[0].id);
   };
 
   const handleCreate = () => {
@@ -66,6 +74,7 @@ const Disparos = () => {
       contacts: targetType === "todos" ? 450 : selectedTags.length * 30,
       status: "rascunho",
       date: new Date().toLocaleDateString("pt-BR"),
+      conexao: CONEXOES.find(c => c.id === selectedConexao)?.name,
     };
     setDisparos([newDisparo, ...disparos]);
     resetForm();
@@ -146,6 +155,21 @@ const Disparos = () => {
             <DialogDescription>Crie uma nova campanha de disparo de mensagens.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Conexão de envio</label>
+              <div className="grid grid-cols-2 gap-2">
+                {CONEXOES.map(c => (
+                  <button key={c.id} onClick={() => setSelectedConexao(c.id)} className={cn("flex items-center gap-2 p-3 rounded-xl border transition-all text-left", selectedConexao === c.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60")}>
+                    <Smartphone className={cn("w-5 h-5", selectedConexao === c.id ? "text-primary" : "text-muted-foreground")} />
+                    <div>
+                      <span className={cn("text-sm font-medium block", selectedConexao === c.id ? "text-primary" : "text-foreground")}>{c.name}</span>
+                      <span className="text-xs text-muted-foreground">{c.number}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-foreground">Título da campanha</label>
               <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Promoção de Natal" className="w-full bg-muted/50 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all" />

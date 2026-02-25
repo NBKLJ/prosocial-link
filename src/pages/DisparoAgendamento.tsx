@@ -2,12 +2,17 @@ import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { getTagStore, getTagColor } from "@/lib/tagStore";
 import {
-  CalendarDays, Plus, Clock, X, Type, Mic, Image, FileText, File, Users, Tag, Trash2, Send, Upload,
+  CalendarDays, Plus, Clock, X, Type, Mic, Image, FileText, File, Users, Tag, Trash2, Send, Upload, Smartphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+const CONEXOES = [
+  { id: "1", name: "Comercial 1", number: "(11) 99999-1234" },
+  { id: "2", name: "Suporte", number: "(21) 98888-5678" },
+];
 
 type ContentType = "texto" | "audio" | "imagem" | "pdf" | "word";
 type TargetType = "todos" | "tags";
@@ -47,6 +52,7 @@ const DisparoAgendamento = () => {
   const [time, setTime] = useState("09:00");
   const [targetType, setTargetType] = useState<TargetType>("todos");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedConexao, setSelectedConexao] = useState(CONEXOES[0].id);
 
   const toggleContentType = (type: ContentType) => {
     setSelectedContentTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
@@ -64,6 +70,7 @@ const DisparoAgendamento = () => {
     setTime("09:00");
     setTargetType("todos");
     setSelectedTags([]);
+    setSelectedConexao(CONEXOES[0].id);
   };
 
   const handleSave = () => {
@@ -156,6 +163,21 @@ const DisparoAgendamento = () => {
                 <button onClick={() => { resetForm(); setShowModal(false); }} className="p-1 rounded-lg hover:bg-muted transition-colors">
                   <X className="w-5 h-5 text-muted-foreground" />
                 </button>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Conexão de envio</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {CONEXOES.map(c => (
+                    <button key={c.id} onClick={() => setSelectedConexao(c.id)} className={cn("flex items-center gap-2 p-3 rounded-xl border transition-all text-left", selectedConexao === c.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60")}>
+                      <Smartphone className={cn("w-5 h-5", selectedConexao === c.id ? "text-primary" : "text-muted-foreground")} />
+                      <div>
+                        <span className={cn("text-sm font-medium block", selectedConexao === c.id ? "text-primary" : "text-foreground")}>{c.name}</span>
+                        <span className="text-xs text-muted-foreground">{c.number}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-2">
