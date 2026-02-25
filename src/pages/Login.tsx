@@ -38,21 +38,24 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full bg-background">
       {/* Left Panel - Illustration */}
-      <div className="hidden lg:flex lg:w-[45%] bg-muted/40 relative flex-col justify-end overflow-hidden">
-        {/* Illustration centered in panel */}
-        <div className="flex-1 flex items-end justify-center px-8 pt-16">
+      <div className="hidden lg:flex lg:w-[45%] flex-col justify-center items-center relative overflow-hidden">
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] to-primary/[0.08]" />
+
+        {/* Illustration */}
+        <div className="relative z-10 flex flex-col items-center px-12 mt-auto">
           <img
             src={illustration}
             alt="Ilustração de automação de conversas"
-            className="w-[28rem] h-auto max-h-[65vh] object-contain"
+            className="w-full max-w-[420px] h-auto"
           />
         </div>
 
-        {/* Text pinned to bottom */}
-        <div className="px-10 pb-10 pt-6">
-          <h2 className="text-xl font-bold text-foreground mb-1">
+        {/* Text at bottom */}
+        <div className="relative z-10 w-full px-12 pb-12 pt-8 mt-auto">
+          <h2 className="text-lg font-bold text-foreground mb-1">
             Automatize suas conversas
           </h2>
           <p className="text-muted-foreground text-sm">
@@ -62,19 +65,19 @@ const Login = () => {
       </div>
 
       {/* Right Panel - Login Form */}
-      <div className="flex w-full lg:w-[55%] items-center justify-center bg-card p-6 sm:p-12">
-        <div className="w-full max-w-sm space-y-10">
+      <div className="flex w-full lg:w-[55%] items-center justify-center bg-card p-8 sm:p-16">
+        <div className="w-full max-w-[380px]">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="ZapPro" className="h-10 w-auto" />
-            <span className="text-xl font-bold text-foreground">
+          <div className="flex items-center gap-2.5 mb-12">
+            <img src={logo} alt="ZapProBR" className="h-9 w-auto" />
+            <span className="text-lg font-bold text-foreground">
               Zap<span className="text-primary">Pro</span>BR
             </span>
           </div>
 
           {/* Welcome text */}
-          <div className="space-y-1">
-            <h1 className="text-xl font-bold text-foreground">
+          <div className="mb-8">
+            <h1 className="text-xl font-bold text-foreground mb-1">
               Bem-Vindo de volta
             </h1>
             <p className="text-muted-foreground text-sm">
@@ -85,20 +88,24 @@ const Login = () => {
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground font-medium">E-mail</Label>
+              <Label htmlFor="email" className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">
+                E-mail
+              </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-12 bg-muted/50 border-0 text-sm"
+                className="h-12 bg-muted/40 border-0 text-sm rounded-lg"
                 autoComplete="email"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Senha</Label>
+              <Label htmlFor="password" className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">
+                Senha
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -106,7 +113,7 @@ const Login = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 bg-muted/50 border-0 pr-10 text-sm"
+                  className="h-12 bg-muted/40 border-0 pr-10 text-sm rounded-lg"
                   autoComplete="current-password"
                 />
                 <button
