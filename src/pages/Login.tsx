@@ -50,7 +50,7 @@ const Login = () => {
           <img
             src={illustration}
             alt="Ilustração de automação de conversas"
-            className="w-80 h-auto mb-10 drop-shadow-2xl"
+            className="w-[40rem] h-auto mb-10 drop-shadow-2xl"
           />
           <h2 className="text-3xl font-bold text-white mb-3">
             Automatize suas conversas.
