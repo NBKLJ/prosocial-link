@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Smartphone,
   QrCode,
@@ -89,7 +90,7 @@ const Configuracoes = () => {
         <div className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center gap-3">
           <Crown className="w-4 h-4 text-primary-foreground" />
           <span className="text-sm font-semibold text-primary-foreground">Fazer upgrade de plano</span>
-          <button className="ml-2 px-3 py-1 rounded-lg bg-primary-foreground/20 text-primary-foreground text-xs font-bold hover:bg-primary-foreground/30 transition-colors backdrop-blur-sm">
+          <button onClick={() => toast.info("Redirecionando para planos...")} className="ml-2 px-3 py-1 rounded-lg bg-primary-foreground/20 text-primary-foreground text-xs font-bold hover:bg-primary-foreground/30 transition-colors backdrop-blur-sm">
             Upgrade
           </button>
         </div>
@@ -134,7 +135,7 @@ const Configuracoes = () => {
                   <p className="text-sm text-muted-foreground mt-0.5">Até 2 conexões • Disparos ilimitados • CRM básico</p>
                 </div>
               </div>
-              <button className="px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">Upgrade</button>
+              <button onClick={() => toast.info("Redirecionando para planos...")} className="px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">Upgrade</button>
             </div>
 
             <div className="mt-6 grid grid-cols-3 gap-4">
@@ -220,11 +221,11 @@ const Configuracoes = () => {
                   {/* Botão */}
                   <div className="px-5 pb-3 flex justify-center">
                     {c.status === "connected" ? (
-                      <button className="px-6 py-2 rounded-md border border-border text-xs font-bold text-foreground uppercase tracking-widest hover:bg-muted transition-colors">
+                      <button onClick={() => toast.success(`Conexão "${c.name}" desconectada`)} className="px-6 py-2 rounded-md border border-border text-xs font-bold text-foreground uppercase tracking-widest hover:bg-muted transition-colors">
                         Desconectar
                       </button>
                     ) : (
-                      <button className="px-6 py-2 rounded-md bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest hover:bg-primary/90 transition-colors flex items-center gap-2">
+                      <button onClick={() => toast.success(`Conexão "${c.name}" conectada`)} className="px-6 py-2 rounded-md bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest hover:bg-primary/90 transition-colors flex items-center gap-2">
                         <QrCode className="w-3.5 h-3.5" /> Conectar
                       </button>
                     )}

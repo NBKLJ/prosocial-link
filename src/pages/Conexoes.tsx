@@ -1,6 +1,7 @@
 import { AppLayout } from "@/components/AppLayout";
 import { Link2, Smartphone, QrCode, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const conexoes = [
   { id: "1", number: "(11) 99999-1234", name: "Comercial 1", status: "connected" as const },
@@ -40,7 +41,7 @@ const Conexoes = () => (
               </span>
             </div>
             {c.status === "disconnected" && (
-              <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
+              <button onClick={() => toast.info("Escaneie o QR Code no WhatsApp")} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
                 <QrCode className="w-4 h-4" />
                 Reconectar via QR Code
               </button>

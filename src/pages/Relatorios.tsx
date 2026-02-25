@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { TrendingUp, Download } from "lucide-react";
+import { toast } from "sonner";
 
 const Relatorios = () => (
   <AppLayout>
@@ -9,7 +10,7 @@ const Relatorios = () => (
           <h1 className="text-2xl font-bold text-foreground">Relatórios</h1>
           <p className="text-muted-foreground mt-1">Análise detalhada de desempenho</p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm hover:bg-secondary/80 transition-colors">
+        <button onClick={() => toast.success("Relatório exportado")} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm hover:bg-secondary/80 transition-colors">
           <Download className="w-4 h-4" />
           Exportar
         </button>

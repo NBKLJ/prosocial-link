@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { MessageSquarePlus, Save, ToggleRight, Mic, Type, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type ResponseType = "text" | "audio" | "both";
 
@@ -155,7 +156,7 @@ const DisparoRecepcao = () => {
 
             {/* Salvar */}
             <div className="flex justify-end">
-              <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors">
+              <button onClick={() => toast.success("Configuração salva com sucesso")} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors">
                 <Save className="w-4 h-4" />
                 Salvar Configuração
               </button>

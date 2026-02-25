@@ -1,6 +1,7 @@
 import { AppLayout } from "@/components/AppLayout";
 import { CalendarDays, Plus, Clock, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 const agendamentos = [
   { id: "1", contact: "João Silva", message: "Lembrete de reunião", date: "24/02/2026", time: "09:00", type: "Texto" },
@@ -8,19 +9,21 @@ const agendamentos = [
   { id: "3", contact: "Maria Souza", message: "Follow-up proposta", date: "26/02/2026", time: "10:30", type: "Áudio" },
 ];
 
-const Agendamentos = () => (
-  <AppLayout>
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Agendamentos</h1>
-          <p className="text-muted-foreground mt-1">Fila de disparos agendados</p>
+const Agendamentos = () => {
+  const navigate = useNavigate();
+  return (
+    <AppLayout>
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Agendamentos</h1>
+            <p className="text-muted-foreground mt-1">Fila de disparos agendados</p>
+          </div>
+          <button onClick={() => navigate("/disparos/agendamento")} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors">
+            <Plus className="w-4 h-4" />
+            Novo Agendamento
+          </button>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors">
-          <Plus className="w-4 h-4" />
-          Novo Agendamento
-        </button>
-      </div>
 
       <div className="grid gap-3">
         {agendamentos.map((a) => (
@@ -48,6 +51,7 @@ const Agendamentos = () => (
       </div>
     </div>
   </AppLayout>
-);
+  );
+};
 
 export default Agendamentos;
