@@ -30,15 +30,17 @@ interface Conversation {
   atendimentoStatus: ConversationStatus;
   tags: string[];
   attendant?: string;
+  connection?: string;
+  department?: string;
 }
 
 const conversations: Conversation[] = [
-  { id: "1", name: "João Silva", phone: "(11) 99999-1234", lastMessage: "Olá, gostaria de saber mais sobre o produto...", time: "10:32", unread: 3, avatar: "JS", status: "online", atendimentoStatus: "aguardando", tags: ["Lead Quente"], attendant: "Ana" },
-  { id: "2", name: "Maria Souza", phone: "(21) 98888-5678", lastMessage: "Ok, pode enviar o orçamento", time: "09:15", unread: 0, avatar: "MS", status: "online", atendimentoStatus: "atendendo", tags: [], attendant: "Carlos" },
-  { id: "3", name: "Carlos Lima", phone: "(31) 97777-9012", lastMessage: "Perfeito, vamos fechar então!", time: "Ontem", unread: 0, avatar: "CL", status: "offline", atendimentoStatus: "finalizado", tags: ["Cliente VIP"], attendant: "Ana" },
-  { id: "4", name: "Ana Costa", phone: "(41) 96666-3456", lastMessage: "Preciso de mais informações", time: "Ontem", unread: 1, avatar: "AC", status: "offline", atendimentoStatus: "aguardando", tags: [], attendant: "Julia" },
-  { id: "5", name: "Pedro Rocha", phone: "(51) 95555-7890", lastMessage: "Obrigado pelo atendimento!", time: "23/02", unread: 0, avatar: "PR", status: "offline", atendimentoStatus: "finalizado", tags: ["Parceiro"], attendant: "Carlos" },
-  { id: "6", name: "Fernanda Dias", phone: "(11) 91234-5678", lastMessage: "Quero saber sobre o plano Enterprise", time: "10:05", unread: 2, avatar: "FD", status: "online", atendimentoStatus: "atendendo", tags: ["Lead Quente", "Cliente VIP"], attendant: "Ana" },
+  { id: "1", name: "João Silva", phone: "(11) 99999-1234", lastMessage: "Olá, gostaria de saber mais sobre o produto...", time: "10:32", unread: 3, avatar: "JS", status: "online", atendimentoStatus: "aguardando", tags: ["Lead Quente"], attendant: "Ana", connection: "Comercial 1", department: "Vendas" },
+  { id: "2", name: "Maria Souza", phone: "(21) 98888-5678", lastMessage: "Ok, pode enviar o orçamento", time: "09:15", unread: 0, avatar: "MS", status: "online", atendimentoStatus: "atendendo", tags: [], attendant: "Carlos", connection: "Suporte", department: "Suporte" },
+  { id: "3", name: "Carlos Lima", phone: "(31) 97777-9012", lastMessage: "Perfeito, vamos fechar então!", time: "Ontem", unread: 0, avatar: "CL", status: "offline", atendimentoStatus: "finalizado", tags: ["Cliente VIP"], attendant: "Ana", connection: "Comercial 1", department: "Vendas" },
+  { id: "4", name: "Ana Costa", phone: "(41) 96666-3456", lastMessage: "Preciso de mais informações", time: "Ontem", unread: 1, avatar: "AC", status: "offline", atendimentoStatus: "aguardando", tags: [], attendant: "Julia", connection: "Comercial 1", department: "Financeiro" },
+  { id: "5", name: "Pedro Rocha", phone: "(51) 95555-7890", lastMessage: "Obrigado pelo atendimento!", time: "23/02", unread: 0, avatar: "PR", status: "offline", atendimentoStatus: "finalizado", tags: ["Parceiro"], attendant: "Carlos", connection: "Suporte", department: "Suporte" },
+  { id: "6", name: "Fernanda Dias", phone: "(11) 91234-5678", lastMessage: "Quero saber sobre o plano Enterprise", time: "10:05", unread: 2, avatar: "FD", status: "online", atendimentoStatus: "atendendo", tags: ["Lead Quente", "Cliente VIP"], attendant: "Ana", connection: "Comercial 1", department: "Gestão" },
 ];
 
 const statusFilters: { value: ConversationStatus | "todos"; label: string }[] = [
@@ -304,11 +306,11 @@ const Conversas = () => {
                 key={conv.id}
                 onClick={() => setSelected(conv.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left",
+                  "w-full flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left border-b border-border/40",
                   selected === conv.id && "bg-muted"
                 )}
               >
-                <div className="relative flex-shrink-0">
+                <div className="relative flex-shrink-0 mt-0.5">
                   <div className="w-10 h-10 rounded-full gradient-green flex items-center justify-center text-xs font-bold text-primary-foreground">
                     {conv.avatar}
                   </div>
@@ -317,11 +319,32 @@ const Conversas = () => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-sm font-medium text-foreground truncate">{conv.name}</span>
-                    <span className="text-xs text-muted-foreground flex-shrink-0">{conv.time}</span>
+                  <div className="flex justify-between items-start">
+                    <div className="min-w-0">
+                      <span className="text-sm font-medium text-foreground truncate block">{conv.name}</span>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{conv.lastMessage}</p>
+                    </div>
+                    <div className="flex flex-col items-end flex-shrink-0 ml-2 gap-0.5">
+                      <span className="text-[10px] text-muted-foreground">{conv.time}</span>
+                      {conv.unread > 0 && (
+                        <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                          {conv.unread}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">{conv.lastMessage}</p>
+                  {/* Connection, attendant, department */}
+                  <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                    {conv.connection && (
+                      <span className="inline-flex items-center gap-1 bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
+                        <Phone className="w-2.5 h-2.5" />
+                        {conv.connection}
+                      </span>
+                    )}
+                    {conv.attendant && (
+                      <span className="truncate">👤 {conv.attendant} - {conv.department || "Geral"}</span>
+                    )}
+                  </div>
                   {(convTags[conv.id] || []).length > 0 && (
                     <div className="flex gap-1 mt-1 flex-wrap">
                       {(convTags[conv.id] || []).map((tag) => (
@@ -336,11 +359,6 @@ const Conversas = () => {
                     </div>
                   )}
                 </div>
-                {conv.unread > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-                    {conv.unread}
-                  </span>
-                )}
               </button>
             ))}
           </div>
