@@ -1,4 +1,4 @@
-import { DragEvent } from "react";
+import { DragEvent, useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Plus, MoreHorizontal, Users } from "lucide-react";
 import { Pipeline, Lead } from "./types";
@@ -21,31 +21,36 @@ interface PipelineColumnProps {
   onColumnDragOver?: (e: DragEvent, columnId: string) => void;
   onColumnDrop?: (e: DragEvent, columnId: string) => void;
   onColumnDragEnd?: () => void;
+  onAddLead?: () => void;
+  onRenameColumn?: () => void;
+  onClearColumn?: () => void;
+  onDeleteColumn?: () => void;
 }
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value);
 
 export function PipelineColumn({
-  pipeline,
-  dragOverColumn,
-  draggedFromColumn,
-  onDragStart,
-  onDragEnd,
-  onDragEnter,
-  onDragLeave,
-  onDragOver,
-  onDrop,
-  isDraggingColumn,
-  isColumnDropTarget,
-  onColumnDragStart,
-  onColumnDragOver,
-  onColumnDrop,
-  onColumnDragEnd,
+  pipeline, dragOverColumn, draggedFromColumn,
+  onDragStart, onDragEnd, onDragEnter, onDragLeave, onDragOver, onDrop,
+  isDraggingColumn, isColumnDropTarget,
+  onColumnDragStart, onColumnDragOver, onColumnDrop, onColumnDragEnd,
+  onAddLead, onRenameColumn, onClearColumn, onDeleteColumn,
 }: PipelineColumnProps) {
   const colors = stageColors[pipeline.id] || stageColors.qualified;
   const totalValue = pipeline.leads.reduce((sum, l) => sum + l.value, 0);
   const isDropTarget = dragOverColumn === pipeline.id && draggedFromColumn !== pipeline.id;
+
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false);
+    };
+    if (showMenu) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showMenu]);
 
   return (
     <div
@@ -59,26 +64,15 @@ export function PipelineColumn({
       )}
       onDragEnter={(e) => onDragEnter(e, pipeline.id)}
       onDragLeave={(e) => onDragLeave(e, pipeline.id)}
-      onDragOver={(e) => {
-        onDragOver(e);
-        onColumnDragOver?.(e, pipeline.id);
-      }}
-      onDrop={(e) => {
-        onDrop(e, pipeline.id);
-        onColumnDrop?.(e, pipeline.id);
-      }}
+      onDragOver={(e) => { onDragOver(e); onColumnDragOver?.(e, pipeline.id); }}
+      onDrop={(e) => { onDrop(e, pipeline.id); onColumnDrop?.(e, pipeline.id); }}
     >
-      {/* Column top bar */}
       <div className={cn("h-1 rounded-t-xl", colors.bar)} />
 
-      {/* Header - draggable for column reorder */}
       <div
         className="px-3 py-3 cursor-grab active:cursor-grabbing"
         draggable
-        onDragStart={(e) => {
-          e.stopPropagation();
-          onColumnDragStart?.(e, pipeline.id);
-        }}
+        onDragStart={(e) => { e.stopPropagation(); onColumnDragStart?.(e, pipeline.id); }}
         onDragEnd={() => onColumnDragEnd?.()}
       >
         <div className="flex items-center justify-between mb-1">
@@ -88,30 +82,30 @@ export function PipelineColumn({
               {pipeline.leads.length}
             </span>
           </div>
-          <div className="flex items-center gap-0.5">
-            <button className="p-1.5 rounded-md hover:bg-muted transition-colors">
+          <div className="flex items-center gap-0.5 relative" ref={menuRef}>
+            <button onClick={onAddLead} className="p-1.5 rounded-md hover:bg-muted transition-colors">
               <Plus className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
-            <button className="p-1.5 rounded-md hover:bg-muted transition-colors">
+            <button onClick={() => setShowMenu(!showMenu)} className="p-1.5 rounded-md hover:bg-muted transition-colors">
               <MoreHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
+
+            {showMenu && (
+              <div className="absolute top-full right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-20 w-40 py-1">
+                <button onClick={() => { setShowMenu(false); onRenameColumn?.(); }} className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors">Renomear</button>
+                <button onClick={() => { setShowMenu(false); onClearColumn?.(); }} className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors">Limpar leads</button>
+                <button onClick={() => { setShowMenu(false); onDeleteColumn?.(); }} className="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-muted transition-colors">Excluir estágio</button>
+              </div>
+            )}
           </div>
         </div>
         <p className="text-[11px] text-muted-foreground font-medium">{formatCurrency(totalValue)}</p>
       </div>
 
-      {/* Cards */}
       <div className="flex-1 overflow-y-auto space-y-2 px-2 pb-3 min-h-[80px] transition-all duration-300">
         {pipeline.leads.map((lead) => (
-          <LeadCard
-            key={lead.id}
-            lead={lead}
-            columnId={pipeline.id}
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
-          />
+          <LeadCard key={lead.id} lead={lead} columnId={pipeline.id} onDragStart={onDragStart} onDragEnd={onDragEnd} />
         ))}
-
         {pipeline.leads.length === 0 && (
           <div className="flex flex-col items-center justify-center py-10 text-muted-foreground/40">
             <Users className="w-6 h-6 mb-1.5" />

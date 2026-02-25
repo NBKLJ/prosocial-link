@@ -1,6 +1,7 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import {
   Search, Check, CheckCheck, Mic, X, Send as SendIcon,
   Smile, Image, FileText, Sticker, Plus,
@@ -49,7 +50,7 @@ interface Message {
   read: boolean;
 }
 
-const messages: Message[] = [
+const initialMessages: Message[] = [
   { id: "1", text: "Olá, boa tarde!", time: "10:20", sent: false, read: true },
   { id: "2", text: "Boa tarde! Como posso ajudar?", time: "10:22", sent: true, read: true },
   { id: "3", text: "Gostaria de saber mais sobre o produto Premium", time: "10:25", sent: false, read: true },
@@ -59,6 +60,8 @@ const messages: Message[] = [
 
 const Conversas = () => {
   const [selected, setSelected] = useState<string>("1");
+  const [chatMessages, setChatMessages] = useState<Message[]>(initialMessages);
+  const [messageText, setMessageText] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ConversationStatus | "todos">("atendendo");
   const [showAudioList, setShowAudioList] = useState(false);
@@ -142,6 +145,22 @@ const Conversas = () => {
     const m = Math.floor(s / 60);
     const sec = s % 60;
     return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const sendMessage = () => {
+    if (!messageText.trim()) return;
+    const now = new Date();
+    const time = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+    setChatMessages((prev) => [
+      ...prev,
+      { id: Date.now().toString(), text: messageText, time, sent: true, read: false },
+    ]);
+    setMessageText("");
+  };
+
+  const insertEmoji = (emoji: string) => {
+    setMessageText((prev) => prev + emoji);
+    setShowEmoji(false);
   };
 
   return (
@@ -308,6 +327,7 @@ const Conversas = () => {
                 <button
                   onClick={() => {
                     setConvStatuses({ ...convStatuses, [selected]: "finalizado" });
+                    toast.success("Conversa finalizada");
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors"
                 >
@@ -361,7 +381,7 @@ const Conversas = () => {
                       {availableUsers.map((user) => (
                         <button
                           key={user}
-                          onClick={() => setShowTransferMenu(false)}
+                          onClick={() => { setShowTransferMenu(false); toast.success(`Conversa transferida para ${user}`); }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm text-foreground hover:bg-muted/50 transition-colors"
                         >
                           <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
@@ -393,7 +413,7 @@ const Conversas = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-muted/30">
-            {messages.map((msg) => (
+            {chatMessages.map((msg) => (
               <div key={msg.id} className={cn("flex", msg.sent ? "justify-end" : "justify-start")}>
                 <div className={cn(
                   "max-w-[65%] px-4 py-2.5 rounded-2xl text-sm",
@@ -456,7 +476,7 @@ const Conversas = () => {
                   ].map((item) => (
                     <button
                       key={item.label}
-                      onClick={() => { item.action?.(); if (!item.action) setShowAttach(false); }}
+                      onClick={() => { if (item.action) { item.action(); } else { setShowAttach(false); toast.info("Funcionalidade em breve"); } }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors text-left"
                     >
                       <item.icon className={cn("w-5 h-5", item.color)} />
@@ -480,7 +500,7 @@ const Conversas = () => {
                   {["😀","😂","😍","🥰","😎","🤩","😢","😡","👍","👎","❤️","🔥","🎉","✅","⭐","💬","📞","📸","🎁","💰","🙏","👋","🤝","💪","🏆","🎯","📌","⏰","📅","💡","🚀","✨"].map((emoji) => (
                     <button
                       key={emoji}
-                      onClick={() => setShowEmoji(false)}
+                      onClick={() => insertEmoji(emoji)}
                       className="w-8 h-8 flex items-center justify-center text-lg hover:bg-muted rounded transition-colors"
                     >
                       {emoji}
@@ -580,6 +600,9 @@ const Conversas = () => {
                 <input
                   type="text"
                   placeholder="Digite uma mensagem..."
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                   className="flex-1 bg-muted rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
                 />
 
@@ -591,7 +614,10 @@ const Conversas = () => {
                   <Mic className="w-5 h-5" />
                 </button>
 
-                <button className="p-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0">
+                <button
+                  onClick={sendMessage}
+                  className="p-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0"
+                >
                   <SendIcon className="w-5 h-5" />
                 </button>
               </div>

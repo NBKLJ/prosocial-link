@@ -40,10 +40,12 @@ export function ClientDetailPanel({
     { id: "1", text: "Cliente interessado no plano Premium. Retornar na sexta.", date: "24/02/2026" },
   ]);
   const [newNote, setNewNote] = useState("");
-  const [scheduledMessages] = useState([
+  const [scheduledMessages, setScheduledMessages] = useState([
     { id: "1", text: "Lembrete de follow-up", date: "25/02/2026 14:00" },
     { id: "2", text: "Enviar proposta comercial", date: "27/02/2026 10:00" },
   ]);
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({ text: "", date: "", time: "" });
 
   // CRM form state
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
@@ -397,10 +399,60 @@ export function ClientDetailPanel({
                     </div>
                   </div>
                 ))}
-                <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-colors">
+                <button
+                  onClick={() => setShowScheduleForm(!showScheduleForm)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-colors"
+                >
                   <Plus className="w-4 h-4" />
                   Agendar mensagem
                 </button>
+
+                {showScheduleForm && (
+                  <div className="mt-2 p-3 rounded-lg border border-border bg-card space-y-2 animate-in slide-in-from-top-2 duration-200">
+                    <input
+                      value={scheduleForm.text}
+                      onChange={(e) => setScheduleForm({ ...scheduleForm, text: e.target.value })}
+                      placeholder="Mensagem..."
+                      className="w-full bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={scheduleForm.date}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })}
+                        className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      />
+                      <input
+                        type="time"
+                        value={scheduleForm.time}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, time: e.target.value })}
+                        className="w-28 bg-muted rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowScheduleForm(false)}
+                        className="flex-1 px-3 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (!scheduleForm.text.trim()) return;
+                          const dateStr = scheduleForm.date
+                            ? new Date(scheduleForm.date + "T" + (scheduleForm.time || "12:00")).toLocaleDateString("pt-BR") + " " + (scheduleForm.time || "12:00")
+                            : new Date().toLocaleDateString("pt-BR") + " 12:00";
+                          setScheduledMessages((prev) => [...prev, { id: Date.now().toString(), text: scheduleForm.text, date: dateStr }]);
+                          setScheduleForm({ text: "", date: "", time: "" });
+                          setShowScheduleForm(false);
+                        }}
+                        className="flex-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        Agendar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
 
