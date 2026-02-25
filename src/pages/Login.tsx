@@ -40,74 +40,73 @@ const Login = () => {
   return (
     <div className="flex min-h-screen w-full">
       {/* Left Panel - Illustration */}
-      <div className="hidden lg:flex lg:w-1/2 gradient-green relative flex-col items-center justify-center p-12 overflow-hidden">
-        {/* Decorative circles */}
-        <div className="absolute top-[-80px] left-[-80px] w-64 h-64 rounded-full bg-white/5" />
-        <div className="absolute bottom-[-60px] right-[-60px] w-48 h-48 rounded-full bg-white/5" />
-        <div className="absolute top-1/4 right-10 w-20 h-20 rounded-full bg-white/5" />
-
-        <div className="relative z-10 flex flex-col items-center text-center max-w-md">
+      <div className="hidden lg:flex lg:w-[45%] bg-muted/40 relative flex-col justify-end overflow-hidden">
+        {/* Illustration centered in panel */}
+        <div className="flex-1 flex items-end justify-center px-8 pt-16">
           <img
             src={illustration}
             alt="Ilustração de automação de conversas"
-            className="w-[40rem] h-auto mb-10 drop-shadow-2xl"
+            className="w-[28rem] h-auto max-h-[65vh] object-contain"
           />
-          <h2 className="text-3xl font-bold text-white mb-3">
-            Automatize suas conversas.
+        </div>
+
+        {/* Text pinned to bottom */}
+        <div className="px-10 pb-10 pt-6">
+          <h2 className="text-xl font-bold text-foreground mb-1">
+            Automatize suas conversas
           </h2>
-          <p className="text-white/80 text-lg leading-relaxed">
-            Gerencie leads, envie mensagens em massa e acompanhe resultados em tempo real.
+          <p className="text-muted-foreground text-sm">
+            Gerencie mensagens, contatos e campanhas em um só lugar.
           </p>
         </div>
       </div>
 
       {/* Right Panel - Login Form */}
-      <div className="flex w-full lg:w-1/2 items-center justify-center bg-card p-6 sm:p-12">
-        <div className="w-full max-w-md space-y-8">
+      <div className="flex w-full lg:w-[55%] items-center justify-center bg-card p-6 sm:p-12">
+        <div className="w-full max-w-sm space-y-10">
           {/* Logo */}
-          <div className="flex flex-col items-center space-y-2">
-            <img src={logo} alt="ZapProBR" className="h-14 w-auto" />
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="ZapPro" className="h-10 w-auto" />
+            <span className="text-xl font-bold text-foreground">
+              Zap<span className="text-primary">Pro</span>
+            </span>
           </div>
 
           {/* Welcome text */}
-          <div className="text-center space-y-1">
-            <h1 className="text-2xl font-bold text-foreground">
+          <div className="space-y-1">
+            <h1 className="text-xl font-bold text-foreground">
               Bem-Vindo de volta
             </h1>
             <p className="text-muted-foreground text-sm">
-              Faça login para acessar sua conta
+              Entre com suas credenciais para acessar o painel.
             </p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">E-mail</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  autoComplete="email"
-                />
-              </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground font-medium">E-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-12 bg-muted/50 border-0 text-sm"
+                autoComplete="email"
+              />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground">Senha</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Senha</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10"
+                  className="h-12 bg-muted/50 border-0 pr-10 text-sm"
                   autoComplete="current-password"
                 />
                 <button
@@ -142,23 +141,12 @@ const Login = () => {
 
             <Button
               type="submit"
-              className="w-full h-11 text-base font-semibold"
+              className="w-full h-12 text-base font-semibold rounded-lg"
               disabled={loading}
             >
               {loading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Não tem uma conta?{" "}
-            <button
-              type="button"
-              onClick={() => toast.info("Funcionalidade em breve")}
-              className="text-primary font-medium hover:underline"
-            >
-              Criar conta
-            </button>
-          </p>
         </div>
       </div>
     </div>
