@@ -12,6 +12,7 @@ import {
 import {
   Tag, StickyNote, BarChart3, CalendarClock, Check, Plus, X,
   Send as SendIcon, ChevronRight, DollarSign, Mail, Building2, Percent,
+  Type, Mic, Image, Upload,
 } from "lucide-react";
 
 interface Note {
@@ -19,6 +20,8 @@ interface Note {
   text: string;
   date: string;
 }
+
+type ScheduleContentType = "texto" | "audio" | "imagem";
 
 interface ClientDetailPanelProps {
   open: boolean;
@@ -46,6 +49,9 @@ export function ClientDetailPanel({
   ]);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [scheduleForm, setScheduleForm] = useState({ text: "", date: "", time: "" });
+  const [scheduleContentTypes, setScheduleContentTypes] = useState<ScheduleContentType[]>(["texto"]);
+  const [scheduleAudioFile, setScheduleAudioFile] = useState<string | null>(null);
+  const [scheduleImageFile, setScheduleImageFile] = useState<string | null>(null);
 
   // CRM form state
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
@@ -60,7 +66,6 @@ export function ClientDetailPanel({
 
   const stages = initialPipelines.map((p) => ({ id: p.id, title: p.title }));
 
-  // Sync CRM stage when panel opens
   useEffect(() => {
     if (open && contact) {
       const existingLead = findLeadByName(contact.name);
@@ -102,10 +107,8 @@ export function ClientDetailPanel({
 
   const handleSaveToPipeline = () => {
     if (!selectedStage || !contact) return;
-
     const existingLead = findLeadByName(contact.name);
     const leadId = existingLead?.id || `conv-${Date.now()}`;
-
     const lead = {
       id: leadId,
       name: contact.name,
@@ -117,7 +120,6 @@ export function ClientDetailPanel({
       tag: crmForm.tag || undefined,
       lastContact: "Agora",
     };
-
     upsertLeadToStage(selectedStage, lead);
     setShowCrmForm(false);
     onCrmUpdate?.();
@@ -134,11 +136,23 @@ export function ClientDetailPanel({
     }
   };
 
+  const toggleScheduleContentType = (type: ScheduleContentType) => {
+    setScheduleContentTypes(prev =>
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
+  };
+
   if (!contact) return null;
 
   const currentStageName = selectedStage
     ? stages.find((s) => s.id === selectedStage)?.title
     : null;
+
+  const scheduleContentOptions: { value: ScheduleContentType; label: string; icon: typeof Type }[] = [
+    { value: "texto", label: "Texto", icon: Type },
+    { value: "audio", label: "Áudio", icon: Mic },
+    { value: "imagem", label: "Imagem", icon: Image },
+  ];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -195,16 +209,12 @@ export function ClientDetailPanel({
                   <h3 className="text-sm font-semibold text-foreground">Classificação CRM</h3>
                 </div>
                 {currentStageName && (
-                  <button
-                    onClick={handleRemoveFromPipeline}
-                    className="text-[11px] text-muted-foreground hover:text-destructive transition-colors"
-                  >
+                  <button onClick={handleRemoveFromPipeline} className="text-[11px] text-muted-foreground hover:text-destructive transition-colors">
                     Remover
                   </button>
                 )}
               </div>
 
-              {/* Current stage indicator */}
               {currentStageName && !showCrmForm && (
                 <div className="mb-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
                   <div className="flex items-center justify-between">
@@ -212,10 +222,7 @@ export function ClientDetailPanel({
                       <p className="text-xs text-muted-foreground">Estágio atual</p>
                       <p className="text-sm font-semibold text-primary">{currentStageName}</p>
                     </div>
-                    <button
-                      onClick={() => setShowCrmForm(true)}
-                      className="text-xs text-primary hover:underline"
-                    >
+                    <button onClick={() => setShowCrmForm(true)} className="text-xs text-primary hover:underline">
                       Editar
                     </button>
                   </div>
@@ -228,7 +235,6 @@ export function ClientDetailPanel({
                 </div>
               )}
 
-              {/* Stage selector */}
               <div className="space-y-1">
                 {stages.map((stage) => {
                   const colors = stageColors[stage.id];
@@ -245,99 +251,42 @@ export function ClientDetailPanel({
                       )}
                     >
                       <div className="flex items-center gap-2.5">
-                        <div className={cn(
-                          "w-2.5 h-2.5 rounded-full",
-                          isSelected ? (colors?.bar || "bg-primary") : "bg-muted-foreground/20"
-                        )} />
-                        <span className={isSelected ? (colors?.text || "text-primary") : ""}>
-                          {stage.title}
-                        </span>
+                        <div className={cn("w-2.5 h-2.5 rounded-full", isSelected ? (colors?.bar || "bg-primary") : "bg-muted-foreground/20")} />
+                        <span className={isSelected ? (colors?.text || "text-primary") : ""}>{stage.title}</span>
                       </div>
-                      <ChevronRight className={cn(
-                        "w-3.5 h-3.5 transition-opacity",
-                        isSelected ? "opacity-60" : "opacity-0 group-hover:opacity-40"
-                      )} />
+                      <ChevronRight className={cn("w-3.5 h-3.5 transition-opacity", isSelected ? "opacity-60" : "opacity-0 group-hover:opacity-40")} />
                     </button>
                   );
                 })}
               </div>
 
-              {/* CRM Form */}
               {showCrmForm && selectedStage && (
                 <div className="mt-3 p-4 rounded-lg border border-border bg-card space-y-3 animate-in slide-in-from-top-2 duration-200">
                   <p className="text-xs font-semibold text-foreground uppercase tracking-wider">
                     Dados do Lead — {stages.find((s) => s.id === selectedStage)?.title}
                   </p>
-
                   <div className="space-y-2.5">
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                      <input
-                        type="number"
-                        placeholder="Valor do orçamento"
-                        value={crmForm.value}
-                        onChange={(e) => setCrmForm({ ...crmForm, value: e.target.value })}
-                        className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                      />
+                      <input type="number" placeholder="Valor do orçamento" value={crmForm.value} onChange={(e) => setCrmForm({ ...crmForm, value: e.target.value })} className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
                     </div>
-
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                      <input
-                        type="email"
-                        placeholder="E-mail"
-                        value={crmForm.email}
-                        onChange={(e) => setCrmForm({ ...crmForm, email: e.target.value })}
-                        className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                      />
+                      <input type="email" placeholder="E-mail" value={crmForm.email} onChange={(e) => setCrmForm({ ...crmForm, email: e.target.value })} className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
                     </div>
-
                     <div className="relative">
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                      <input
-                        type="text"
-                        placeholder="Empresa"
-                        value={crmForm.company}
-                        onChange={(e) => setCrmForm({ ...crmForm, company: e.target.value })}
-                        className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                      />
+                      <input type="text" placeholder="Empresa" value={crmForm.company} onChange={(e) => setCrmForm({ ...crmForm, company: e.target.value })} className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
                     </div>
-
                     <div className="relative">
                       <Percent className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        placeholder="Probabilidade de fechamento (%)"
-                        value={crmForm.probability}
-                        onChange={(e) => setCrmForm({ ...crmForm, probability: e.target.value })}
-                        className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                      />
+                      <input type="number" min="0" max="100" placeholder="Probabilidade (%)" value={crmForm.probability} onChange={(e) => setCrmForm({ ...crmForm, probability: e.target.value })} className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
                     </div>
-
-                    <input
-                      type="text"
-                      placeholder="Etiqueta do lead (ex: Quente, VIP)"
-                      value={crmForm.tag}
-                      onChange={(e) => setCrmForm({ ...crmForm, tag: e.target.value })}
-                      className="w-full bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                    />
+                    <input type="text" placeholder="Etiqueta do lead (ex: Quente, VIP)" value={crmForm.tag} onChange={(e) => setCrmForm({ ...crmForm, tag: e.target.value })} className="w-full bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
                   </div>
-
                   <div className="flex gap-2 pt-1">
-                    <button
-                      onClick={() => setShowCrmForm(false)}
-                      className="flex-1 px-3 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={handleSaveToPipeline}
-                      className="flex-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-                    >
-                      Salvar no Pipeline
-                    </button>
+                    <button onClick={() => setShowCrmForm(false)} className="flex-1 px-3 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors">Cancelar</button>
+                    <button onClick={handleSaveToPipeline} className="flex-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">Salvar no Pipeline</button>
                   </div>
                 </div>
               )}
@@ -350,17 +299,8 @@ export function ClientDetailPanel({
                 <h3 className="text-sm font-semibold text-foreground">Anotações</h3>
               </div>
               <div className="flex gap-2 mb-3">
-                <input
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addNote()}
-                  placeholder="Nova anotação..."
-                  className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                />
-                <button
-                  onClick={addNote}
-                  className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                >
+                <input value={newNote} onChange={(e) => setNewNote(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addNote()} placeholder="Nova anotação..." className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
+                <button onClick={addNote} className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
                   <Plus className="w-4 h-4" />
                 </button>
               </div>
@@ -369,10 +309,7 @@ export function ClientDetailPanel({
                   <div key={note.id} className="bg-muted/50 rounded-lg px-3 py-2.5 group relative">
                     <p className="text-sm text-foreground pr-6">{note.text}</p>
                     <span className="text-[10px] text-muted-foreground mt-1 block">{note.date}</span>
-                    <button
-                      onClick={() => removeNote(note.id)}
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted transition-all"
-                    >
+                    <button onClick={() => removeNote(note.id)} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted transition-all">
                       <X className="w-3 h-3 text-muted-foreground" />
                     </button>
                   </div>
@@ -400,7 +337,12 @@ export function ClientDetailPanel({
                   </div>
                 ))}
                 <button
-                  onClick={() => setShowScheduleForm(!showScheduleForm)}
+                  onClick={() => {
+                    setShowScheduleForm(!showScheduleForm);
+                    setScheduleContentTypes(["texto"]);
+                    setScheduleAudioFile(null);
+                    setScheduleImageFile(null);
+                  }}
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
@@ -408,42 +350,96 @@ export function ClientDetailPanel({
                 </button>
 
                 {showScheduleForm && (
-                  <div className="mt-2 p-3 rounded-lg border border-border bg-card space-y-2 animate-in slide-in-from-top-2 duration-200">
-                    <input
-                      value={scheduleForm.text}
-                      onChange={(e) => setScheduleForm({ ...scheduleForm, text: e.target.value })}
-                      placeholder="Mensagem..."
-                      className="w-full bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                    />
+                  <div className="mt-2 p-3 rounded-lg border border-border bg-card space-y-3 animate-in slide-in-from-top-2 duration-200">
+                    {/* Content type toggles */}
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Tipo de conteúdo</p>
+                      <div className="flex gap-1.5">
+                        {scheduleContentOptions.map((opt) => {
+                          const isActive = scheduleContentTypes.includes(opt.value);
+                          return (
+                            <button
+                              key={opt.value}
+                              onClick={() => toggleScheduleContentType(opt.value)}
+                              className={cn(
+                                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all",
+                                isActive
+                                  ? "border-primary bg-primary/5 text-primary"
+                                  : "border-border text-muted-foreground hover:bg-muted"
+                              )}
+                            >
+                              <opt.icon className="w-3.5 h-3.5" />
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Text input */}
+                    {scheduleContentTypes.includes("texto") && (
+                      <input
+                        value={scheduleForm.text}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, text: e.target.value })}
+                        placeholder="Mensagem..."
+                        className="w-full bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      />
+                    )}
+
+                    {/* Audio upload */}
+                    {scheduleContentTypes.includes("audio") && (
+                      <div>
+                        {scheduleAudioFile ? (
+                          <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
+                            <Mic className="w-4 h-4 text-primary" />
+                            <span className="text-xs text-foreground flex-1">{scheduleAudioFile}</span>
+                            <button onClick={() => setScheduleAudioFile(null)} className="text-xs text-destructive">Remover</button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setScheduleAudioFile("audio-agendado.mp3")} className="w-full flex items-center gap-2 py-3 border border-dashed border-border rounded-lg hover:border-primary/30 hover:bg-primary/5 transition-all justify-center">
+                            <Upload className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">Enviar áudio</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Image upload */}
+                    {scheduleContentTypes.includes("imagem") && (
+                      <div>
+                        {scheduleImageFile ? (
+                          <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
+                            <Image className="w-4 h-4 text-primary" />
+                            <span className="text-xs text-foreground flex-1">{scheduleImageFile}</span>
+                            <button onClick={() => setScheduleImageFile(null)} className="text-xs text-destructive">Remover</button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setScheduleImageFile("imagem-agendada.jpg")} className="w-full flex items-center gap-2 py-3 border border-dashed border-border rounded-lg hover:border-primary/30 hover:bg-primary/5 transition-all justify-center">
+                            <Upload className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">Enviar imagem</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex gap-2">
-                      <input
-                        type="date"
-                        value={scheduleForm.date}
-                        onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })}
-                        className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                      />
-                      <input
-                        type="time"
-                        value={scheduleForm.time}
-                        onChange={(e) => setScheduleForm({ ...scheduleForm, time: e.target.value })}
-                        className="w-28 bg-muted rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                      />
+                      <input type="date" value={scheduleForm.date} onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })} className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
+                      <input type="time" value={scheduleForm.time} onChange={(e) => setScheduleForm({ ...scheduleForm, time: e.target.value })} className="w-28 bg-muted rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
                     </div>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => setShowScheduleForm(false)}
-                        className="flex-1 px-3 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
-                      >
-                        Cancelar
-                      </button>
+                      <button onClick={() => setShowScheduleForm(false)} className="flex-1 px-3 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors">Cancelar</button>
                       <button
                         onClick={() => {
-                          if (!scheduleForm.text.trim()) return;
+                          if (!scheduleForm.text.trim() && scheduleContentTypes.includes("texto")) return;
                           const dateStr = scheduleForm.date
                             ? new Date(scheduleForm.date + "T" + (scheduleForm.time || "12:00")).toLocaleDateString("pt-BR") + " " + (scheduleForm.time || "12:00")
                             : new Date().toLocaleDateString("pt-BR") + " 12:00";
-                          setScheduledMessages((prev) => [...prev, { id: Date.now().toString(), text: scheduleForm.text, date: dateStr }]);
+                          const types = scheduleContentTypes.join(" + ");
+                          setScheduledMessages((prev) => [...prev, { id: Date.now().toString(), text: `[${types}] ${scheduleForm.text || "Mídia agendada"}`, date: dateStr }]);
                           setScheduleForm({ text: "", date: "", time: "" });
+                          setScheduleContentTypes(["texto"]);
+                          setScheduleAudioFile(null);
+                          setScheduleImageFile(null);
                           setShowScheduleForm(false);
                         }}
                         className="flex-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"

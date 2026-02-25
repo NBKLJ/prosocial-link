@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import logo from "@/assets/logo.png";
 import illustration from "@/assets/login-illustration.png";
 
@@ -35,9 +35,18 @@ const Login = () => {
       return;
     }
 
-    const user = USERS.find(
+    // Check fixed users
+    let user = USERS.find(
       (u) => u.email === email.toLowerCase().trim() && u.password === password
     );
+
+    // Check dynamic users from Configuracoes
+    if (!user) {
+      const dynamicUsers = JSON.parse(localStorage.getItem("zapprobr_dynamic_users") || "[]");
+      user = dynamicUsers.find(
+        (u: any) => u.email === email.toLowerCase().trim() && u.password === password
+      );
+    }
 
     if (!user) {
       toast.error("E-mail ou senha incorretos");
@@ -47,7 +56,7 @@ const Login = () => {
     setLoading(true);
     setTimeout(() => {
       localStorage.setItem("zapprobr_auth", "true");
-      localStorage.setItem("zapprobr_user", JSON.stringify({ email: user.email, plan: user.plan }));
+      localStorage.setItem("zapprobr_user", JSON.stringify({ email: user!.email, plan: user!.plan }));
       toast.success("Login realizado com sucesso!");
       navigate("/conversas", { replace: true });
     }, 600);
@@ -55,118 +64,51 @@ const Login = () => {
 
   return (
     <div className="flex min-h-screen w-full bg-background">
-      {/* Left Panel - Illustration */}
+      {/* Left Panel */}
       <div className="hidden lg:flex lg:w-[45%] flex-col justify-center items-center relative overflow-hidden">
-        {/* Subtle gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] to-primary/[0.08]" />
-
-        {/* Illustration */}
         <div className="relative z-10 flex flex-col items-center px-12 mt-auto">
-          <img
-            src={illustration}
-            alt="Ilustração de automação de conversas"
-            className="w-full max-w-[420px] h-auto"
-          />
+          <img src={illustration} alt="Ilustração de automação de conversas" className="w-full max-w-[420px] h-auto" />
         </div>
-
-        {/* Text at bottom */}
         <div className="relative z-10 w-full px-12 pb-12 pt-8 mt-auto">
-          <h2 className="text-lg font-bold text-foreground mb-1">
-            Automatize suas conversas
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Gerencie mensagens, contatos e campanhas em um só lugar.
-          </p>
+          <h2 className="text-lg font-bold text-foreground mb-1">Automatize suas conversas</h2>
+          <p className="text-muted-foreground text-sm">Gerencie mensagens, contatos e campanhas em um só lugar.</p>
         </div>
       </div>
 
-      {/* Right Panel - Login Form */}
+      {/* Right Panel */}
       <div className="flex w-full lg:w-[55%] items-center justify-center bg-card p-8 sm:p-16">
         <div className="w-full max-w-[380px]">
-          {/* Logo */}
           <div className="flex items-center gap-2.5 mb-12">
             <img src={logo} alt="ZapProBR" className="h-9 w-auto" />
-            <span className="text-lg font-bold text-foreground">
-              Zap<span className="text-primary">Pro</span>BR
-            </span>
+            <span className="text-lg font-bold text-foreground">Zap<span className="text-primary">Pro</span>BR</span>
           </div>
-
-          {/* Welcome text */}
           <div className="mb-8">
-            <h1 className="text-xl font-bold text-foreground mb-1">
-              Bem-Vindo de volta
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Entre com suas credenciais para acessar o painel.
-            </p>
+            <h1 className="text-xl font-bold text-foreground mb-1">Bem-Vindo de volta</h1>
+            <p className="text-muted-foreground text-sm">Entre com suas credenciais para acessar o painel.</p>
           </div>
-
-          {/* Form */}
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">
-                E-mail
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-12 bg-muted/40 border-0 text-sm rounded-lg"
-                autoComplete="email"
-              />
+              <Label htmlFor="email" className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">E-mail</Label>
+              <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 bg-muted/40 border-0 text-sm rounded-lg" autoComplete="email" />
             </div>
-
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">
-                Senha
-              </Label>
+              <Label htmlFor="password" className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Senha</Label>
               <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 bg-muted/40 border-0 pr-10 text-sm rounded-lg"
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
+                <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 bg-muted/40 border-0 pr-10 text-sm rounded-lg" autoComplete="current-password" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
-
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="remember"
-                  checked={remember}
-                  onCheckedChange={(checked) => setRemember(checked === true)}
-                />
-                <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
-                  Lembrar-me
-                </Label>
+                <Checkbox id="remember" checked={remember} onCheckedChange={(checked) => setRemember(checked === true)} />
+                <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">Lembrar-me</Label>
               </div>
-              <button
-                type="button"
-                onClick={() => toast.info("Funcionalidade em breve")}
-                className="text-sm text-primary hover:underline"
-              >
-                Esqueceu a senha?
-              </button>
+              <button type="button" onClick={() => toast.info("Funcionalidade em breve")} className="text-sm text-primary hover:underline">Esqueceu a senha?</button>
             </div>
-
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-semibold rounded-lg"
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full h-12 text-base font-semibold rounded-lg" disabled={loading}>
               {loading ? "Entrando..." : "Entrar"}
             </Button>
           </form>

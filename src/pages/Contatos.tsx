@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState } from "react";
-import { Search, Plus, Filter, Upload, Download, Trash2, Pencil, Phone, Mail, Calendar, ChevronUp, ChevronDown } from "lucide-react";
+import { Search, Plus, Filter, Upload, Download, Trash2, Pencil, Phone, Mail, Calendar, ChevronUp, ChevronDown, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getTagStore, getTagColor } from "@/lib/tagStore";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router-dom";
 
 interface Contato {
   id: string;
@@ -51,6 +52,7 @@ type SortField = "name" | "createdAt";
 type SortDir = "asc" | "desc";
 
 const Contatos = () => {
+  const navigate = useNavigate();
   const [contatos, setContatos] = useState<Contato[]>(contatosMock);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -58,8 +60,6 @@ const Contatos = () => {
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [showFilter, setShowFilter] = useState(false);
-
-  // Modal state
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", phone: "", email: "", tags: "" });
@@ -132,6 +132,11 @@ const Contatos = () => {
     a.click();
     URL.revokeObjectURL(url);
     toast.success("Contatos exportados");
+  };
+
+  const startConversation = (c: Contato) => {
+    navigate("/conversas", { state: { contactName: c.name, contactPhone: c.phone } });
+    toast.success(`Abrindo conversa com ${c.name}`);
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -232,7 +237,12 @@ const Contatos = () => {
                   </td>
                   <td className="px-4 py-3.5"><div className="flex items-center gap-1.5 text-sm text-muted-foreground"><Calendar className="w-3.5 h-3.5" />{c.createdAt}</div></td>
                   <td className="px-4 py-3.5 text-right">
-                    <button onClick={() => openEditModal(c)} className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><Pencil className="w-4 h-4" /></button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button onClick={() => startConversation(c)} className="p-1.5 rounded-md hover:bg-primary/10 transition-colors text-muted-foreground hover:text-primary" title="Iniciar conversa">
+                        <MessageCircle className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => openEditModal(c)} className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"><Pencil className="w-4 h-4" /></button>
+                    </div>
                   </td>
                 </tr>
               ))}

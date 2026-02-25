@@ -6,10 +6,15 @@ import {
   Search, Check, CheckCheck, Mic, X, Send as SendIcon,
   Smile, Image, FileText, Sticker, Plus,
   Trash2, Pause, Play, CircleStop, ArrowRightLeft, ChevronDown, CircleX,
+  Phone, Filter,
 } from "lucide-react";
 import { getAudioStore } from "@/pages/DisparoAudio";
-import { getTagColor } from "@/lib/tagStore";
+import { getTagColor, getTagStore } from "@/lib/tagStore";
 import { ClientDetailPanel } from "@/components/conversas/ClientDetailPanel";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 type ConversationStatus = "aguardando" | "atendendo" | "finalizado";
 
@@ -24,14 +29,16 @@ interface Conversation {
   status: "online" | "offline";
   atendimentoStatus: ConversationStatus;
   tags: string[];
+  attendant?: string;
 }
 
 const conversations: Conversation[] = [
-  { id: "1", name: "João Silva", phone: "(11) 99999-1234", lastMessage: "Olá, gostaria de saber mais sobre o produto...", time: "10:32", unread: 3, avatar: "JS", status: "online", atendimentoStatus: "aguardando", tags: ["Lead Quente"] },
-  { id: "2", name: "Maria Souza", phone: "(21) 98888-5678", lastMessage: "Ok, pode enviar o orçamento", time: "09:15", unread: 0, avatar: "MS", status: "online", atendimentoStatus: "atendendo", tags: [] },
-  { id: "3", name: "Carlos Lima", phone: "(31) 97777-9012", lastMessage: "Perfeito, vamos fechar então!", time: "Ontem", unread: 0, avatar: "CL", status: "offline", atendimentoStatus: "finalizado", tags: ["Cliente VIP"] },
-  { id: "4", name: "Ana Costa", phone: "(41) 96666-3456", lastMessage: "Preciso de mais informações", time: "Ontem", unread: 1, avatar: "AC", status: "offline", atendimentoStatus: "aguardando", tags: [] },
-  { id: "5", name: "Pedro Rocha", phone: "(51) 95555-7890", lastMessage: "Obrigado pelo atendimento!", time: "23/02", unread: 0, avatar: "PR", status: "offline", atendimentoStatus: "finalizado", tags: ["Parceiro"] },
+  { id: "1", name: "João Silva", phone: "(11) 99999-1234", lastMessage: "Olá, gostaria de saber mais sobre o produto...", time: "10:32", unread: 3, avatar: "JS", status: "online", atendimentoStatus: "aguardando", tags: ["Lead Quente"], attendant: "Ana" },
+  { id: "2", name: "Maria Souza", phone: "(21) 98888-5678", lastMessage: "Ok, pode enviar o orçamento", time: "09:15", unread: 0, avatar: "MS", status: "online", atendimentoStatus: "atendendo", tags: [], attendant: "Carlos" },
+  { id: "3", name: "Carlos Lima", phone: "(31) 97777-9012", lastMessage: "Perfeito, vamos fechar então!", time: "Ontem", unread: 0, avatar: "CL", status: "offline", atendimentoStatus: "finalizado", tags: ["Cliente VIP"], attendant: "Ana" },
+  { id: "4", name: "Ana Costa", phone: "(41) 96666-3456", lastMessage: "Preciso de mais informações", time: "Ontem", unread: 1, avatar: "AC", status: "offline", atendimentoStatus: "aguardando", tags: [], attendant: "Julia" },
+  { id: "5", name: "Pedro Rocha", phone: "(51) 95555-7890", lastMessage: "Obrigado pelo atendimento!", time: "23/02", unread: 0, avatar: "PR", status: "offline", atendimentoStatus: "finalizado", tags: ["Parceiro"], attendant: "Carlos" },
+  { id: "6", name: "Fernanda Dias", phone: "(11) 91234-5678", lastMessage: "Quero saber sobre o plano Enterprise", time: "10:05", unread: 2, avatar: "FD", status: "online", atendimentoStatus: "atendendo", tags: ["Lead Quente", "Cliente VIP"], attendant: "Ana" },
 ];
 
 const statusFilters: { value: ConversationStatus | "todos"; label: string }[] = [
@@ -40,7 +47,15 @@ const statusFilters: { value: ConversationStatus | "todos"; label: string }[] = 
   { value: "finalizado", label: "Finalizado" },
 ];
 
-const availableUsers = ["Ana (Suporte)", "Carlos (Vendas)", "Julia (Financeiro)"];
+const availableAttendants = ["Ana", "Carlos", "Julia"];
+const departments = ["Gestão", "Suporte", "Vendas", "Financeiro"];
+const connections = ["Comercial", "Suporte"];
+const departmentUsers: Record<string, string[]> = {
+  "Gestão": ["Admin Principal"],
+  "Suporte": ["Ana Paula"],
+  "Vendas": ["Carlos Silva"],
+  "Financeiro": ["Julia Mendes"],
+};
 
 interface Message {
   id: string;
@@ -48,9 +63,11 @@ interface Message {
   time: string;
   sent: boolean;
   read: boolean;
+  isSystem?: boolean;
 }
 
 const initialMessages: Message[] = [
+  { id: "sys-0", text: "Atendimento iniciado", time: "10:19", sent: false, read: true, isSystem: true },
   { id: "1", text: "Olá, boa tarde!", time: "10:20", sent: false, read: true },
   { id: "2", text: "Boa tarde! Como posso ajudar?", time: "10:22", sent: true, read: true },
   { id: "3", text: "Gostaria de saber mais sobre o produto Premium", time: "10:25", sent: false, read: true },
@@ -71,13 +88,14 @@ const Conversas = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [recordTime, setRecordTime] = useState(0);
   const recordInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [showTagMenu, setShowTagMenu] = useState(false); // kept for closing other menus
-  const [showTransferMenu, setShowTransferMenu] = useState(false);
+  const [showTagMenu, setShowTagMenu] = useState(false);
+  const [showTransferDialog, setShowTransferDialog] = useState(false);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [convTags, setConvTags] = useState<Record<string, string[]>>({
     "1": ["Lead Quente"],
     "3": ["Cliente VIP"],
     "5": ["Parceiro"],
+    "6": ["Lead Quente", "Cliente VIP"],
   });
   const [convStatuses, setConvStatuses] = useState<Record<string, ConversationStatus>>({
     "1": "aguardando",
@@ -85,22 +103,37 @@ const Conversas = () => {
     "3": "finalizado",
     "4": "aguardando",
     "5": "finalizado",
+    "6": "atendendo",
   });
   const [showClientPanel, setShowClientPanel] = useState(false);
+  const [removedConvIds, setRemovedConvIds] = useState<string[]>([]);
+
+  // Advanced filters
+  const [showAdvFilters, setShowAdvFilters] = useState(false);
+  const [filterAttendant, setFilterAttendant] = useState<string | null>(null);
+  const [filterTag, setFilterTag] = useState<string | null>(null);
+
+  // Transfer dialog state
+  const [transferConnection, setTransferConnection] = useState(connections[0]);
+  const [transferDept, setTransferDept] = useState(departments[0]);
+  const [transferUser, setTransferUser] = useState("");
 
   const getConvStatus = (id: string) => convStatuses[id] || conversations.find((c) => c.id === id)?.atendimentoStatus || "aguardando";
 
-  const filtered = conversations.filter((c) => {
+  const activeConversations = conversations.filter(c => !removedConvIds.includes(c.id));
+
+  const filtered = activeConversations.filter((c) => {
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "todos" || getConvStatus(c.id) === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesAttendant = !filterAttendant || c.attendant === filterAttendant;
+    const matchesTag = !filterTag || (convTags[c.id] || c.tags || []).includes(filterTag);
+    return matchesSearch && matchesStatus && matchesAttendant && matchesTag;
   });
 
   const statusCounts = {
-    aguardando: conversations.filter((c) => getConvStatus(c.id) === "aguardando").length,
-    atendendo: conversations.filter((c) => getConvStatus(c.id) === "atendendo").length,
-    
-    finalizado: conversations.filter((c) => getConvStatus(c.id) === "finalizado").length,
+    aguardando: activeConversations.filter((c) => getConvStatus(c.id) === "aguardando").length,
+    atendendo: activeConversations.filter((c) => getConvStatus(c.id) === "atendendo").length,
+    finalizado: activeConversations.filter((c) => getConvStatus(c.id) === "finalizado").length,
   };
 
   const toggleConvTag = (tag: string) => {
@@ -111,7 +144,16 @@ const Conversas = () => {
     setConvTags({ ...convTags, [selected]: updated });
   };
 
-  const selectedConv = conversations.find((c) => c.id === selected);
+  const selectedConv = activeConversations.find((c) => c.id === selected);
+
+  const addSystemMessage = (text: string) => {
+    const now = new Date();
+    const time = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+    setChatMessages((prev) => [
+      ...prev,
+      { id: `sys-${Date.now()}`, text, time, sent: false, read: true, isSystem: true },
+    ]);
+  };
 
   const startRecording = () => {
     setIsRecording(true);
@@ -163,13 +205,38 @@ const Conversas = () => {
     setShowEmoji(false);
   };
 
+  const handleTransfer = () => {
+    if (!transferUser) {
+      toast.error("Selecione um usuário");
+      return;
+    }
+    addSystemMessage(`Conversa transferida para ${transferUser} (${transferDept})`);
+    toast.success(`Conversa transferida para ${transferUser}`);
+    setRemovedConvIds([...removedConvIds, selected]);
+    setShowTransferDialog(false);
+    // Select next available conversation
+    const remaining = activeConversations.filter(c => c.id !== selected);
+    if (remaining.length > 0) setSelected(remaining[0].id);
+  };
+
   return (
     <AppLayout fullHeight>
       <div className="animate-fade-in h-full flex overflow-hidden border-l border-border">
         {/* Contacts List */}
         <div className="w-[340px] border-r border-border flex flex-col bg-card">
           <div className="p-4 border-b border-border space-y-3">
-            <h2 className="text-lg font-semibold text-foreground">Conversas</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground">Conversas</h2>
+              <button
+                onClick={() => setShowAdvFilters(!showAdvFilters)}
+                className={cn(
+                  "p-1.5 rounded-lg transition-colors",
+                  showAdvFilters ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <Filter className="w-4 h-4" />
+              </button>
+            </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
@@ -180,6 +247,30 @@ const Conversas = () => {
                 className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
               />
             </div>
+
+            {/* Advanced filters */}
+            {showAdvFilters && (
+              <div className="space-y-2 pt-1">
+                <div className="flex gap-2">
+                  <select
+                    value={filterAttendant || ""}
+                    onChange={(e) => setFilterAttendant(e.target.value || null)}
+                    className="flex-1 bg-muted rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  >
+                    <option value="">Todos atendentes</option>
+                    {availableAttendants.map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                  <select
+                    value={filterTag || ""}
+                    onChange={(e) => setFilterTag(e.target.value || null)}
+                    className="flex-1 bg-muted rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  >
+                    <option value="">Todas tags</option>
+                    {getTagStore().map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
 
             {/* Status filters */}
             <div className="flex gap-1.5">
@@ -231,7 +322,6 @@ const Conversas = () => {
                     <span className="text-xs text-muted-foreground flex-shrink-0">{conv.time}</span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate mt-0.5">{conv.lastMessage}</p>
-                  {/* Tags inline */}
                   {(convTags[conv.id] || []).length > 0 && (
                     <div className="flex gap-1 mt-1 flex-wrap">
                       {(convTags[conv.id] || []).map((tag) => (
@@ -260,7 +350,6 @@ const Conversas = () => {
         <div className="flex-1 flex flex-col">
           {/* Chat header */}
           <div className="border-b border-border">
-            {/* Main header row */}
             <div className="flex items-center justify-between px-5 py-3">
               <div className="flex items-center gap-3 min-w-0">
                 <button onClick={() => setShowClientPanel(true)} className="flex-shrink-0">
@@ -272,17 +361,15 @@ const Conversas = () => {
                   <p className="text-sm font-semibold text-foreground truncate">{selectedConv?.name || "Selecione"}</p>
                   <p className="text-xs text-muted-foreground truncate">
                     {selectedConv?.phone}
-                    {selectedConv && <span className="text-muted-foreground/60"> • Atendente</span>}
+                    {selectedConv && <span className="text-muted-foreground/60"> • {selectedConv.attendant || "Atendente"}</span>}
                   </p>
                 </button>
 
-                {/* Status badge */}
                 {selectedConv && (() => {
                   const s = getConvStatus(selected);
                   const statusConfig = {
                     atendendo: { label: "Em Atendimento", classes: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
                     aguardando: { label: "Aguardando", classes: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
-                    
                     finalizado: { label: "Finalizado", classes: "bg-muted text-muted-foreground border-border" },
                   };
                   const cfg = statusConfig[s] || statusConfig.aguardando;
@@ -295,15 +382,28 @@ const Conversas = () => {
               </div>
 
               <div className="flex items-center gap-2 flex-shrink-0 relative">
+                {/* WhatsApp Call */}
+                <button
+                  onClick={() => {
+                    if (selectedConv) {
+                      const num = selectedConv.phone.replace(/\D/g, "");
+                      window.open(`https://wa.me/55${num}`, "_blank");
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                >
+                  <Phone className="w-4 h-4" />
+                </button>
+
                 {/* Transfer */}
                 <button
-                  onClick={() => { setShowTransferMenu(!showTransferMenu); setShowStatusMenu(false); setShowTagMenu(false); }}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors",
-                    showTransferMenu
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-border text-foreground hover:bg-muted"
-                  )}
+                  onClick={() => {
+                    setTransferConnection(connections[0]);
+                    setTransferDept(departments[0]);
+                    setTransferUser(departmentUsers[departments[0]]?.[0] || "");
+                    setShowTransferDialog(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
                 >
                   <ArrowRightLeft className="w-4 h-4" />
                   Transferir
@@ -311,7 +411,7 @@ const Conversas = () => {
 
                 {/* Status dropdown button */}
                 <button
-                  onClick={() => { setShowStatusMenu(!showStatusMenu); setShowTransferMenu(false); setShowTagMenu(false); }}
+                  onClick={() => { setShowStatusMenu(!showStatusMenu); setShowTagMenu(false); }}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors",
                     showStatusMenu
@@ -327,6 +427,7 @@ const Conversas = () => {
                 <button
                   onClick={() => {
                     setConvStatuses({ ...convStatuses, [selected]: "finalizado" });
+                    addSystemMessage("Atendimento finalizado");
                     toast.success("Conversa finalizada");
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors"
@@ -353,8 +454,12 @@ const Conversas = () => {
                           <button
                             key={status.value}
                             onClick={() => {
+                              const prev = convStatuses[selected] || selectedConv?.atendimentoStatus || "aguardando";
                               setConvStatuses({ ...convStatuses, [selected]: status.value });
                               setShowStatusMenu(false);
+                              if (prev !== status.value) {
+                                addSystemMessage(`Status alterado para "${status.label}"`);
+                              }
                             }}
                             className={cn(
                               "w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors",
@@ -367,29 +472,6 @@ const Conversas = () => {
                           </button>
                         );
                       })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Transfer dropdown */}
-                {showTransferMenu && (
-                  <div className="absolute top-full right-0 mt-2 bg-card border border-border rounded-xl shadow-lg z-20 w-56">
-                    <div className="px-4 py-3 border-b border-border">
-                      <span className="text-sm font-semibold text-foreground">Transferir para</span>
-                    </div>
-                    <div className="py-1">
-                      {availableUsers.map((user) => (
-                        <button
-                          key={user}
-                          onClick={() => { setShowTransferMenu(false); toast.success(`Conversa transferida para ${user}`); }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm text-foreground hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
-                            {user.charAt(0)}
-                          </div>
-                          {user}
-                        </button>
-                      ))}
                     </div>
                   </div>
                 )}
@@ -413,22 +495,33 @@ const Conversas = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-muted/30">
-            {chatMessages.map((msg) => (
-              <div key={msg.id} className={cn("flex", msg.sent ? "justify-end" : "justify-start")}>
-                <div className={cn(
-                  "max-w-[65%] px-4 py-2.5 rounded-2xl text-sm",
-                  msg.sent
-                    ? "bg-primary text-primary-foreground rounded-br-md"
-                    : "bg-muted text-foreground rounded-bl-md"
-                )}>
-                  <p>{msg.text}</p>
-                  <div className={cn("flex items-center justify-end gap-1 mt-1", msg.sent ? "text-primary-foreground/70" : "text-muted-foreground")}>
-                    <span className="text-[10px]">{msg.time}</span>
-                    {msg.sent && (msg.read ? <CheckCheck className="w-3 h-3" /> : <Check className="w-3 h-3" />)}
+            {chatMessages.map((msg) => {
+              if (msg.isSystem) {
+                return (
+                  <div key={msg.id} className="flex justify-center">
+                    <span className="text-[11px] text-muted-foreground bg-muted/80 px-3 py-1 rounded-full font-medium">
+                      {msg.text} • {msg.time}
+                    </span>
+                  </div>
+                );
+              }
+              return (
+                <div key={msg.id} className={cn("flex", msg.sent ? "justify-end" : "justify-start")}>
+                  <div className={cn(
+                    "max-w-[65%] px-4 py-2.5 rounded-2xl text-sm",
+                    msg.sent
+                      ? "bg-primary text-primary-foreground rounded-br-md"
+                      : "bg-muted text-foreground rounded-bl-md"
+                  )}>
+                    <p>{msg.text}</p>
+                    <div className={cn("flex items-center justify-end gap-1 mt-1", msg.sent ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                      <span className="text-[10px]">{msg.time}</span>
+                      {msg.sent && (msg.read ? <CheckCheck className="w-3 h-3" /> : <Check className="w-3 h-3" />)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="px-5 py-3 border-t border-border relative">
@@ -511,92 +604,46 @@ const Conversas = () => {
             )}
 
             {isRecording ? (
-              /* ===== RECORDING BAR ===== */
               <div className="flex gap-2 items-center">
-                {/* Cancelar label */}
                 <span className="text-xs text-muted-foreground mr-1 cursor-pointer hover:text-foreground transition-colors" onClick={stopRecording}>Cancelar</span>
-
-                {/* Delete */}
-                <button
-                  onClick={stopRecording}
-                  className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive transition-colors flex-shrink-0"
-                  title="Descartar"
-                >
+                <button onClick={stopRecording} className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive transition-colors flex-shrink-0" title="Descartar">
                   <Trash2 className="w-4 h-4" />
                 </button>
-
-                {/* Red dot + timer */}
                 <div className="flex items-center gap-2 px-3">
                   <div className={cn("w-2.5 h-2.5 rounded-full bg-destructive", !isPaused && "animate-pulse")} />
                   <span className="text-sm font-mono font-semibold text-foreground min-w-[36px]">{formatRecordTime(recordTime)}</span>
                 </div>
-
-                {/* Waveform visualization */}
                 <div className="flex-1 flex items-center justify-center gap-[3px] h-8 overflow-hidden">
                   {Array.from({ length: 30 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={cn("w-[3px] rounded-full bg-muted-foreground/40 transition-all", !isPaused && "animate-pulse")}
-                      style={{
-                        height: `${Math.max(4, Math.random() * 24 + 4)}px`,
-                        animationDelay: `${i * 50}ms`,
-                      }}
-                    />
+                    <div key={i} className={cn("w-[3px] rounded-full bg-muted-foreground/40 transition-all", !isPaused && "animate-pulse")} style={{ height: `${Math.max(4, Math.random() * 24 + 4)}px`, animationDelay: `${i * 50}ms` }} />
                   ))}
                 </div>
-
-                {/* Pause / Resume */}
-                <button
-                  onClick={isPaused ? resumeRecording : pauseRecording}
-                  className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors flex-shrink-0"
-                  title={isPaused ? "Continuar" : "Pausar"}
-                >
+                <button onClick={isPaused ? resumeRecording : pauseRecording} className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors flex-shrink-0" title={isPaused ? "Continuar" : "Pausar"}>
                   {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                 </button>
-
-                {/* Stop */}
-                <button
-                  onClick={stopRecording}
-                  className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors flex-shrink-0"
-                  title="Parar"
-                >
+                <button onClick={stopRecording} className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors flex-shrink-0" title="Parar">
                   <CircleStop className="w-4 h-4" />
                 </button>
-
-                {/* Send */}
-                <button
-                  onClick={stopRecording}
-                  className="w-10 h-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center flex-shrink-0"
-                  title="Enviar áudio"
-                >
+                <button onClick={stopRecording} className="w-10 h-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center flex-shrink-0" title="Enviar áudio">
                   <SendIcon className="w-5 h-5" />
                 </button>
               </div>
             ) : (
-              /* ===== NORMAL INPUT BAR ===== */
               <div className="flex gap-2 items-center">
                 <button
                   onClick={() => { setShowAttach(!showAttach); setShowEmoji(false); setShowAudioList(false); }}
-                  className={cn(
-                    "p-2.5 rounded-lg transition-colors flex-shrink-0",
-                    showAttach ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
+                  className={cn("p-2.5 rounded-lg transition-colors flex-shrink-0", showAttach ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
                   title="Anexar"
                 >
                   <Plus className="w-5 h-5" />
                 </button>
-
                 <button
                   onClick={() => { setShowEmoji(!showEmoji); setShowAttach(false); setShowAudioList(false); }}
-                  className={cn(
-                    "p-2.5 rounded-lg transition-colors flex-shrink-0",
-                    showEmoji ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
+                  className={cn("p-2.5 rounded-lg transition-colors flex-shrink-0", showEmoji ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
                   title="Emoji"
                 >
                   <Smile className="w-5 h-5" />
                 </button>
-
                 <input
                   type="text"
                   placeholder="Digite uma mensagem..."
@@ -605,19 +652,10 @@ const Conversas = () => {
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                   className="flex-1 bg-muted rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
                 />
-
-                <button
-                  onClick={startRecording}
-                  className="p-2.5 rounded-lg transition-colors flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                  title="Gravar áudio"
-                >
+                <button onClick={startRecording} className="p-2.5 rounded-lg transition-colors flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted" title="Gravar áudio">
                   <Mic className="w-5 h-5" />
                 </button>
-
-                <button
-                  onClick={sendMessage}
-                  className="p-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0"
-                >
+                <button onClick={sendMessage} className="p-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0">
                   <SendIcon className="w-5 h-5" />
                 </button>
               </div>
@@ -634,6 +672,56 @@ const Conversas = () => {
           onToggleTag={toggleConvTag}
         />
       </div>
+
+      {/* Transfer Dialog */}
+      <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Transferir Conversa</DialogTitle>
+            <DialogDescription>Selecione o destino para transferir esta conversa.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Conexão</label>
+              <select
+                value={transferConnection}
+                onChange={(e) => setTransferConnection(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {connections.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Departamento</label>
+              <select
+                value={transferDept}
+                onChange={(e) => {
+                  setTransferDept(e.target.value);
+                  setTransferUser(departmentUsers[e.target.value]?.[0] || "");
+                }}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {departments.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Usuário</label>
+              <select
+                value={transferUser}
+                onChange={(e) => setTransferUser(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">Selecione um usuário</option>
+                {(departmentUsers[transferDept] || []).map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTransferDialog(false)}>Cancelar</Button>
+            <Button onClick={handleTransfer} disabled={!transferUser}>Transferir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };
