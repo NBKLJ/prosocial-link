@@ -13,9 +13,10 @@ import {
   Clock,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
+import { toast } from "sonner";
 
 interface SubItem {
   title: string;
@@ -33,10 +34,10 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { title: "Conversas", url: "/conversas", icon: MessageCircle, count: 12 },
+  { title: "Conversas", url: "/conversas", icon: MessageCircle, count: 6 },
   { title: "CRM", url: "/crm", icon: BarChart3 },
   {
-    title: "Disparos", url: "/disparos", icon: Megaphone, count: 3, expandable: true,
+    title: "Disparos", url: "/disparos", icon: Megaphone, expandable: true,
     subItems: [
       { title: "Disparo de Mensagens", url: "/disparos", icon: Send },
       { title: "Recepção Automática", url: "/disparos/recepcao", icon: MessageSquarePlus },
@@ -49,6 +50,7 @@ const menuItems: MenuItem[] = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
@@ -59,6 +61,17 @@ export function AppSidebar() {
   const toggleExpand = (title: string) => {
     setExpandedMenus((prev) => ({ ...prev, [title]: !prev[title] }));
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem("zapprobr_auth");
+    localStorage.removeItem("zapprobr_user");
+    toast.success("Logout realizado");
+    navigate("/login", { replace: true });
+  };
+
+  // Get current user plan from localStorage
+  const userDataStr = localStorage.getItem("zapprobr_user");
+  const userData = userDataStr ? JSON.parse(userDataStr) : { email: "usuario@email.com", plan: "basic" };
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-[260px] flex flex-col bg-[hsl(var(--sidebar-background))] border-r border-[hsl(var(--sidebar-border))]">
@@ -117,7 +130,7 @@ export function AppSidebar() {
                     </span>
                   )}
                 </NavLink>
-                {hasSubItems && (
+                {hasSubItems && !isExpanded && (
                   <button
                     onClick={(e) => {
                       e.preventDefault();
@@ -125,14 +138,19 @@ export function AppSidebar() {
                     }}
                     className="p-2 rounded-lg hover:bg-[hsl(var(--sidebar-accent))] transition-colors"
                   >
-                    <ChevronDown className={cn(
-                      "w-4 h-4 text-[hsl(var(--sidebar-foreground))]/50 transition-transform duration-200",
-                      isExpanded && "rotate-180"
-                    )} />
+                    <ChevronDown className="w-4 h-4 text-[hsl(var(--sidebar-foreground))]/50 transition-transform duration-200" />
                   </button>
                 )}
-                {item.expandable && !hasSubItems && (
-                  <ChevronDown className="w-4 h-4 text-[hsl(var(--sidebar-foreground))]/50 mr-2" />
+                {hasSubItems && isExpanded && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleExpand(item.title);
+                    }}
+                    className="p-2 rounded-lg hover:bg-[hsl(var(--sidebar-accent))] transition-colors"
+                  >
+                    <ChevronDown className="w-4 h-4 text-[hsl(var(--sidebar-foreground))]/50 transition-transform duration-200 rotate-180" />
+                  </button>
                 )}
               </div>
 
@@ -178,11 +196,18 @@ export function AppSidebar() {
           <div className="w-8 h-8 rounded-full bg-[hsl(var(--sidebar-muted))] flex items-center justify-center text-xs font-semibold text-[hsl(var(--sidebar-foreground))]">
             U
           </div>
-          <span className="text-sm font-medium text-[hsl(var(--sidebar-accent-foreground))] flex-1">Usuário</span>
+          <span className="text-sm font-medium text-[hsl(var(--sidebar-accent-foreground))] flex-1 truncate">{userData.email?.split("@")[0] || "Usuário"}</span>
           <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-[hsl(var(--sidebar-primary))]/15 text-[hsl(var(--sidebar-primary))]">
-            Basic
+            {userData.plan || "Basic"}
           </span>
         </div>
+
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-all"
+        >
+          Sair
+        </button>
       </div>
     </aside>
   );

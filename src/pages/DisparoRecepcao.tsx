@@ -1,10 +1,18 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
-import { MessageSquarePlus, Save, ToggleRight, Mic, Type, Upload } from "lucide-react";
+import { MessageSquarePlus, Save, ToggleRight, Mic, Type, Upload, Plus, X, Megaphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 type ResponseType = "text" | "audio" | "both";
+
+interface AdRule {
+  id: string;
+  keyword: string;
+  responseType: ResponseType;
+  message: string;
+  audioFile: string | null;
+}
 
 const DisparoRecepcao = () => {
   const [active, setActive] = useState(true);
@@ -14,11 +22,32 @@ const DisparoRecepcao = () => {
   );
   const [audioFile, setAudioFile] = useState<string | null>(null);
 
+  // Ad rules
+  const [adRules, setAdRules] = useState<AdRule[]>([
+    { id: "1", keyword: "promo", responseType: "text", message: "Obrigado pelo interesse na promoção! Um consultor entrará em contato.", audioFile: null },
+  ]);
+  const [showAdForm, setShowAdForm] = useState(false);
+  const [adForm, setAdForm] = useState<{ keyword: string; responseType: ResponseType; message: string; audioFile: string | null }>({
+    keyword: "", responseType: "text", message: "", audioFile: null,
+  });
+
   const responseOptions: { value: ResponseType; label: string; icon: typeof Type }[] = [
     { value: "text", label: "Mensagem de Texto", icon: Type },
     { value: "audio", label: "Áudio", icon: Mic },
     { value: "both", label: "Texto + Áudio", icon: MessageSquarePlus },
   ];
+
+  const addAdRule = () => {
+    if (!adForm.keyword.trim()) return;
+    setAdRules([...adRules, { ...adForm, id: Date.now().toString() }]);
+    setAdForm({ keyword: "", responseType: "text", message: "", audioFile: null });
+    setShowAdForm(false);
+    toast.success("Regra de anúncio adicionada");
+  };
+
+  const removeAdRule = (id: string) => {
+    setAdRules(adRules.filter(r => r.id !== id));
+  };
 
   return (
     <AppLayout>
@@ -26,9 +55,7 @@ const DisparoRecepcao = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Recepção Automática</h1>
-            <p className="text-muted-foreground mt-1">
-              Configure a resposta automática para novos atendimentos
-            </p>
+            <p className="text-muted-foreground mt-1">Configure a resposta automática para novos atendimentos</p>
           </div>
         </div>
 
@@ -40,9 +67,7 @@ const DisparoRecepcao = () => {
             </div>
             <div>
               <h3 className="text-sm font-semibold text-foreground">Resposta automática</h3>
-              <p className="text-xs text-muted-foreground">
-                Enviar automaticamente ao receber um novo contato
-              </p>
+              <p className="text-xs text-muted-foreground">Enviar automaticamente ao receber um novo contato</p>
             </div>
           </div>
           <button
@@ -69,25 +94,11 @@ const DisparoRecepcao = () => {
                     onClick={() => setResponseType(opt.value)}
                     className={cn(
                       "glass-card rounded-xl p-4 flex flex-col items-center gap-2 transition-all text-center",
-                      responseType === opt.value
-                        ? "ring-2 ring-primary bg-primary/5"
-                        : "hover:bg-muted/60"
+                      responseType === opt.value ? "ring-2 ring-primary bg-primary/5" : "hover:bg-muted/60"
                     )}
                   >
-                    <opt.icon
-                      className={cn(
-                        "w-5 h-5",
-                        responseType === opt.value ? "text-primary" : "text-muted-foreground"
-                      )}
-                    />
-                    <span
-                      className={cn(
-                        "text-xs font-medium",
-                        responseType === opt.value ? "text-primary" : "text-muted-foreground"
-                      )}
-                    >
-                      {opt.label}
-                    </span>
+                    <opt.icon className={cn("w-5 h-5", responseType === opt.value ? "text-primary" : "text-muted-foreground")} />
+                    <span className={cn("text-xs font-medium", responseType === opt.value ? "text-primary" : "text-muted-foreground")}>{opt.label}</span>
                   </button>
                 ))}
               </div>
@@ -127,12 +138,7 @@ const DisparoRecepcao = () => {
                         <p className="text-sm font-medium text-foreground">{audioFile}</p>
                         <p className="text-xs text-muted-foreground">Áudio carregado</p>
                       </div>
-                      <button
-                        onClick={() => setAudioFile(null)}
-                        className="text-xs text-destructive hover:underline"
-                      >
-                        Remover
-                      </button>
+                      <button onClick={() => setAudioFile(null)} className="text-xs text-destructive hover:underline">Remover</button>
                     </div>
                   ) : (
                     <button
@@ -141,18 +147,93 @@ const DisparoRecepcao = () => {
                     >
                       <Upload className="w-8 h-8 text-muted-foreground" />
                       <div className="text-center">
-                        <p className="text-sm font-medium text-foreground">
-                          Clique para enviar um áudio
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          MP3, OGG ou WAV • Máx. 5MB
-                        </p>
+                        <p className="text-sm font-medium text-foreground">Clique para enviar um áudio</p>
+                        <p className="text-xs text-muted-foreground mt-1">MP3, OGG ou WAV • Máx. 5MB</p>
                       </div>
                     </button>
                   )}
                 </div>
               </div>
             )}
+
+            {/* === RESPOSTAS POR ANÚNCIO === */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Megaphone className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">Respostas por Anúncio</h3>
+                </div>
+                <button
+                  onClick={() => setShowAdForm(!showAdForm)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/15 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Nova regra
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Configure respostas automáticas para contatos que chegam por anúncios específicos.
+              </p>
+
+              {/* Existing rules */}
+              <div className="space-y-2">
+                {adRules.map(rule => (
+                  <div key={rule.id} className="glass-card rounded-xl p-4 flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-chart-4/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Megaphone className="w-4 h-4 text-chart-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-foreground">Gatilho:</span>
+                        <code className="bg-muted px-2 py-0.5 rounded text-primary text-[11px] font-mono">{rule.keyword}</code>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 truncate">{rule.message || "Áudio"}</p>
+                      <span className="text-[10px] text-muted-foreground capitalize">{rule.responseType === "both" ? "Texto + Áudio" : rule.responseType === "text" ? "Texto" : "Áudio"}</span>
+                    </div>
+                    <button onClick={() => removeAdRule(rule.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* New rule form */}
+              {showAdForm && (
+                <div className="glass-card rounded-xl p-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground">Palavra-chave / Gatilho</label>
+                    <input value={adForm.keyword} onChange={(e) => setAdForm({ ...adForm, keyword: e.target.value })} placeholder="Ex: promo, desconto, oferta" className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground">Tipo de resposta</label>
+                    <div className="flex gap-2">
+                      {responseOptions.map(opt => (
+                        <button key={opt.value} onClick={() => setAdForm({ ...adForm, responseType: opt.value })} className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all", adForm.responseType === opt.value ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:bg-muted")}>
+                          <opt.icon className="w-3.5 h-3.5" />
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {(adForm.responseType === "text" || adForm.responseType === "both") && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-foreground">Mensagem</label>
+                      <textarea value={adForm.message} onChange={(e) => setAdForm({ ...adForm, message: e.target.value })} placeholder="Mensagem de resposta..." rows={2} className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all resize-none" />
+                    </div>
+                  )}
+                  {(adForm.responseType === "audio" || adForm.responseType === "both") && (
+                    <button onClick={() => setAdForm({ ...adForm, audioFile: "audio-anuncio.mp3" })} className="w-full flex items-center gap-2 py-3 border-2 border-dashed border-border rounded-lg hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer justify-center">
+                      <Upload className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{adForm.audioFile || "Enviar áudio"}</span>
+                    </button>
+                  )}
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={() => setShowAdForm(false)} className="px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors">Cancelar</button>
+                    <button onClick={addAdRule} className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">Adicionar</button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Salvar */}
             <div className="flex justify-end">
