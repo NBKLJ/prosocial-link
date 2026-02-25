@@ -68,7 +68,7 @@ const Login = () => {
           <div className="flex items-center gap-3">
             <img src={logo} alt="ZapPro" className="h-10 w-auto" />
             <span className="text-xl font-bold text-foreground">
-              Zap<span className="text-primary">Pro</span>
+              Zap<span className="text-primary">Pro</span>BR
             </span>
           </div>
 
