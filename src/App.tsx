@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CRM from "./pages/CRM";
@@ -15,8 +15,17 @@ import Relatorios from "./pages/Relatorios";
 import Contatos from "./pages/Contatos";
 import Conexoes from "./pages/Conexoes";
 import Configuracoes from "./pages/Configuracoes";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAuthenticated = localStorage.getItem("zapprobr_auth") === "true";
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -25,15 +34,16 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Conversas />} />
-          <Route path="/crm" element={<CRM />} />
-          <Route path="/conversas" element={<Conversas />} />
-          <Route path="/disparos" element={<Disparos />} />
-          <Route path="/disparos/recepcao" element={<DisparoRecepcao />} />
-          <Route path="/disparos/audio" element={<DisparoAudio />} />
-          <Route path="/disparos/agendamento" element={<DisparoAgendamento />} />
-          <Route path="/contatos" element={<Contatos />} />
-          <Route path="/configuracoes" element={<Configuracoes />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<ProtectedRoute><Conversas /></ProtectedRoute>} />
+          <Route path="/crm" element={<ProtectedRoute><CRM /></ProtectedRoute>} />
+          <Route path="/conversas" element={<ProtectedRoute><Conversas /></ProtectedRoute>} />
+          <Route path="/disparos" element={<ProtectedRoute><Disparos /></ProtectedRoute>} />
+          <Route path="/disparos/recepcao" element={<ProtectedRoute><DisparoRecepcao /></ProtectedRoute>} />
+          <Route path="/disparos/audio" element={<ProtectedRoute><DisparoAudio /></ProtectedRoute>} />
+          <Route path="/disparos/agendamento" element={<ProtectedRoute><DisparoAgendamento /></ProtectedRoute>} />
+          <Route path="/contatos" element={<ProtectedRoute><Contatos /></ProtectedRoute>} />
+          <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
