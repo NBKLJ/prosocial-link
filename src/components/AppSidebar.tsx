@@ -7,7 +7,6 @@ import {
   Settings,
   Search,
   ChevronDown,
-  Zap,
   Send,
   MessageSquarePlus,
   Mic,
@@ -16,6 +15,7 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.png";
 
 interface SubItem {
   title: string;
@@ -64,9 +64,7 @@ export function AppSidebar() {
     <aside className="fixed left-0 top-0 z-40 h-screen w-[260px] flex flex-col bg-[hsl(var(--sidebar-background))] border-r border-[hsl(var(--sidebar-border))]">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 pt-6 pb-4">
-        <div className="w-10 h-10 rounded-xl gradient-green flex items-center justify-center flex-shrink-0">
-          <Zap className="w-5 h-5 text-primary-foreground" />
-        </div>
+        <img src={logo} alt="ZapProBR" className="w-10 h-10 rounded-xl object-contain flex-shrink-0" />
         <div>
           <span className="text-base font-bold text-[hsl(var(--sidebar-accent-foreground))] tracking-tight block leading-tight">ZapProBR</span>
           <span className="text-xs text-[hsl(var(--sidebar-foreground))]">WhatsApp Manager</span>
