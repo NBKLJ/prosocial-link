@@ -10,6 +10,8 @@ export interface Lead {
   probability?: number;
   assignee?: string;
   createdAt?: string;
+  origin?: 'whatsapp' | 'site' | 'indicacao' | 'anuncio';
+  convertedAt?: string;
 }
 
 export interface Pipeline {

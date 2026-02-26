@@ -5,29 +5,29 @@ export const initialPipelines: Pipeline[] = [
     id: "qualified",
     title: "Leads Qualificados",
     leads: [
-      { id: "1", name: "João Silva", phone: "(11) 99999-1234", email: "joao@empresa.com", value: 2500, lastContact: "Há 2h", tag: "Quente", company: "Tech Solutions", probability: 20, assignee: "VS" },
-      { id: "2", name: "Maria Souza", phone: "(21) 98888-5678", email: "maria@startup.io", value: 1800, lastContact: "Há 5h", company: "Startup.io", probability: 15, assignee: "AL" },
+      { id: "1", name: "João Silva", phone: "(11) 99999-1234", email: "joao@empresa.com", value: 2500, lastContact: "Há 2h", tag: "Quente", company: "Tech Solutions", probability: 20, assignee: "VS", origin: "whatsapp" },
+      { id: "2", name: "Maria Souza", phone: "(21) 98888-5678", email: "maria@startup.io", value: 1800, lastContact: "Há 5h", company: "Startup.io", probability: 15, assignee: "AL", origin: "site" },
     ],
   },
   {
     id: "contact",
     title: "Contato Realizado",
     leads: [
-      { id: "4", name: "Ana Costa", phone: "(41) 96666-3456", email: "ana@vipgroup.com", value: 5000, lastContact: "Há 3h", tag: "VIP", company: "VIP Group", probability: 40, assignee: "MR" },
+      { id: "4", name: "Ana Costa", phone: "(41) 96666-3456", email: "ana@vipgroup.com", value: 5000, lastContact: "Há 3h", tag: "VIP", company: "VIP Group", probability: 40, assignee: "MR", origin: "indicacao" },
     ],
   },
   {
     id: "proposal",
     title: "Proposta Enviada",
     leads: [
-      { id: "5", name: "Pedro Rocha", phone: "(51) 95555-7890", value: 3200, lastContact: "Há 1d", company: "Rocha Digital", probability: 55, assignee: "VS" },
+      { id: "5", name: "Pedro Rocha", phone: "(51) 95555-7890", value: 3200, lastContact: "Há 1d", company: "Rocha Digital", probability: 55, assignee: "VS", origin: "anuncio" },
     ],
   },
   {
     id: "negotiation",
     title: "Em Negociação",
     leads: [
-      { id: "3", name: "Carlos Lima", phone: "(31) 97777-9012", value: 4200, lastContact: "Há 1d", tag: "Indicação", company: "Lima & Assoc.", probability: 75, assignee: "VS" },
+      { id: "3", name: "Carlos Lima", phone: "(31) 97777-9012", value: 4200, lastContact: "Há 1d", tag: "Indicação", company: "Lima & Assoc.", probability: 75, assignee: "VS", origin: "whatsapp" },
     ],
   },
   {
