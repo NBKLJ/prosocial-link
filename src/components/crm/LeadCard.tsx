@@ -117,6 +117,16 @@ export function LeadCard({ lead, columnId, onDragStart, onDragEnd }: LeadCardPro
       {/* Footer */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
+          {lead.origin && (
+            <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-medium", {
+              "bg-blue-500/10 text-blue-600 dark:text-blue-400": lead.origin === "whatsapp",
+              "bg-purple-500/10 text-purple-600 dark:text-purple-400": lead.origin === "site",
+              "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400": lead.origin === "indicacao",
+              "bg-amber-500/10 text-amber-600 dark:text-amber-400": lead.origin === "anuncio",
+            })}>
+              {lead.origin === "whatsapp" ? "WhatsApp" : lead.origin === "site" ? "Site" : lead.origin === "indicacao" ? "Indicação" : "Anúncio"}
+            </span>
+          )}
           {lead.tag && (
             <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium", tagColors[lead.tag] || "bg-muted text-muted-foreground")}>
               {lead.tag}

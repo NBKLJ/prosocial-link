@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
-import { MessageSquarePlus, Save, ToggleRight, Mic, Type, Upload, Plus, X, Megaphone, Smartphone } from "lucide-react";
+import { MessageSquarePlus, Save, ToggleRight, Mic, Type, Upload, Plus, X, Megaphone, Smartphone, Brain, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { ProGate } from "@/components/ui/ProGate";
+import { ProBadge } from "@/components/ui/ProBadge";
 
 const CONEXOES = [
   { id: "1", name: "Comercial 1", number: "(11) 99999-1234" },
@@ -27,8 +29,6 @@ const DisparoRecepcao = () => {
     "Olá! Obrigado por entrar em contato. Em breve um de nossos atendentes irá te responder. 😊"
   );
   const [audioFile, setAudioFile] = useState<string | null>(null);
-
-  // Ad rules
   const [adRules, setAdRules] = useState<AdRule[]>([
     { id: "1", keyword: "promo", responseType: "text", message: "Obrigado pelo interesse na promoção! Um consultor entrará em contato.", audioFile: null },
   ]);
@@ -36,6 +36,10 @@ const DisparoRecepcao = () => {
   const [adForm, setAdForm] = useState<{ keyword: string; responseType: ResponseType; message: string; audioFile: string | null }>({
     keyword: "", responseType: "text", message: "", audioFile: null,
   });
+
+  // IA de recepção state
+  const [iaActive, setIaActive] = useState(false);
+  const [iaSetor, setIaSetor] = useState<"comercial" | "financeiro" | "suporte">("comercial");
 
   const responseOptions: { value: ResponseType; label: string; icon: typeof Type }[] = [
     { value: "text", label: "Mensagem de Texto", icon: Type },
@@ -53,6 +57,12 @@ const DisparoRecepcao = () => {
 
   const removeAdRule = (id: string) => {
     setAdRules(adRules.filter(r => r.id !== id));
+  };
+
+  const iaPreviewMessages: Record<string, string> = {
+    comercial: "Olá! 👋 Sou a IA Comercial. Vi que você demonstrou interesse. Posso ajudá-lo a encontrar a solução ideal para seu negócio. Qual é sua principal necessidade?",
+    financeiro: "Boa tarde. Sou o assistente financeiro. Posso ajudar com informações sobre faturas, prazos ou negociação de pagamento. Como posso ajudá-lo?",
+    suporte: "Olá! Sou o assistente de suporte. Para ajudá-lo da melhor forma, descreva o problema que está enfrentando e vou buscar a solução mais rápida.",
   };
 
   return (
@@ -76,13 +86,7 @@ const DisparoRecepcao = () => {
               <p className="text-xs text-muted-foreground">Enviar automaticamente ao receber um novo contato</p>
             </div>
           </div>
-          <button
-            onClick={() => setActive(!active)}
-            className={cn(
-              "flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-full transition-colors",
-              active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-            )}
-          >
+          <button onClick={() => setActive(!active)} className={cn("flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-full transition-colors", active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
             <ToggleRight className="w-4 h-4" />
             {active ? "Ativo" : "Inativo"}
           </button>
@@ -111,14 +115,7 @@ const DisparoRecepcao = () => {
               <h3 className="text-sm font-semibold text-foreground">Tipo de resposta</h3>
               <div className="grid grid-cols-3 gap-3">
                 {responseOptions.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setResponseType(opt.value)}
-                    className={cn(
-                      "glass-card rounded-xl p-4 flex flex-col items-center gap-2 transition-all text-center",
-                      responseType === opt.value ? "ring-2 ring-primary bg-primary/5" : "hover:bg-muted/60"
-                    )}
-                  >
+                  <button key={opt.value} onClick={() => setResponseType(opt.value)} className={cn("glass-card rounded-xl p-4 flex flex-col items-center gap-2 transition-all text-center", responseType === opt.value ? "ring-2 ring-primary bg-primary/5" : "hover:bg-muted/60")}>
                     <opt.icon className={cn("w-5 h-5", responseType === opt.value ? "text-primary" : "text-muted-foreground")} />
                     <span className={cn("text-xs font-medium", responseType === opt.value ? "text-primary" : "text-muted-foreground")}>{opt.label}</span>
                   </button>
@@ -131,13 +128,7 @@ const DisparoRecepcao = () => {
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-foreground">Mensagem de boas-vindas</h3>
                 <div className="glass-card rounded-xl p-5">
-                  <textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Digite a mensagem automática..."
-                    rows={4}
-                    className="w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all resize-none"
-                  />
+                  <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Digite a mensagem automática..." rows={4} className="w-full bg-muted/50 border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all resize-none" />
                   <p className="text-xs text-muted-foreground mt-2">
                     Variáveis disponíveis: <code className="bg-muted px-1.5 py-0.5 rounded text-primary text-[11px]">{"{{nome}}"}</code>{" "}
                     <code className="bg-muted px-1.5 py-0.5 rounded text-primary text-[11px]">{"{{numero}}"}</code>
@@ -153,73 +144,40 @@ const DisparoRecepcao = () => {
                 <div className="glass-card rounded-xl p-5">
                   {audioFile ? (
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Mic className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">{audioFile}</p>
-                        <p className="text-xs text-muted-foreground">Áudio carregado</p>
-                      </div>
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center"><Mic className="w-5 h-5 text-primary" /></div>
+                      <div className="flex-1"><p className="text-sm font-medium text-foreground">{audioFile}</p><p className="text-xs text-muted-foreground">Áudio carregado</p></div>
                       <button onClick={() => setAudioFile(null)} className="text-xs text-destructive hover:underline">Remover</button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => setAudioFile("audio-recepcao.mp3")}
-                      className="w-full flex flex-col items-center gap-3 py-8 border-2 border-dashed border-border rounded-lg hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer"
-                    >
+                    <button onClick={() => setAudioFile("audio-recepcao.mp3")} className="w-full flex flex-col items-center gap-3 py-8 border-2 border-dashed border-border rounded-lg hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer">
                       <Upload className="w-8 h-8 text-muted-foreground" />
-                      <div className="text-center">
-                        <p className="text-sm font-medium text-foreground">Clique para enviar um áudio</p>
-                        <p className="text-xs text-muted-foreground mt-1">MP3, OGG ou WAV • Máx. 5MB</p>
-                      </div>
+                      <div className="text-center"><p className="text-sm font-medium text-foreground">Clique para enviar um áudio</p><p className="text-xs text-muted-foreground mt-1">MP3, OGG ou WAV • Máx. 5MB</p></div>
                     </button>
                   )}
                 </div>
               </div>
             )}
 
-            {/* === RESPOSTAS POR ANÚNCIO === */}
+            {/* Respostas por Anúncio */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Megaphone className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-semibold text-foreground">Respostas por Anúncio</h3>
-                </div>
-                <button
-                  onClick={() => setShowAdForm(!showAdForm)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/15 transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Nova regra
-                </button>
+                <div className="flex items-center gap-2"><Megaphone className="w-4 h-4 text-primary" /><h3 className="text-sm font-semibold text-foreground">Respostas por Anúncio</h3></div>
+                <button onClick={() => setShowAdForm(!showAdForm)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/15 transition-colors"><Plus className="w-3.5 h-3.5" />Nova regra</button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Configure respostas automáticas para contatos que chegam por anúncios específicos.
-              </p>
-
-              {/* Existing rules */}
+              <p className="text-xs text-muted-foreground">Configure respostas automáticas para contatos que chegam por anúncios específicos.</p>
               <div className="space-y-2">
                 {adRules.map(rule => (
                   <div key={rule.id} className="glass-card rounded-xl p-4 flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-chart-4/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Megaphone className="w-4 h-4 text-chart-4" />
-                    </div>
+                    <div className="w-8 h-8 rounded-lg bg-chart-4/10 flex items-center justify-center flex-shrink-0 mt-0.5"><Megaphone className="w-4 h-4 text-chart-4" /></div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-foreground">Gatilho:</span>
-                        <code className="bg-muted px-2 py-0.5 rounded text-primary text-[11px] font-mono">{rule.keyword}</code>
-                      </div>
+                      <div className="flex items-center gap-2"><span className="text-xs font-semibold text-foreground">Gatilho:</span><code className="bg-muted px-2 py-0.5 rounded text-primary text-[11px] font-mono">{rule.keyword}</code></div>
                       <p className="text-xs text-muted-foreground mt-1 truncate">{rule.message || "Áudio"}</p>
                       <span className="text-[10px] text-muted-foreground capitalize">{rule.responseType === "both" ? "Texto + Áudio" : rule.responseType === "text" ? "Texto" : "Áudio"}</span>
                     </div>
-                    <button onClick={() => removeAdRule(rule.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
-                      <X className="w-4 h-4" />
-                    </button>
+                    <button onClick={() => removeAdRule(rule.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0"><X className="w-4 h-4" /></button>
                   </div>
                 ))}
               </div>
-
-              {/* New rule form */}
               {showAdForm && (
                 <div className="glass-card rounded-xl p-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
                   <div className="space-y-1.5">
@@ -231,8 +189,7 @@ const DisparoRecepcao = () => {
                     <div className="flex gap-2">
                       {responseOptions.map(opt => (
                         <button key={opt.value} onClick={() => setAdForm({ ...adForm, responseType: opt.value })} className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all", adForm.responseType === opt.value ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:bg-muted")}>
-                          <opt.icon className="w-3.5 h-3.5" />
-                          {opt.label}
+                          <opt.icon className="w-3.5 h-3.5" />{opt.label}
                         </button>
                       ))}
                     </div>
@@ -245,8 +202,7 @@ const DisparoRecepcao = () => {
                   )}
                   {(adForm.responseType === "audio" || adForm.responseType === "both") && (
                     <button onClick={() => setAdForm({ ...adForm, audioFile: "audio-anuncio.mp3" })} className="w-full flex items-center gap-2 py-3 border-2 border-dashed border-border rounded-lg hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer justify-center">
-                      <Upload className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">{adForm.audioFile || "Enviar áudio"}</span>
+                      <Upload className="w-4 h-4 text-muted-foreground" /><span className="text-xs text-muted-foreground">{adForm.audioFile || "Enviar áudio"}</span>
                     </button>
                   )}
                   <div className="flex gap-2 justify-end">
@@ -256,6 +212,51 @@ const DisparoRecepcao = () => {
                 </div>
               )}
             </div>
+
+            {/* === IA DE RECEPÇÃO INTELIGENTE (PRO) === */}
+            <ProGate title="IA de Recepção Inteligente" description="IA que entende a necessidade do cliente automaticamente. Disponível no Plano Pro.">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-primary" />
+                    <h3 className="text-sm font-semibold text-foreground">IA de Recepção Inteligente</h3>
+                    <ProBadge />
+                  </div>
+                  <button onClick={() => setIaActive(!iaActive)} className={cn("flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-full transition-colors", iaActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                    <ToggleRight className="w-4 h-4" />
+                    {iaActive ? "Ativo" : "Inativo"}
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-foreground">Setor da IA</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { value: "comercial" as const, label: "Comercial", desc: "Vendas e qualificação" },
+                      { value: "financeiro" as const, label: "Financeiro", desc: "Cobranças e pagamentos" },
+                      { value: "suporte" as const, label: "Suporte", desc: "Atendimento técnico" },
+                    ].map(s => (
+                      <button key={s.value} onClick={() => setIaSetor(s.value)} className={cn("glass-card rounded-xl p-4 text-left transition-all", iaSetor === s.value ? "ring-2 ring-primary bg-primary/5" : "hover:bg-muted/60")}>
+                        <span className={cn("text-sm font-medium block", iaSetor === s.value ? "text-primary" : "text-foreground")}>{s.label}</span>
+                        <span className="text-xs text-muted-foreground">{s.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {iaActive && (
+                  <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-xs font-medium text-foreground">Preview da IA ({iaSetor})</span>
+                    </div>
+                    <div className="bg-card rounded-lg p-3 border border-border/40">
+                      <p className="text-xs text-muted-foreground leading-relaxed">{iaPreviewMessages[iaSetor]}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ProGate>
 
             {/* Salvar */}
             <div className="flex justify-end">
