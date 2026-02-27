@@ -9,6 +9,7 @@ import {
   Phone, Filter, Clock, User, MessageCircle,
 } from "lucide-react";
 import { getAudioStore } from "@/pages/DisparoAudio";
+import { getMensagemStore } from "@/pages/DisparoMensagem";
 import { getTagColor, getTagStore } from "@/lib/tagStore";
 import { ClientDetailPanel } from "@/components/conversas/ClientDetailPanel";
 import {
@@ -84,6 +85,7 @@ const Conversas = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ConversationStatus | "todos">("atendendo");
   const [showAudioList, setShowAudioList] = useState(false);
+  const [showMensagemList, setShowMensagemList] = useState(false);
   const [showAttach, setShowAttach] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -583,6 +585,41 @@ const Conversas = () => {
               </div>
             )}
 
+            {/* Mensagens programadas list popup */}
+            {showMensagemList && (
+              <div className="absolute bottom-full left-5 right-5 mb-2 bg-card border border-border rounded-xl shadow-lg max-h-60 overflow-y-auto z-10">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                  <span className="text-sm font-semibold text-foreground">Mensagens Programadas</span>
+                  <button onClick={() => setShowMensagemList(false)} className="p-1 rounded hover:bg-muted">
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
+                {getMensagemStore().length === 0 ? (
+                  <p className="px-4 py-6 text-sm text-muted-foreground text-center">Nenhuma mensagem salva</p>
+                ) : (
+                  getMensagemStore().map((msg) => (
+                    <button
+                      key={msg.id}
+                      onClick={() => {
+                        setMessageText(msg.message);
+                        setShowMensagemList(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <MessageCircle className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{msg.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{msg.message}</p>
+                      </div>
+                      <SendIcon className="w-4 h-4 text-primary flex-shrink-0" />
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+
             {/* Attach popup */}
             {showAttach && (
               <div className="absolute bottom-full left-5 mb-2 bg-card border border-border rounded-xl shadow-lg z-10 w-56">
@@ -590,7 +627,8 @@ const Conversas = () => {
                   {[
                     { icon: Image, label: "Imagem", color: "text-blue-500" },
                     { icon: FileText, label: "Documento", color: "text-orange-500" },
-                    { icon: Mic, label: "Áudios Programados", color: "text-primary", action: () => { setShowAttach(false); setShowAudioList(true); } },
+                    { icon: Mic, label: "Áudios Programados", color: "text-primary", action: () => { setShowAttach(false); setShowAudioList(true); setShowMensagemList(false); } },
+                    { icon: MessageCircle, label: "Mensagens Programadas", color: "text-emerald-500", action: () => { setShowAttach(false); setShowMensagemList(true); setShowAudioList(false); } },
                     { icon: Sticker, label: "Figurinha", color: "text-pink-500" },
                   ].map((item) => (
                     <button
@@ -657,7 +695,7 @@ const Conversas = () => {
             ) : (
               <div className="flex gap-2 items-center">
                 <button
-                  onClick={() => { setShowAttach(!showAttach); setShowEmoji(false); setShowAudioList(false); }}
+                  onClick={() => { setShowAttach(!showAttach); setShowEmoji(false); setShowAudioList(false); setShowMensagemList(false); }}
                   className={cn("p-2.5 rounded-lg transition-colors flex-shrink-0", showAttach ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
                   title="Anexar"
                 >
