@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState } from "react";
-import { Search, Plus, Filter, Upload, Download, Trash2, Pencil, Phone, Mail, Calendar, ChevronUp, ChevronDown, MessageCircle } from "lucide-react";
+import { Search, Plus, Filter, Upload, Download, Trash2, Pencil, Phone, Mail, Calendar, ChevronUp, ChevronDown, MessageCircle, Smartphone, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getTagStore, getTagColor } from "@/lib/tagStore";
 import { toast } from "sonner";
@@ -9,6 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
+
+const CONEXOES = [
+  { id: "1", name: "Comercial 1", number: "(11) 99999-1234" },
+  { id: "2", name: "Suporte", number: "(21) 98888-5678" },
+];
+
+const DEPARTAMENTOS = ["Gestão", "Suporte", "Vendas", "Financeiro"];
 
 interface Contato {
   id: string;
@@ -61,6 +68,10 @@ const Contatos = () => {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [showFilter, setShowFilter] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showStartChat, setShowStartChat] = useState(false);
+  const [chatContact, setChatContact] = useState<Contato | null>(null);
+  const [chatConexao, setChatConexao] = useState(CONEXOES[0].id);
+  const [chatDepartamento, setChatDepartamento] = useState(DEPARTAMENTOS[0]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", phone: "", email: "", tags: "" });
 
@@ -135,8 +146,18 @@ const Contatos = () => {
   };
 
   const startConversation = (c: Contato) => {
-    navigate("/conversas", { state: { contactName: c.name, contactPhone: c.phone } });
-    toast.success(`Abrindo conversa com ${c.name}`);
+    setChatContact(c);
+    setChatConexao(CONEXOES[0].id);
+    setChatDepartamento(DEPARTAMENTOS[0]);
+    setShowStartChat(true);
+  };
+
+  const confirmStartChat = () => {
+    if (!chatContact) return;
+    const conexaoName = CONEXOES.find(cx => cx.id === chatConexao)?.name || "";
+    navigate("/conversas", { state: { contactName: chatContact.name, contactPhone: chatContact.phone, connection: conexaoName, department: chatDepartamento } });
+    toast.success(`Atendimento iniciado com ${chatContact.name}`);
+    setShowStartChat(false);
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -272,6 +293,67 @@ const Contatos = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowModal(false)}>Cancelar</Button>
             <Button onClick={handleSave} disabled={!form.name.trim()}>{editingId ? "Salvar" : "Criar Contato"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Start Chat Modal */}
+      <Dialog open={showStartChat} onOpenChange={setShowStartChat}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Iniciar Atendimento</DialogTitle>
+            <DialogDescription>
+              Selecione a conexão e o departamento para atender {chatContact?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Conexão de envio</label>
+              <div className="grid grid-cols-2 gap-2">
+                {CONEXOES.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => setChatConexao(c.id)}
+                    className={cn(
+                      "flex items-center gap-2 p-3 rounded-xl border transition-all text-left",
+                      chatConexao === c.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60"
+                    )}
+                  >
+                    <Smartphone className={cn("w-5 h-5", chatConexao === c.id ? "text-primary" : "text-muted-foreground")} />
+                    <div>
+                      <span className={cn("text-sm font-medium block", chatConexao === c.id ? "text-primary" : "text-foreground")}>{c.name}</span>
+                      <span className="text-xs text-muted-foreground">{c.number}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Departamento</label>
+              <div className="grid grid-cols-2 gap-2">
+                {DEPARTAMENTOS.map(dept => (
+                  <button
+                    key={dept}
+                    onClick={() => setChatDepartamento(dept)}
+                    className={cn(
+                      "flex items-center gap-2 p-3 rounded-xl border transition-all text-left",
+                      chatDepartamento === dept ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60"
+                    )}
+                  >
+                    <Building2 className={cn("w-4 h-4", chatDepartamento === dept ? "text-primary" : "text-muted-foreground")} />
+                    <span className={cn("text-sm font-medium", chatDepartamento === dept ? "text-primary" : "text-foreground")}>{dept}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowStartChat(false)}>Cancelar</Button>
+            <Button onClick={confirmStartChat}>
+              <MessageCircle className="w-4 h-4 mr-1.5" />
+              Iniciar Atendimento
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
