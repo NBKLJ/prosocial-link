@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   MessageCircle, BarChart3, Megaphone, Users, Settings, Search, ChevronDown,
-  Send, MessageSquarePlus, Mic, Clock, Bot, Brain, CalendarDays, LayoutDashboard,
+  Send, MessageSquarePlus, Mic, Clock, Bot, Brain, CalendarDays, LayoutDashboard, MessageSquare,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -24,6 +24,7 @@ const menuItems: MenuItem[] = [
       { title: "Disparo de Mensagens", url: "/disparos", icon: Send },
       { title: "Recepção Automática", url: "/disparos/recepcao", icon: MessageSquarePlus },
       { title: "Áudio Programado", url: "/disparos/audio", icon: Mic },
+      { title: "Mensagem Programada", url: "/disparos/mensagem", icon: MessageSquare },
       { title: "Agendamento", url: "/disparos/agendamento", icon: Clock },
     ],
   },
