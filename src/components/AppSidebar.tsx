@@ -38,7 +38,16 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    menuItems.forEach((item) => {
+      if (item.expandable && item.subItems) {
+        const isOnSubRoute = item.subItems.some((sub) => location.pathname.startsWith(item.url));
+        if (isOnSubRoute) initial[item.title] = true;
+      }
+    });
+    return initial;
+  });
 
   const filteredItems = menuItems.filter((item) =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -113,7 +122,7 @@ export function AppSidebar() {
                   {item.subItems!.map((sub) => {
                     const isSubActive = location.pathname === sub.url;
                     return (
-                      <NavLink key={sub.title} to={sub.url}
+                      <NavLink key={sub.title} to={sub.url} end
                         className={cn("flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200", "text-[hsl(var(--sidebar-foreground))] hover:text-[hsl(var(--sidebar-accent-foreground))] hover:bg-[hsl(var(--sidebar-accent))]")}
                         activeClassName="text-[hsl(var(--sidebar-primary))] !font-semibold"
                       >
