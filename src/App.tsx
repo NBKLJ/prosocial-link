@@ -11,6 +11,7 @@ import Disparos from "./pages/Disparos";
 import DisparoRecepcao from "./pages/DisparoRecepcao";
 import DisparoAudio from "./pages/DisparoAudio";
 import DisparoAgendamento from "./pages/DisparoAgendamento";
+import DisparoMensagem from "./pages/DisparoMensagem";
 import Contatos from "./pages/Contatos";
 import Configuracoes from "./pages/Configuracoes";
 import Login from "./pages/Login";
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/disparos/recepcao" element={<ProtectedRoute><DisparoRecepcao /></ProtectedRoute>} />
           <Route path="/disparos/audio" element={<ProtectedRoute><DisparoAudio /></ProtectedRoute>} />
           <Route path="/disparos/agendamento" element={<ProtectedRoute><DisparoAgendamento /></ProtectedRoute>} />
+          <Route path="/disparos/mensagem" element={<ProtectedRoute><DisparoMensagem /></ProtectedRoute>} />
           <Route path="/automacoes" element={<ProtectedRoute><Automacoes /></ProtectedRoute>} />
           <Route path="/agendamentos" element={<ProtectedRoute><Agendamentos /></ProtectedRoute>} />
           <Route path="/ias-setoriais" element={<ProtectedRoute><IAsSetoriais /></ProtectedRoute>} />
