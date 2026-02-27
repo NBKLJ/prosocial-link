@@ -11,6 +11,7 @@ import {
   ArrowRight, CheckCircle2, TrendingUp
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 
 type FunnelStage = {
   id: string;
@@ -113,17 +114,17 @@ const Automacoes = () => {
 
   return (
     <AppLayout>
-      <div className="animate-fade-in flex h-[calc(100vh-4rem)] bg-gradient-to-br from-[#0f172a] to-[#1e293b] rounded-xl overflow-hidden">
+      <div className="animate-fade-in flex h-[calc(100vh-4rem)]">
         {/* Sidebar */}
-        <div className="w-60 bg-[#0f172a]/80 backdrop-blur-xl border-r border-white/10 flex-shrink-0 overflow-y-auto flex flex-col">
-          <div className="p-4 pb-3 border-b border-white/10">
+        <div className="w-60 border-r border-border bg-card/50 flex-shrink-0 overflow-y-auto flex flex-col">
+          <div className="p-4 pb-3 border-b border-border">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[#2563eb]/15 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-[#2563eb]" />
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Zap className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <h1 className="text-sm font-bold text-white">Automações</h1>
-                <p className="text-[10px] text-slate-400">Centro de controle</p>
+                <h1 className="text-sm font-bold text-foreground">Automações</h1>
+                <p className="text-[10px] text-muted-foreground">Centro de controle</p>
               </div>
             </div>
           </div>
@@ -131,18 +132,18 @@ const Automacoes = () => {
           <nav className="flex-1 px-2 py-3 space-y-4">
             {Object.entries(sections).map(([section, items]) => (
               <div key={section}>
-                <p className="px-3 text-[9px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-1.5">{section}</p>
+                <p className="px-3 text-[9px] font-bold text-muted-foreground/70 uppercase tracking-[0.15em] mb-1.5">{section}</p>
                 <div className="space-y-0.5">
                   {items.map(item => (
                     <button
                       key={item.id}
                       onClick={() => !item.soon && setActiveSidebar(item.id)}
                       className={cn(
-                        "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] transition-all text-left group",
+                        "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-all text-left group",
                         activeSidebar === item.id
-                          ? "bg-[#2563eb]/15 text-[#2563eb] font-semibold"
-                          : "text-slate-400 hover:text-white hover:bg-white/5",
-                        item.soon && "opacity-40 cursor-not-allowed"
+                          ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                        item.soon && "opacity-50 cursor-not-allowed"
                       )}
                     >
                       <item.icon className="w-3.5 h-3.5 flex-shrink-0" />
@@ -150,11 +151,11 @@ const Automacoes = () => {
                       {item.count && (
                         <span className={cn(
                           "text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full",
-                          activeSidebar === item.id ? "bg-[#2563eb]/20 text-[#2563eb]" : "bg-white/10 text-slate-400"
+                          activeSidebar === item.id ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/10 text-primary"
                         )}>{item.count}</span>
                       )}
                       {item.pro && <ProBadge />}
-                      {item.soon && <span className="text-[8px] font-medium text-slate-500 bg-white/5 px-1.5 py-0.5 rounded">SOON</span>}
+                      {item.soon && <span className="text-[8px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">SOON</span>}
                     </button>
                   ))}
                 </div>
@@ -162,8 +163,8 @@ const Automacoes = () => {
             ))}
           </nav>
 
-          <div className="p-3 border-t border-white/10">
-            <button className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+          <div className="p-3 border-t border-border">
+            <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all">
               <Settings2 className="w-3.5 h-3.5" />
               <span>Configurações</span>
             </button>
@@ -173,29 +174,29 @@ const Automacoes = () => {
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top bar */}
-          <div className="flex items-center justify-between border-b border-white/10 px-6 py-3 bg-white/[0.02] backdrop-blur-sm">
+          <div className="flex items-center justify-between border-b border-border px-6 py-3 bg-background">
             <div className="flex items-center gap-3">
-              <h2 className="text-base font-bold text-white">Follow-up Automático</h2>
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <h2 className="text-base font-bold text-foreground">Follow-up Automático</h2>
+              <Badge variant="outline" className="text-[10px] gap-1 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 {activeFollowUpsCount} ativos
-              </span>
+              </Badge>
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <input
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Buscar..."
-                  className="h-8 w-40 pl-8 pr-3 rounded-xl border-none bg-[#0f172a] text-white text-xs focus:outline-none focus:ring-1 focus:ring-[#2563eb]/40 placeholder:text-slate-500"
+                  className="h-8 w-40 pl-8 pr-3 rounded-lg border border-border bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground/60"
                 />
               </div>
-              <button className="h-8 px-3 rounded-xl border border-white/10 text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-1.5">
+              <button className="h-8 px-3 rounded-lg border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center gap-1.5">
                 <Filter className="w-3 h-3" />
                 Filtros
               </button>
-              <button className="h-8 px-4 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-lg shadow-[#2563eb]/20">
+              <button className="h-8 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-xs hover:bg-primary/90 transition-colors flex items-center gap-1.5 shadow-sm">
                 <Plus className="w-3.5 h-3.5" />
                 Novo Follow-up
               </button>
@@ -209,63 +210,63 @@ const Automacoes = () => {
               {/* Stats row */}
               <div className="grid grid-cols-4 gap-3">
                 {[
-                  { label: "Total enviados", value: "660", icon: Send, change: "+12%", color: "text-[#2563eb]" },
-                  { label: "Aberturas", value: "512", icon: Eye, change: "77.6%", color: "text-emerald-400" },
-                  { label: "Respostas", value: "277", icon: MessageSquare, change: "42%", color: "text-blue-400" },
-                  { label: "Conversões", value: "89", icon: TrendingUp, change: "13.5%", color: "text-amber-400" },
+                  { label: "Total enviados", value: "660", icon: Send, change: "+12%", color: "text-primary" },
+                  { label: "Aberturas", value: "512", icon: Eye, change: "77.6%", color: "text-emerald-500" },
+                  { label: "Respostas", value: "277", icon: MessageSquare, change: "42%", color: "text-blue-500" },
+                  { label: "Conversões", value: "89", icon: TrendingUp, change: "13.5%", color: "text-amber-500" },
                 ].map(stat => (
-                  <div key={stat.label} className="rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 p-4 shadow-lg">
+                  <div key={stat.label} className="rounded-xl border border-border bg-card p-4">
                     <div className="flex items-center justify-between mb-2">
                       <stat.icon className={cn("w-4 h-4", stat.color)} />
-                      <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">{stat.change}</span>
+                      <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">{stat.change}</span>
                     </div>
-                    <p className="text-xl font-bold text-white">{stat.value}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{stat.label}</p>
+                    <p className="text-xl font-bold text-foreground">{stat.value}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{stat.label}</p>
                   </div>
                 ))}
               </div>
 
               {/* Funnel Stages */}
-              <div className="rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg">
+              <div className="rounded-xl border border-border bg-card">
                 <button
                   onClick={() => setShowStages(!showStages)}
-                  className="w-full flex items-center justify-between p-4 hover:bg-white/[0.03] transition-colors rounded-xl"
+                  className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors rounded-xl"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-[#2563eb]/15 flex items-center justify-center">
-                      <Zap className="w-3.5 h-3.5 text-[#2563eb]" />
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Zap className="w-3.5 h-3.5 text-primary" />
                     </div>
                     <div className="text-left">
-                      <span className="text-sm font-semibold text-white">Etapas do Funil</span>
-                      <p className="text-[11px] text-slate-400">Selecione em quais etapas os follow-ups serão disparados</p>
+                      <span className="text-sm font-semibold text-foreground">Etapas do Funil</span>
+                      <p className="text-[11px] text-muted-foreground">Selecione em quais etapas os follow-ups serão disparados</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-semibold text-slate-300 bg-white/10 px-2 py-0.5 rounded-lg">
+                    <Badge variant="secondary" className="text-[10px] font-semibold">
                       {activeStagesCount}/{stages.length}
-                    </span>
-                    {showStages ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                    </Badge>
+                    {showStages ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                   </div>
                 </button>
 
                 {showStages && (
                   <div className="px-4 pb-4 pt-0">
-                    <div className="h-px bg-white/10 mb-3" />
+                    <div className="h-px bg-border mb-3" />
                     <div className="flex flex-wrap gap-2">
                       {stages.map(stage => (
                         <button
                           key={stage.id}
                           onClick={() => toggleStage(stage.id)}
                           className={cn(
-                            "inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border transition-all",
+                            "inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border transition-all",
                             stage.active
-                              ? "border-[#2563eb]/40 bg-[#2563eb]/10 text-[#2563eb] shadow-sm shadow-[#2563eb]/5"
-                              : "border-white/10 bg-white/[0.02] text-slate-400 hover:border-white/20 hover:text-slate-300"
+                              ? "border-primary/40 bg-primary/5 text-primary shadow-sm shadow-primary/5"
+                              : "border-border bg-background text-muted-foreground hover:border-primary/20 hover:text-foreground"
                           )}
                         >
                           <span className={cn("w-2 h-2 rounded-full flex-shrink-0", stage.color)} />
                           {stage.name}
-                          {stage.active && <CheckCircle2 className="w-3 h-3 text-[#2563eb]" />}
+                          {stage.active && <CheckCircle2 className="w-3 h-3 text-primary" />}
                         </button>
                       ))}
                     </div>
@@ -274,36 +275,36 @@ const Automacoes = () => {
               </div>
 
               {/* IA States */}
-              <div className="rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 p-4 shadow-lg">
+              <div className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-center gap-2.5 mb-3">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center">
-                    <Bot className="w-3.5 h-3.5 text-emerald-400" />
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <Bot className="w-3.5 h-3.5 text-emerald-500" />
                   </div>
                   <div>
-                    <span className="text-sm font-semibold text-white">Estado da IA</span>
-                    <p className="text-[11px] text-slate-400">Defina quando os follow-ups devem ser enviados</p>
+                    <span className="text-sm font-semibold text-foreground">Estado da IA</span>
+                    <p className="text-[11px] text-muted-foreground">Defina quando os follow-ups devem ser enviados</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {([
-                    { key: "ativa" as IAState, label: "IA Ativa", desc: "Enviar quando IA está respondendo", icon: Play, borderColor: "border-emerald-500/30", bgColor: "bg-emerald-500/5", iconColor: "text-emerald-400" },
-                    { key: "pausada" as IAState, label: "IA Pausada", desc: "Enviar quando IA está em pausa", icon: Pause, borderColor: "border-amber-500/30", bgColor: "bg-amber-500/5", iconColor: "text-amber-400" },
-                    { key: "desativada" as IAState, label: "IA Desativada", desc: "Enviar quando IA está desligada", icon: XCircle, borderColor: "border-red-500/30", bgColor: "bg-red-500/5", iconColor: "text-red-400" },
+                    { key: "ativa" as IAState, label: "IA Ativa", desc: "Enviar quando IA está respondendo", icon: Play, color: "emerald" },
+                    { key: "pausada" as IAState, label: "IA Pausada", desc: "Enviar quando IA está em pausa", icon: Pause, color: "amber" },
+                    { key: "desativada" as IAState, label: "IA Desativada", desc: "Enviar quando IA está desligada", icon: XCircle, color: "red" },
                   ]).map(state => (
                     <div
                       key={state.key}
                       className={cn(
-                        "rounded-xl border p-3 transition-all cursor-pointer",
+                        "rounded-lg border p-3 transition-all cursor-pointer",
                         iaStates[state.key]
-                          ? `${state.borderColor} ${state.bgColor}`
-                          : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"
+                          ? `border-${state.color}-500/30 bg-${state.color}-500/5`
+                          : "border-border bg-background hover:border-border/80"
                       )}
                       onClick={() => toggleIA(state.key)}
                     >
                       <div className="flex items-center justify-between mb-1.5">
                         <div className="flex items-center gap-1.5">
-                          <state.icon className={cn("w-3.5 h-3.5", state.iconColor)} />
-                          <span className="text-xs font-semibold text-white">{state.label}</span>
+                          <state.icon className={cn("w-3.5 h-3.5", `text-${state.color}-500`)} />
+                          <span className="text-xs font-semibold text-foreground">{state.label}</span>
                         </div>
                         <Switch
                           checked={iaStates[state.key]}
@@ -311,7 +312,7 @@ const Automacoes = () => {
                           className="scale-75"
                         />
                       </div>
-                      <p className="text-[10px] text-slate-400 leading-relaxed">{state.desc}</p>
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">{state.desc}</p>
                     </div>
                   ))}
                 </div>
@@ -320,8 +321,8 @@ const Automacoes = () => {
               {/* Follow-ups list */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-white">Sequência de Follow-ups</h3>
-                  <span className="text-[11px] text-slate-400">{followUps.length} configurados</span>
+                  <h3 className="text-sm font-bold text-foreground">Sequência de Follow-ups</h3>
+                  <span className="text-[11px] text-muted-foreground">{followUps.length} configurados</span>
                 </div>
 
                 <div className="space-y-2">
@@ -330,63 +331,63 @@ const Automacoes = () => {
                       {/* Connector line */}
                       {index > 0 && (
                         <div className="flex items-center gap-2 py-1 pl-5">
-                          <div className="w-px h-4 bg-white/10" />
-                          <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                          <div className="w-px h-4 bg-border" />
+                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                             <Clock className="w-2.5 h-2.5" />
                             aguardar {fu.delay}
                           </div>
-                          <ArrowRight className="w-2.5 h-2.5 text-slate-500" />
+                          <ArrowRight className="w-2.5 h-2.5 text-muted-foreground" />
                         </div>
                       )}
 
                       <div className={cn(
-                        "rounded-xl border bg-white/5 backdrop-blur-xl transition-all shadow-lg",
-                        fu.active ? "border-emerald-500/20" : "border-white/10 opacity-60",
-                        expandedFollowUp === fu.id && "shadow-xl shadow-black/20"
+                        "rounded-xl border bg-card transition-all",
+                        fu.active ? "border-emerald-500/20" : "border-border opacity-60",
+                        expandedFollowUp === fu.id && "shadow-sm"
                       )}>
                         {/* Header row */}
                         <div
                           className="flex items-center gap-3 p-4 cursor-pointer"
                           onClick={() => setExpandedFollowUp(expandedFollowUp === fu.id ? null : fu.id)}
                         >
-                          <button className="cursor-grab text-slate-600 hover:text-slate-400">
+                          <button className="cursor-grab text-muted-foreground/40 hover:text-muted-foreground">
                             <GripVertical className="w-4 h-4" />
                           </button>
 
                           <div className={cn(
                             "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0",
-                            fu.active ? "bg-emerald-500/15 text-emerald-400" : "bg-white/5 text-slate-500"
+                            fu.active ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"
                           )}>
                             #{index + 1}
                           </div>
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-white">{fu.name}</span>
-                              <span className="text-[9px] px-1.5 py-0 h-4 inline-flex items-center rounded-md border border-white/10 text-slate-400 font-medium">
+                              <span className="text-sm font-semibold text-foreground">{fu.name}</span>
+                              <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 font-medium">
                                 {fu.type}
-                              </span>
+                              </Badge>
                             </div>
                             <div className="flex items-center gap-3 mt-0.5">
-                              <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                              <span className="text-[11px] text-muted-foreground flex items-center gap-1">
                                 <Clock className="w-3 h-3" /> {fu.delay}
                               </span>
-                              <span className="text-[11px] text-slate-500">
+                              <span className="text-[11px] text-muted-foreground">
                                 {fu.stats.sent} enviados · {fu.stats.replied} respostas
                               </span>
                             </div>
                           </div>
 
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button className="p-1.5 rounded-md text-slate-500 hover:text-white hover:bg-white/10 transition-colors">
+                            <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
-                            <button className="p-1.5 rounded-md text-slate-500 hover:text-white hover:bg-white/10 transition-colors">
+                            <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                               <Copy className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={e => { e.stopPropagation(); deleteFollowUp(fu.id); }}
-                              className="p-1.5 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -399,7 +400,7 @@ const Automacoes = () => {
                           />
 
                           <ChevronDown className={cn(
-                            "w-4 h-4 text-slate-500 transition-transform",
+                            "w-4 h-4 text-muted-foreground transition-transform",
                             expandedFollowUp === fu.id && "rotate-180"
                           )} />
                         </div>
@@ -407,34 +408,34 @@ const Automacoes = () => {
                         {/* Expanded content */}
                         {expandedFollowUp === fu.id && (
                           <div className="px-4 pb-4 pt-0">
-                            <div className="h-px bg-white/10 mb-3" />
+                            <div className="h-px bg-border mb-3" />
 
                             <div className="grid grid-cols-2 gap-4">
                               {/* Message preview */}
                               <div>
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Mensagem</p>
-                                <div className="rounded-xl bg-[#0f172a] p-3 text-xs text-slate-300 leading-relaxed border border-white/5">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Mensagem</p>
+                                <div className="rounded-lg bg-muted/50 p-3 text-xs text-foreground leading-relaxed border border-border">
                                   {fu.message}
                                 </div>
                               </div>
 
                               {/* Mini stats */}
                               <div>
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Desempenho</p>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Desempenho</p>
                                 <div className="space-y-2">
                                   {[
-                                    { label: "Enviados", value: fu.stats.sent, total: fu.stats.sent, color: "bg-[#2563eb]" },
+                                    { label: "Enviados", value: fu.stats.sent, total: fu.stats.sent, color: "bg-primary" },
                                     { label: "Aberturas", value: fu.stats.opened, total: fu.stats.sent, color: "bg-emerald-500" },
-                                    { label: "Respostas", value: fu.stats.replied, total: fu.stats.sent, color: "bg-blue-400" },
+                                    { label: "Respostas", value: fu.stats.replied, total: fu.stats.sent, color: "bg-blue-500" },
                                   ].map(s => (
                                     <div key={s.label}>
                                       <div className="flex items-center justify-between mb-1">
-                                        <span className="text-[11px] text-slate-400">{s.label}</span>
-                                        <span className="text-[11px] font-semibold text-white">
-                                          {s.value} <span className="text-slate-500 font-normal">({Math.round(s.value / s.total * 100)}%)</span>
+                                        <span className="text-[11px] text-muted-foreground">{s.label}</span>
+                                        <span className="text-[11px] font-semibold text-foreground">
+                                          {s.value} <span className="text-muted-foreground font-normal">({Math.round(s.value / s.total * 100)}%)</span>
                                         </span>
                                       </div>
-                                      <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                                         <div
                                           className={cn("h-full rounded-full transition-all", s.color)}
                                           style={{ width: `${Math.round(s.value / s.total * 100)}%` }}
@@ -453,7 +454,7 @@ const Automacoes = () => {
                 </div>
 
                 {/* Add button */}
-                <button className="w-full mt-3 py-3 rounded-xl border-2 border-dashed border-white/10 hover:border-[#2563eb]/30 text-slate-500 hover:text-[#2563eb] text-xs font-medium flex items-center justify-center gap-2 transition-all">
+                <button className="w-full mt-3 py-3 rounded-xl border-2 border-dashed border-border hover:border-primary/30 text-muted-foreground hover:text-primary text-xs font-medium flex items-center justify-center gap-2 transition-all">
                   <Plus className="w-3.5 h-3.5" />
                   Adicionar follow-up à sequência
                 </button>
@@ -463,7 +464,7 @@ const Automacoes = () => {
               <ProGate title="Automações por Gatilho" description="Follow-ups automáticos, alertas de inatividade e integração com CRM. Disponível no Plano Pro.">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-sm font-bold text-white">Automações Avançadas</h3>
+                    <h3 className="text-sm font-bold text-foreground">Automações Avançadas</h3>
                     <ProBadge />
                   </div>
                   {[
@@ -471,14 +472,14 @@ const Automacoes = () => {
                     { title: "Alerta de Inatividade", desc: "Sem resposta em 72h → Notificar responsável + escalar", active: true },
                     { title: "Mover Lead no CRM", desc: "Resposta positiva detectada → Mover para 'Em Negociação'", active: false },
                   ].map(item => (
-                    <div key={item.title} className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 flex items-center gap-3 shadow-lg">
-                      <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", item.active ? "bg-emerald-400" : "bg-slate-500")} />
+                    <div key={item.title} className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+                      <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", item.active ? "bg-emerald-500" : "bg-muted-foreground")} />
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-white">{item.title}</span>
+                          <span className="text-sm font-semibold text-foreground">{item.title}</span>
                           <ProBadge />
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">{item.desc}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
                       </div>
                     </div>
                   ))}

@@ -1,47 +1,141 @@
 
 
-# Plano: Reestruturar Automações com layout dark do HTML fornecido
+# Plano: Funcionalidades Exclusivas do Plano Pro
 
-O HTML do usuario e uma landing page com estilo dark gradient (`#0f172a` → `#1e293b`), glassmorphism cards, e tipografia Inter. Vou aplicar esse visual ao conteudo existente da pagina de Automacoes, mantendo toda a logica funcional.
+Implementacao completa das features Pro, controladas por um helper de verificacao de plano. Usuarios Basic veem badges "PRO" com cadeado e botao de upgrade; usuarios Pro/Premium acessam tudo.
 
-## Mudancas em `src/pages/Automacoes.tsx`
+---
 
-### Layout principal
-- Fundo com gradiente dark: `bg-gradient-to-br from-[#0f172a] to-[#1e293b]` no container principal
-- Textos em `text-white` / `text-slate-400` em vez dos tokens padrão
-- Cards com estilo glassmorphism: `bg-white/5 backdrop-blur-xl border border-white/10 shadow-lg`
+## 1. Helper de controle de plano
 
-### Header (inspirado no header do HTML)
-- Barra superior com titulo "Automações" alinhado a esquerda + nav links (Follow-ups, Etapas, IA, Gatilhos) como links de navegacao estilo `nav a` do HTML
-- Botao "Novo Follow-up" no estilo `btn-primary` (`bg-[#2563eb] hover:bg-[#1d4ed8] rounded-xl`)
+**Novo arquivo:** `src/lib/planAccess.ts`
+- Funcoes `isPro()`, `isPremium()`, `isBasic()` lendo `localStorage("zapprobr_user").plan`
 
-### Sidebar
-- Manter sidebar funcional mas com fundo `bg-[#0f172a]/80 backdrop-blur` e itens com hover `bg-white/5`
-- Textos `text-slate-400` com hover `text-white`
-- Item ativo com `bg-[#2563eb]/15 text-[#2563eb]`
+**Novo componente:** `src/components/ui/ProGate.tsx`
+- Wrapper: se Pro+ renderiza children, senao mostra card com icone de cadeado + "Funcionalidade do Plano Pro" + botao "Fazer Upgrade"
 
-### Cards de stats
-- Fundo `bg-white/5 backdrop-blur-xl border border-white/10`
-- Valores em `text-white`, labels em `text-slate-400`
-- Badges de percentual com fundo translucido
+**Novo componente:** `src/components/ui/ProBadge.tsx`
+- Badge pequeno "PRO" reutilizavel
 
-### Etapas do funil
-- Card glassmorphism
-- Botoes de etapa com borda `border-white/10`, ativo com `border-[#2563eb]/40 bg-[#2563eb]/10`
+---
 
-### Estado da IA
-- Cards glassmorphism com cores sutis por estado
+## 2. IA de Recepcao Inteligente
 
-### Follow-ups
-- Cards glassmorphism com borda esverdeada quando ativo (`border-emerald-500/20`)
-- Barras de progresso mantidas
-- Inputs com `bg-[#0f172a] text-white border-none` (estilo do HTML)
+**Arquivo:** `src/pages/DisparoRecepcao.tsx`
+- Adicionar secao Pro-only apos as regras de anuncio:
+  - Selecao de setor da IA (Comercial, Financeiro, Suporte)
+  - Toggle para ativar IA de recepcao
+  - Preview simulado da resposta da IA baseada no setor
+- Envolvido em `ProGate`
 
-### Pro section
-- Manter ProGate com visual adaptado ao tema dark
+---
 
-## Arquivos afetados
-| Arquivo | Acao |
-|---------|------|
-| `src/pages/Automacoes.tsx` | Reescrever estilos de todos os elementos para tema dark gradient com glassmorphism |
+## 3. IAs Personalizadas por Setor
+
+**Novo arquivo:** `src/pages/IAsSetoriais.tsx` (rota `/ias-setoriais`)
+- 3 cards (Comercial, Financeiro, Suporte) com:
+  - Prompt editavel, tom de voz (formal/amigavel/tecnico), toggle ativo/inativo
+- Toda a pagina envolvida em `ProGate`
+
+**Atualizar:** `src/App.tsx` — nova rota `/ias-setoriais`
+**Atualizar:** `src/components/AppSidebar.tsx` — novo item "IAs Setoriais" com icone `Brain` e badge PRO
+
+---
+
+## 4. Agendamento com Google Meet
+
+**Arquivo:** `src/pages/Agendamentos.tsx`
+- Secao Pro-only "Agendamento Automatico":
+  - Toggle integracao Google Meet (mock)
+  - Formulario: titulo, duracao, participantes
+  - Lista de reunioes com link Meet mockado
+- Envolvido em `ProGate`
+
+---
+
+## 5. CRM Avancado
+
+**Arquivo:** `src/components/crm/types.ts`
+- Adicionar campos `origin` (`'whatsapp' | 'site' | 'indicacao' | 'anuncio'`) e `convertedAt` ao tipo Lead
+
+**Arquivo:** `src/components/crm/data.ts`
+- Adicionar `origin` aos leads existentes
+
+**Novo componente:** `src/components/crm/LeadOriginChart.tsx`
+- Grafico de pizza com origens (recharts)
+
+**Arquivo:** `src/components/crm/PipelineMetrics.tsx`
+- Adicionar metricas Pro+: taxa de conversao, leads por origem (envolvidas em ProGate)
+
+**Arquivo:** `src/components/crm/LeadCard.tsx`
+- Mostrar badge de origem no card
+
+---
+
+## 6. Distribuicao Automatica de Leads
+
+**Arquivo:** `src/pages/CRM.tsx`
+- Botao "Distribuicao Automatica" (Pro-only) no header
+- Modal com lista de vendedores, metodo round-robin, toggle ativo/inativo
+- Ao criar lead com distribuicao ativa, atribuir `assignee` automaticamente
+
+---
+
+## 7. Automacoes por Gatilho
+
+**Arquivo:** `src/pages/Automacoes.tsx`
+- Adicionar automacoes Pro-only: follow-up automatico (tempo configuravel), alertas de inatividade, mover lead no CRM
+- Cada item Pro com badge PRO
+- Envolvidos em `ProGate`
+
+**Atualizar:** `src/App.tsx` — rota `/automacoes`
+**Atualizar:** `src/components/AppSidebar.tsx` — item "Automacoes" no menu
+
+---
+
+## 8. Painel Analitico Pro
+
+**Novos componentes:**
+- `src/components/dashboard/ConversionChart.tsx` — AreaChart de conversao por periodo
+- `src/components/dashboard/AttendantPerformanceChart.tsx` — BarChart horizontal por atendente
+- `src/components/dashboard/LeadOriginPieChart.tsx` — PieChart de origens
+
+**Arquivo:** `src/pages/Index.tsx`
+- Adicionar secao Pro-only com os 3 graficos extras abaixo dos atuais
+- Metricas extras: taxa de conversao, tempo medio de resposta
+
+---
+
+## 9. Configuracoes — Limite de 5 conexoes
+
+**Arquivo:** `src/pages/Configuracoes.tsx`
+- Alterar limite de conexoes para mostrar `5` quando plano Pro (ja existe logica para `currentPlan`)
+- Atualizar a descricao do plano Pro no array `plans` com as novas features
+
+---
+
+## Resumo de arquivos
+
+| Acao | Arquivo |
+|------|---------|
+| Criar | `src/lib/planAccess.ts` |
+| Criar | `src/components/ui/ProGate.tsx` |
+| Criar | `src/components/ui/ProBadge.tsx` |
+| Criar | `src/pages/IAsSetoriais.tsx` |
+| Criar | `src/components/crm/LeadOriginChart.tsx` |
+| Criar | `src/components/dashboard/ConversionChart.tsx` |
+| Criar | `src/components/dashboard/AttendantPerformanceChart.tsx` |
+| Criar | `src/components/dashboard/LeadOriginPieChart.tsx` |
+| Editar | `src/App.tsx` |
+| Editar | `src/components/AppSidebar.tsx` |
+| Editar | `src/pages/DisparoRecepcao.tsx` |
+| Editar | `src/pages/Agendamentos.tsx` |
+| Editar | `src/pages/CRM.tsx` |
+| Editar | `src/pages/Automacoes.tsx` |
+| Editar | `src/pages/Index.tsx` |
+| Editar | `src/pages/Configuracoes.tsx` |
+| Editar | `src/components/crm/types.ts` |
+| Editar | `src/components/crm/data.ts` |
+| Editar | `src/components/crm/PipelineMetrics.tsx` |
+| Editar | `src/components/crm/LeadCard.tsx` |
 
