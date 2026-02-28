@@ -19,7 +19,7 @@ const Dashboard = () => {
       <div className="space-y-8 animate-fade-in">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Visão geral do seu ZapProBR</p>
+          <p className="text-muted-foreground mt-1">Visão geral do seu Birdly</p>
         </div>
 
         {/* Metrics */}

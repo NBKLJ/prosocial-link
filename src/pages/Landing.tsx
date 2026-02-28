@@ -5,6 +5,7 @@ import {
   MessageSquare, Bot, Zap, BarChart3, Shield, Users, ArrowRight, Check,
   Send, Sparkles, TrendingUp, Crown, ChevronDown,
 } from "lucide-react";
+import birdlyLogo from "@/assets/birdly-logo.png";
 
 // ── GOLD PARTICLES (Canvas) ─────────────────────────────────────
 function GoldParticles() {
@@ -427,15 +428,9 @@ const Landing = () => {
         <div className={`transition-all duration-700 ${scrolled ? "bg-[#05070A]/90 backdrop-blur-2xl shadow-2xl shadow-black/20" : "bg-transparent"}`}>
           <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-5">
             <motion.div className="flex items-center gap-3" whileHover={{ scale: 1.03 }}>
-              <motion.div
-                className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#C8A55A] to-[#E8C875] flex items-center justify-center shadow-lg shadow-[#C8A55A]/20"
-                animate={{ boxShadow: ["0 4px 15px rgba(200,165,90,0.2)", "0 4px 25px rgba(200,165,90,0.4)", "0 4px 15px rgba(200,165,90,0.2)"] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <Zap className="w-5 h-5 text-[#05070A]" />
-              </motion.div>
+              <img src={birdlyLogo} alt="Birdly" className="w-9 h-9 rounded-lg object-contain" />
               <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-[#C8A55A] to-[#E8C875] bg-clip-text text-transparent">
-                ZapProBR
+                Birdly
               </span>
             </motion.div>
 
@@ -611,7 +606,7 @@ const Landing = () => {
       <section className="relative py-20">
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C8A55A]/25 to-transparent mb-16" />
         <FadeIn className="text-center mb-12">
-          <p className="text-[11px] tracking-[0.3em] uppercase text-white/15">Empresas que confiam no ZapProBR</p>
+          <p className="text-[11px] tracking-[0.3em] uppercase text-white/15">Empresas que confiam no Birdly</p>
         </FadeIn>
         <MarqueeRow />
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C8A55A]/25 to-transparent mt-16" />
@@ -692,7 +687,7 @@ const Landing = () => {
                     <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
                   </div>
                   <div className="flex-1 text-center">
-                    <span className="text-[10px] tracking-[0.1em] text-white/15">app.zapprobr.com</span>
+                    <span className="text-[10px] tracking-[0.1em] text-white/15">app.birdly.com</span>
                   </div>
                 </div>
 
@@ -778,7 +773,7 @@ const Landing = () => {
             </AnimatedHeadline>
             <p className="text-white/25 font-light mt-6 leading-relaxed max-w-md text-base">
               Nossos clientes experimentam resultados transformadores desde o primeiro mês.
-              A tecnologia ZapProBR não é uma promessa — é uma garantia de performance.
+              A tecnologia Birdly não é uma promessa — é uma garantia de performance.
             </p>
           </FadeIn>
 
@@ -954,11 +949,9 @@ const Landing = () => {
           <div className="grid md:grid-cols-4 gap-10">
             <div>
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C8A55A] to-[#E8C875] flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-[#05070A]" />
-                </div>
+                <img src={birdlyLogo} alt="Birdly" className="w-8 h-8 rounded-lg object-contain" />
                 <span className="text-lg font-bold bg-gradient-to-r from-[#C8A55A] to-[#E8C875] bg-clip-text text-transparent">
-                  ZapProBR
+                  Birdly
                 </span>
               </div>
               <p className="text-sm text-white/15 font-light leading-relaxed">
@@ -988,7 +981,7 @@ const Landing = () => {
 
           <div className="mt-16 pt-8 border-t border-[#C8A55A]/5 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-[11px] text-white/10 tracking-wider">
-              © 2025 ZapProBR. Todos os direitos reservados.
+              © 2026 Birdly. Todos os direitos reservados.
             </p>
             <p className="text-[11px] text-white/8 tracking-wider">
               Feito com excelência no Brasil 🇧🇷
