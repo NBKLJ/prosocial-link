@@ -18,6 +18,7 @@ import Login from "./pages/Login";
 import Automacoes from "./pages/Automacoes";
 import Agendamentos from "./pages/Agendamentos";
 import IAsSetoriais from "./pages/IAsSetoriais";
+import Landing from "./pages/Landing";
 
 const queryClient = new QueryClient();
 
@@ -36,8 +37,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<ProtectedRoute><Conversas /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/crm" element={<ProtectedRoute><CRM /></ProtectedRoute>} />
           <Route path="/conversas" element={<ProtectedRoute><Conversas /></ProtectedRoute>} />
