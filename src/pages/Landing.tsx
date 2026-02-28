@@ -1,9 +1,9 @@
 import { useRef, useCallback, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
+import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import {
   MessageSquare, Bot, Zap, BarChart3, Shield, Users, ArrowRight, Check,
-  Send, Brain, Globe, Clock, Sparkles, TrendingUp, Crown,
+  Send, Sparkles, TrendingUp, Crown, ChevronDown,
 } from "lucide-react";
 
 // ── GOLD PARTICLES (Canvas) ─────────────────────────────────────
@@ -21,20 +21,20 @@ function GoldParticles() {
 
     const resize = () => {
       canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.height = window.innerHeight * 3;
     };
     resize();
     window.addEventListener("resize", resize);
 
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 80; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: -Math.random() * 0.4 - 0.1,
-        size: Math.random() * 2 + 0.5,
-        alpha: Math.random() * 0.5 + 0.1,
-        decay: Math.random() * 0.002 + 0.001,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: -Math.random() * 0.5 - 0.1,
+        size: Math.random() * 2.5 + 0.5,
+        alpha: Math.random() * 0.6 + 0.1,
+        decay: Math.random() * 0.003 + 0.001,
       });
     }
 
@@ -48,11 +48,12 @@ function GoldParticles() {
         if (p.x < -10) p.x = canvas.width + 10;
         if (p.x > canvas.width + 10) p.x = -10;
 
-        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
-        gradient.addColorStop(0, `rgba(200, 165, 90, ${Math.max(0, Math.min(0.6, p.alpha))})`);
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
+        gradient.addColorStop(0, `rgba(232, 200, 117, ${Math.max(0, Math.min(0.7, p.alpha))})`);
+        gradient.addColorStop(0.5, `rgba(200, 165, 90, ${Math.max(0, Math.min(0.3, p.alpha * 0.5))})`);
         gradient.addColorStop(1, `rgba(200, 165, 90, 0)`);
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
         ctx.fillStyle = gradient;
         ctx.fill();
       });
@@ -69,22 +70,12 @@ function GoldParticles() {
 function PerspectiveGrid() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div
-        className="absolute inset-0"
-        style={{
-          perspective: "800px",
-          perspectiveOrigin: "50% 30%",
-        }}
-      >
+      <div className="absolute inset-0" style={{ perspective: "800px", perspectiveOrigin: "50% 30%" }}>
         <motion.div
-          animate={{ opacity: [0.06, 0.12, 0.06] }}
+          animate={{ opacity: [0.08, 0.16, 0.08] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           style={{
-            position: "absolute",
-            top: "20%",
-            left: "-20%",
-            right: "-20%",
-            bottom: "-60%",
+            position: "absolute", top: "20%", left: "-20%", right: "-20%", bottom: "-60%",
             transform: "rotateX(60deg)",
             backgroundImage: `
               linear-gradient(rgba(200,165,90,0.3) 1px, transparent 1px),
@@ -94,69 +85,138 @@ function PerspectiveGrid() {
           }}
         />
       </div>
-      {/* Radial fade */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,#05070A_70%)]" />
     </div>
   );
 }
 
-// ── REVEAL TEXT ──────────────────────────────────────────────────
-function RevealText({ children, className = "", delay = 0 }: { children: string; className?: string; delay?: number }) {
+// ── ANIMATED TEXT (word by word, no clipping) ────────────────────
+function AnimatedHeadline({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-40px" });
-  const words = children.split(" ");
+  const isInView = useInView(ref, { once: true, margin: "-20px" });
 
-  return (
-    <div ref={ref} className={className}>
-      {words.map((word, i) => (
-        <span key={i} className="inline-block overflow-hidden mr-[0.3em] py-[0.1em]">
+  // If children is a string, animate word-by-word; otherwise animate as single block
+  if (typeof children === "string") {
+    const words = children.split(" ");
+    return (
+      <div ref={ref} className={className} style={{ lineHeight: 1.15 }}>
+        {words.map((word, i) => (
           <motion.span
-            className="inline-block"
-            initial={{ y: "110%" }}
-            animate={isInView ? { y: 0 } : {}}
-            transition={{ duration: 0.6, delay: delay + i * 0.04, ease: [0.25, 0.46, 0.45, 0.94] }}
+            key={i}
+            className="inline-block mr-[0.25em]"
+            initial={{ opacity: 0, y: 40, filter: "blur(8px)" }}
+            animate={isInView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+            transition={{ duration: 0.7, delay: delay + i * 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             {word}
           </motion.span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-// ── ANGULAR CARD ────────────────────────────────────────────────
-function AngularCard({ children, className = "", delay = 0, glowOnHover = true }: {
-  children: React.ReactNode; className?: string; delay?: number; glowOnHover?: boolean;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-60px" });
-  const [hovered, setHovered] = useState(false);
+        ))}
+      </div>
+    );
+  }
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      className={className}
+      style={{ lineHeight: 1.15 }}
+      initial={{ opacity: 0, y: 40, filter: "blur(8px)" }}
+      animate={isInView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
       transition={{ duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// (ShimmerText removed — shimmer is handled via CSS @keyframes shimmerGold)
+
+// ── TYPING CURSOR ───────────────────────────────────────────────
+function TypingWords({ words, className = "" }: { words: string[]; className?: string }) {
+  const [index, setIndex] = useState(0);
+  const [displayed, setDisplayed] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const word = words[index];
+    let timeout: NodeJS.Timeout;
+    if (!deleting) {
+      if (displayed.length < word.length) {
+        timeout = setTimeout(() => setDisplayed(word.slice(0, displayed.length + 1)), 80);
+      } else {
+        timeout = setTimeout(() => setDeleting(true), 2000);
+      }
+    } else {
+      if (displayed.length > 0) {
+        timeout = setTimeout(() => setDisplayed(displayed.slice(0, -1)), 40);
+      } else {
+        setDeleting(false);
+        setIndex((i) => (i + 1) % words.length);
+      }
+    }
+    return () => clearTimeout(timeout);
+  }, [displayed, deleting, index, words]);
+
+  return (
+    <span className={className}>
+      {displayed}
+      <motion.span
+        animate={{ opacity: [1, 0] }}
+        transition={{ duration: 0.6, repeat: Infinity }}
+        className="inline-block w-[3px] h-[0.85em] bg-[#C8A55A] ml-1 align-middle"
+      />
+    </span>
+  );
+}
+
+// ── ANGULAR CARD ────────────────────────────────────────────────
+function AngularCard({ children, className = "", delay = 0 }: {
+  children: React.ReactNode; className?: string; delay?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+  const [hovered, setHovered] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+
+  const handleMouse = useCallback((e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePos({ x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height });
+  }, []);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 50, rotateX: 5 }}
+      animate={isInView ? { opacity: 1, y: 0, rotateX: 0 } : {}}
+      transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+      whileHover={{ y: -8, transition: { duration: 0.3 } }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`relative group ${className}`}
+      onMouseMove={handleMouse}
+      className={`relative group cursor-default ${className}`}
       style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%)" }}
     >
-      {/* Background */}
       <div className="absolute inset-0 bg-[#0a0d14] transition-all duration-500" />
-      {/* Gold border glow on hover */}
-      {glowOnHover && (
-        <div className={`absolute inset-0 transition-opacity duration-500 ${hovered ? "opacity-100" : "opacity-0"}`}
-          style={{ boxShadow: "inset 0 0 0 1px rgba(200,165,90,0.4), 0 0 30px rgba(200,165,90,0.08)" }}
-        />
-      )}
+      {/* Mouse-following glow */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{
+          background: `radial-gradient(400px circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(200,165,90,0.06), transparent 60%)`,
+        }}
+      />
+      {/* Gold border on hover */}
+      <motion.div
+        className="absolute inset-0"
+        animate={hovered ? { boxShadow: "inset 0 0 0 1px rgba(200,165,90,0.4), 0 0 40px rgba(200,165,90,0.08)" } : { boxShadow: "inset 0 0 0 1px rgba(200,165,90,0.08), 0 0 0px rgba(200,165,90,0)" }}
+        transition={{ duration: 0.4 }}
+        style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%)" }}
+      />
       {/* Corner accent */}
       <div className="absolute bottom-0 right-0 w-[20px] h-[20px]"
         style={{
           background: hovered
-            ? "linear-gradient(135deg, transparent 50%, rgba(200,165,90,0.6) 50%)"
-            : "linear-gradient(135deg, transparent 50%, rgba(200,165,90,0.2) 50%)",
+            ? "linear-gradient(135deg, transparent 50%, rgba(200,165,90,0.7) 50%)"
+            : "linear-gradient(135deg, transparent 50%, rgba(200,165,90,0.15) 50%)",
           transition: "background 0.5s",
         }}
       />
@@ -170,21 +230,27 @@ function BorderGlowButton({ children, onClick, className = "" }: { children: Rea
   return (
     <motion.button
       onClick={onClick}
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       className={`relative group px-8 py-4 font-semibold text-sm tracking-wide uppercase overflow-hidden ${className}`}
       style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%)" }}
     >
-      {/* Rotating conic gradient border */}
       <div
-        className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-500"
+        className="absolute inset-0 opacity-80 group-hover:opacity-100 transition-opacity duration-500"
         style={{
           background: "conic-gradient(from var(--angle, 0deg), #C8A55A, transparent 40%, #C8A55A 60%, transparent)",
           animation: "borderRotate 3s linear infinite",
         }}
       />
-      <div className="absolute inset-[1px] bg-[#05070A]"
+      <div className="absolute inset-[1.5px] bg-[#05070A] group-hover:bg-[#080b12] transition-colors duration-300"
         style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%)" }}
+      />
+      {/* Shimmer sweep */}
+      <motion.div
+        className="absolute inset-0 z-[5]"
+        style={{ background: "linear-gradient(105deg, transparent 40%, rgba(232,200,117,0.15) 50%, transparent 60%)", backgroundSize: "200% 100%" }}
+        animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "linear", repeatDelay: 3 }}
       />
       <span className="relative z-10 text-[#E8C875] group-hover:text-white transition-colors duration-300">{children}</span>
     </motion.button>
@@ -194,15 +260,10 @@ function BorderGlowButton({ children, onClick, className = "" }: { children: Rea
 // ── HOLOGRAM SCAN ───────────────────────────────────────────────
 function HologramScan() {
   return (
-    <motion.div
-      className="absolute inset-0 pointer-events-none z-20"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 1 }}
-    >
+    <motion.div className="absolute inset-0 pointer-events-none z-20" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
       <motion.div
         className="absolute left-0 right-0 h-[2px]"
-        style={{ background: "linear-gradient(90deg, transparent, rgba(200,165,90,0.6), rgba(232,200,117,0.8), rgba(200,165,90,0.6), transparent)" }}
+        style={{ background: "linear-gradient(90deg, transparent, rgba(200,165,90,0.4), rgba(232,200,117,0.8), rgba(200,165,90,0.4), transparent)", boxShadow: "0 0 20px rgba(200,165,90,0.3), 0 0 60px rgba(200,165,90,0.1)" }}
         animate={{ top: ["0%", "100%", "0%"] }}
         transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
       />
@@ -215,15 +276,15 @@ function MarqueeRow() {
   const logos = ["TechCorp", "AutoFlow", "DataSync", "CloudNex", "SmartOps", "DigiPro", "NexaHub", "FlowAI"];
   return (
     <div className="overflow-hidden relative">
-      <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#05070A] to-transparent z-10" />
-      <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#05070A] to-transparent z-10" />
+      <div className="absolute left-0 top-0 bottom-0 w-40 bg-gradient-to-r from-[#05070A] to-transparent z-10" />
+      <div className="absolute right-0 top-0 bottom-0 w-40 bg-gradient-to-l from-[#05070A] to-transparent z-10" />
       <motion.div
-        className="flex gap-16 items-center"
-        animate={{ x: [0, -800] }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="flex gap-20 items-center"
+        animate={{ x: [0, -900] }}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
       >
-        {[...logos, ...logos].map((name, i) => (
-          <div key={i} className="flex-shrink-0 text-lg font-bold tracking-[0.2em] text-[#C8A55A]/20 uppercase select-none">
+        {[...logos, ...logos, ...logos].map((name, i) => (
+          <div key={i} className="flex-shrink-0 text-xl font-bold tracking-[0.25em] text-[#C8A55A]/15 uppercase select-none whitespace-nowrap">
             {name}
           </div>
         ))}
@@ -256,19 +317,34 @@ function AnimatedCounter({ value, suffix = "", prefix = "" }: { value: number; s
 }
 
 // ── FADE IN ─────────────────────────────────────────────────────
-function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+function FadeIn({ children, className = "", delay = 0, direction = "up" }: { children: React.ReactNode; className?: string; delay?: number; direction?: "up" | "left" | "right" }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-60px" });
+  const initialPos = direction === "up" ? { y: 40 } : direction === "left" ? { x: -40 } : { x: 40 };
+  const animatePos = direction === "up" ? { y: 0 } : { x: 0 };
+
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+      initial={{ opacity: 0, ...initialPos }}
+      animate={isInView ? { opacity: 1, ...animatePos } : {}}
+      transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
       className={className}
     >
       {children}
     </motion.div>
+  );
+}
+
+// ── FLOATING GLOW ORB ───────────────────────────────────────────
+function FloatingOrb({ color = "rgba(200,165,90,0.06)", size = 400, x = "50%", y = "50%", delay = 0 }: { color?: string; size?: number; x?: string; y?: string; delay?: number }) {
+  return (
+    <motion.div
+      className="absolute rounded-full pointer-events-none"
+      style={{ width: size, height: size, left: x, top: y, transform: "translate(-50%, -50%)", background: `radial-gradient(circle, ${color}, transparent 70%)`, filter: "blur(60px)" }}
+      animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0.8, 0.5] }}
+      transition={{ duration: 8 + delay, repeat: Infinity, ease: "easeInOut", delay }}
+    />
   );
 }
 
@@ -314,28 +390,20 @@ const IMPACT = [
   { value: 50, suffix: "K+", label: "Atendimentos automatizados/mês" },
 ];
 
-// ── CSS for border rotation ─────────────────────────────────────
 const globalStyles = `
-@property --angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-@keyframes borderRotate {
-  to { --angle: 360deg; }
-}
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
+@property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes borderRotate { to { --angle: 360deg; } }
+@keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
+@keyframes pulseGold { 0%, 100% { box-shadow: 0 0 0 0 rgba(200,165,90,0.4); } 70% { box-shadow: 0 0 0 12px rgba(200,165,90,0); } }
+@keyframes shimmerGold { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 `;
 
 // ── MAIN ────────────────────────────────────────────────────────
 const Landing = () => {
   const navigate = useNavigate();
   const { scrollYProgress } = useScroll();
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.1], [1, 0.95]);
+  const heroY = useTransform(scrollYProgress, [0, 0.15], [0, -60]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -345,23 +413,27 @@ const Landing = () => {
   }, []);
 
   return (
-    <div className="relative bg-[#05070A] text-white min-h-screen overflow-x-hidden selection:bg-[#C8A55A]/20">
+    <div className="relative bg-[#05070A] text-white min-h-screen overflow-x-hidden selection:bg-[#C8A55A]/30 selection:text-[#05070A]">
       <style>{globalStyles}</style>
       <GoldParticles />
 
       {/* ── NAV ───────────────────────────────────── */}
       <motion.nav
-        initial={{ y: -20, opacity: 0 }}
+        initial={{ y: -30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "border-b border-[#C8A55A]/10" : ""}`}
+        transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ${scrolled ? "border-b border-[#C8A55A]/10" : ""}`}
       >
-        <div className={`transition-all duration-500 ${scrolled ? "bg-[#05070A]/80 backdrop-blur-2xl" : "bg-transparent"}`}>
+        <div className={`transition-all duration-700 ${scrolled ? "bg-[#05070A]/90 backdrop-blur-2xl shadow-2xl shadow-black/20" : "bg-transparent"}`}>
           <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-5">
-            <motion.div className="flex items-center gap-3" whileHover={{ scale: 1.02 }}>
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#C8A55A] to-[#E8C875] flex items-center justify-center shadow-lg shadow-[#C8A55A]/20">
+            <motion.div className="flex items-center gap-3" whileHover={{ scale: 1.03 }}>
+              <motion.div
+                className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#C8A55A] to-[#E8C875] flex items-center justify-center shadow-lg shadow-[#C8A55A]/20"
+                animate={{ boxShadow: ["0 4px 15px rgba(200,165,90,0.2)", "0 4px 25px rgba(200,165,90,0.4)", "0 4px 15px rgba(200,165,90,0.2)"] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
                 <Zap className="w-5 h-5 text-[#05070A]" />
-              </div>
+              </motion.div>
               <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-[#C8A55A] to-[#E8C875] bg-clip-text text-transparent">
                 ZapProBR
               </span>
@@ -396,23 +468,23 @@ const Landing = () => {
       </motion.nav>
 
       {/* ── HERO ──────────────────────────────────── */}
-      <motion.section style={{ opacity: heroOpacity, scale: heroScale }} className="relative min-h-screen flex items-center justify-center px-6 pt-24">
+      <motion.section style={{ y: heroY, opacity: heroOpacity }} className="relative min-h-screen flex items-center justify-center px-6 pt-20">
         <PerspectiveGrid />
+        <FloatingOrb color="rgba(200,165,90,0.05)" size={600} x="30%" y="40%" delay={0} />
+        <FloatingOrb color="rgba(30,64,175,0.04)" size={500} x="70%" y="60%" delay={3} />
 
-        {/* Ambient glow */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-[#C8A55A]/[0.03] rounded-full blur-[150px] pointer-events-none" />
-
-        <div className="relative z-10 max-w-5xl mx-auto text-center space-y-10">
+        <div className="relative z-10 max-w-5xl mx-auto text-center">
           {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="mb-8"
           >
             <motion.div
-              className="inline-flex items-center gap-3 px-5 py-2.5 border border-[#C8A55A]/20 bg-[#C8A55A]/5 backdrop-blur-sm text-[12px] tracking-[0.15em] uppercase text-[#C8A55A]"
-              style={{ clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)" }}
-              animate={{ boxShadow: ["0 0 20px rgba(200,165,90,0)", "0 0 20px rgba(200,165,90,0.15)", "0 0 20px rgba(200,165,90,0)"] }}
+              className="inline-flex items-center gap-3 px-6 py-3 border border-[#C8A55A]/25 bg-[#C8A55A]/[0.06] backdrop-blur-md text-[11px] tracking-[0.18em] uppercase text-[#E8C875]"
+              style={{ clipPath: "polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)" }}
+              animate={{ boxShadow: ["0 0 25px rgba(200,165,90,0)", "0 0 25px rgba(200,165,90,0.2)", "0 0 25px rgba(200,165,90,0)"] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
               <Crown className="w-3.5 h-3.5" />
@@ -420,111 +492,167 @@ const Landing = () => {
             </motion.div>
           </motion.div>
 
-          {/* Headline */}
-          <div>
-          <RevealText className="text-5xl md:text-7xl lg:text-8xl font-extralight tracking-tight leading-[1.1]" delay={0.6}>
-            O futuro da
-          </RevealText>
-          <RevealText className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.1] bg-gradient-to-r from-[#C8A55A] via-[#E8C875] to-[#C8A55A] bg-clip-text text-transparent mt-2" delay={0.75}>
-            automação
-          </RevealText>
-          <RevealText className="text-5xl md:text-7xl lg:text-8xl font-extralight tracking-tight leading-[1.1] mt-2" delay={0.9}>
-            começa aqui
-          </RevealText>
+          {/* Headline — compact, no overflow clipping */}
+          <div className="mb-8">
+            <AnimatedHeadline className="text-5xl md:text-7xl lg:text-[5.5rem] font-extralight tracking-tight text-white/90" delay={0.5}>
+              O futuro da
+            </AnimatedHeadline>
+            <div className="my-3">
+              <motion.span
+                initial={{ opacity: 0, scale: 0.85, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.9, delay: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="inline-block text-5xl md:text-7xl lg:text-[5.5rem] font-black tracking-tight"
+                style={{
+                  color: "#C8A55A",
+                  lineHeight: 1.15,
+                }}
+              >
+                <span
+                  style={{
+                    background: "linear-gradient(135deg, #C8A55A 0%, #E8C875 40%, #C8A55A 70%, #E8C875 100%)",
+                    backgroundSize: "300% auto",
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    animation: "shimmerGold 4s ease-in-out infinite",
+                  }}
+                >
+                  automação
+                </span>
+              </motion.span>
+            </div>
+            <AnimatedHeadline className="text-5xl md:text-7xl lg:text-[5.5rem] font-extralight tracking-tight text-white/90" delay={1.0}>
+              começa aqui
+            </AnimatedHeadline>
           </div>
 
-          {/* Subheadline */}
-          <motion.p
+          {/* Typing subheadline */}
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 1.2 }}
-            className="text-lg md:text-xl font-light text-white/40 max-w-2xl mx-auto leading-relaxed tracking-wide"
+            transition={{ duration: 0.8, delay: 1.4 }}
+            className="mb-10"
           >
-            Transforme seu WhatsApp em uma máquina de vendas com inteligência artificial,
-            automações e CRM integrado. Tecnologia de elite para resultados extraordinários.
-          </motion.p>
+            <p className="text-lg md:text-xl font-light text-white/35 max-w-2xl mx-auto leading-relaxed tracking-wide">
+              Transforme seu WhatsApp em uma máquina de{" "}
+              <TypingWords
+                words={["vendas", "atendimento", "conversão", "resultados"]}
+                className="text-[#E8C875] font-medium"
+              />
+            </p>
+            <p className="text-base md:text-lg font-light text-white/20 max-w-xl mx-auto mt-2">
+              com inteligência artificial, automações e CRM integrado.
+            </p>
+          </motion.div>
 
           {/* CTA */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1.4 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            transition={{ duration: 0.7, delay: 1.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-12"
           >
             <BorderGlowButton onClick={() => navigate("/login")} className="text-base">
               Iniciar gratuitamente <ArrowRight className="inline w-4 h-4 ml-2" />
             </BorderGlowButton>
-            <a href="#sistema" className="text-sm font-light tracking-wider uppercase text-white/30 hover:text-[#C8A55A] transition-colors duration-300 flex items-center gap-2">
+            <a href="#sistema" className="text-sm font-light tracking-wider uppercase text-white/25 hover:text-[#C8A55A] transition-all duration-300 flex items-center gap-2 group">
               Ver demonstração
-              <motion.div animate={{ y: [0, 4, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-                <ArrowRight className="w-3 h-3 rotate-90" />
+              <motion.div animate={{ y: [0, 5, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+                <ChevronDown className="w-4 h-4 group-hover:text-[#C8A55A]" />
               </motion.div>
             </a>
           </motion.div>
 
           {/* Inline Stats */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 1.6 }}
-            className="flex flex-wrap items-center justify-center gap-8 md:gap-14 pt-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.8 }}
+            className="flex flex-wrap items-center justify-center gap-8 md:gap-16"
           >
             {STATS.map((s, i) => (
-              <div key={i} className="text-center">
+              <motion.div
+                key={i}
+                className="text-center"
+                whileHover={{ scale: 1.1, transition: { duration: 0.2 } }}
+              >
                 <div className="text-2xl md:text-3xl font-bold bg-gradient-to-b from-[#E8C875] to-[#C8A55A] bg-clip-text text-transparent">
                   <AnimatedCounter value={s.value} suffix={s.suffix} prefix={s.prefix} />
                 </div>
-                <div className="text-[11px] tracking-[0.15em] uppercase text-white/25 mt-1">{s.label}</div>
-              </div>
+                <div className="text-[10px] tracking-[0.2em] uppercase text-white/20 mt-1">{s.label}</div>
+              </motion.div>
             ))}
+          </motion.div>
+
+          {/* Scroll indicator */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2.5 }}
+            className="mt-16"
+          >
+            <motion.div
+              animate={{ y: [0, 8, 0], opacity: [0.2, 0.5, 0.2] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
+              className="w-5 h-8 border border-[#C8A55A]/20 rounded-full mx-auto flex items-start justify-center p-1"
+            >
+              <motion.div
+                className="w-1 h-2 bg-[#C8A55A]/40 rounded-full"
+                animate={{ y: [0, 10, 0] }}
+                transition={{ duration: 2.5, repeat: Infinity }}
+              />
+            </motion.div>
           </motion.div>
         </div>
       </motion.section>
 
       {/* ── PARTNERS MARQUEE ──────────────────────── */}
-      <section className="relative py-16">
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C8A55A]/20 to-transparent mb-16" />
-        <FadeIn className="text-center mb-10">
-          <p className="text-[11px] tracking-[0.3em] uppercase text-white/20">Empresas que confiam no ZapProBR</p>
+      <section className="relative py-20">
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C8A55A]/25 to-transparent mb-16" />
+        <FadeIn className="text-center mb-12">
+          <p className="text-[11px] tracking-[0.3em] uppercase text-white/15">Empresas que confiam no ZapProBR</p>
         </FadeIn>
         <MarqueeRow />
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C8A55A]/20 to-transparent mt-16" />
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C8A55A]/25 to-transparent mt-16" />
       </section>
 
       {/* ── FEATURES ─────────────────────────────── */}
       <section id="features" className="relative py-32 px-6">
+        <FloatingOrb color="rgba(200,165,90,0.03)" size={700} x="80%" y="30%" delay={2} />
         <div className="max-w-7xl mx-auto">
           <FadeIn className="text-center mb-20">
-            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/60 mb-4">Recursos</p>
-            <RevealText className="text-4xl md:text-5xl font-extralight tracking-tight">
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/50 mb-5">Recursos</p>
+            <AnimatedHeadline className="text-4xl md:text-5xl font-extralight tracking-tight text-white/90">
               Tecnologia de ponta
-            </RevealText>
-            <RevealText className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[#C8A55A] to-[#E8C875] bg-clip-text text-transparent mt-1" delay={0.1}>
-              para resultados reais
-            </RevealText>
+            </AnimatedHeadline>
+            <AnimatedHeadline className="text-4xl md:text-5xl font-black tracking-tight mt-1" delay={0.1}>
+              <span style={{ background: "linear-gradient(135deg, #C8A55A, #E8C875)", WebkitBackgroundClip: "text", backgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                para resultados reais
+              </span>
+            </AnimatedHeadline>
           </FadeIn>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((f, i) => (
-              <AngularCard key={i} delay={i * 0.08}>
+              <AngularCard key={i} delay={i * 0.1}>
                 <div className="p-8">
-                  <div className="relative w-12 h-12 mb-6">
+                  <div className="relative w-14 h-14 mb-6">
                     <motion.div
-                      className="absolute inset-0 rounded-xl border border-[#C8A55A]/20"
-                      whileHover={{ borderColor: "rgba(200,165,90,0.6)", boxShadow: "0 0 20px rgba(200,165,90,0.15)" }}
+                      className="absolute inset-0 rounded-xl border border-[#C8A55A]/15 bg-[#C8A55A]/[0.03]"
+                      whileHover={{ borderColor: "rgba(200,165,90,0.5)", boxShadow: "0 0 25px rgba(200,165,90,0.15)" }}
                       transition={{ duration: 0.3 }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <f.icon className="w-5 h-5 text-[#C8A55A]" />
+                      <f.icon className="w-6 h-6 text-[#C8A55A]" />
                     </div>
-                    {/* Pulsing ring on hover */}
                     <motion.div
-                      className="absolute inset-0 rounded-xl border border-[#C8A55A]/0 group-hover:border-[#C8A55A]/30"
-                      animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+                      className="absolute inset-0 rounded-xl border border-[#C8A55A]/0"
+                      animate={{ scale: [1, 1.4, 1], opacity: [0.2, 0, 0.2] }}
+                      transition={{ duration: 3, repeat: Infinity, delay: i * 0.3 }}
                     />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2 tracking-tight">{f.title}</h3>
+                  <h3 className="text-lg font-bold text-white/90 mb-3 tracking-tight">{f.title}</h3>
                   <p className="text-sm text-white/30 leading-relaxed font-light">{f.desc}</p>
                 </div>
               </AngularCard>
@@ -535,43 +663,41 @@ const Landing = () => {
 
       {/* ── O SISTEMA (Demo) ─────────────────────── */}
       <section id="sistema" className="relative py-32 px-6">
+        <FloatingOrb color="rgba(30,64,175,0.03)" size={500} x="20%" y="50%" delay={4} />
         <div className="max-w-6xl mx-auto">
           <FadeIn className="text-center mb-16">
-            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/60 mb-4">O Sistema</p>
-            <RevealText className="text-4xl md:text-5xl font-extralight tracking-tight">
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/50 mb-5">O Sistema</p>
+            <AnimatedHeadline className="text-4xl md:text-5xl font-extralight tracking-tight text-white/90">
               Veja o poder em
-            </RevealText>
-            <RevealText className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[#C8A55A] to-[#E8C875] bg-clip-text text-transparent mt-1" delay={0.1}>
-              ação
-            </RevealText>
+            </AnimatedHeadline>
+            <AnimatedHeadline className="text-4xl md:text-5xl font-black tracking-tight mt-1" delay={0.1}>
+              <span style={{ background: "linear-gradient(135deg, #C8A55A, #E8C875)", WebkitBackgroundClip: "text", backgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                ação
+              </span>
+            </AnimatedHeadline>
           </FadeIn>
 
-          {/* Dashboard Mockup */}
           <FadeIn delay={0.2}>
             <div className="relative">
-              {/* Chamfered gold frame */}
               <div className="absolute -inset-[2px] bg-gradient-to-br from-[#C8A55A]/30 via-transparent to-[#C8A55A]/30"
                 style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%)" }}
               />
               <div className="relative bg-[#0a0d14] overflow-hidden"
                 style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%)" }}
               >
-                {/* Browser chrome */}
                 <div className="flex items-center gap-2 px-5 py-3 bg-[#0d1017] border-b border-[#C8A55A]/10">
                   <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#C8A55A]/20" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#C8A55A]/15" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#C8A55A]/10" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
                   </div>
                   <div className="flex-1 text-center">
                     <span className="text-[10px] tracking-[0.1em] text-white/15">app.zapprobr.com</span>
                   </div>
                 </div>
 
-                {/* Dashboard content with stagger */}
                 <div className="p-6 space-y-4 min-h-[350px]">
-                  {/* Top metrics */}
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
                       { label: "Mensagens Hoje", val: "12.847", icon: Send, change: "+24%" },
                       { label: "Leads Novos", val: "384", icon: Users, change: "+18%" },
@@ -580,48 +706,55 @@ const Landing = () => {
                     ].map((m, i) => (
                       <motion.div
                         key={i}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, y: 25, scale: 0.95 }}
+                        whileInView={{ opacity: 1, y: 0, scale: 1 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
-                        className="bg-[#0d1017] border border-[#C8A55A]/5 p-4"
+                        transition={{ duration: 0.6, delay: 0.3 + i * 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        whileHover={{ scale: 1.03, borderColor: "rgba(200,165,90,0.2)" }}
+                        className="bg-[#0d1017] border border-[#C8A55A]/5 p-4 transition-colors"
                         style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%)" }}
                       >
                         <m.icon className="w-4 h-4 text-[#C8A55A]/40 mb-2" />
                         <p className="text-[10px] text-white/25 uppercase tracking-wider">{m.label}</p>
                         <p className="text-xl font-bold text-white mt-1">{m.val}</p>
-                        <p className="text-[10px] text-[#C8A55A]/60 mt-1">{m.change}</p>
+                        <p className="text-[10px] text-emerald-500/60 mt-1">{m.change}</p>
                       </motion.div>
                     ))}
                   </div>
 
-                  {/* Chart area */}
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
+                    initial={{ opacity: 0, scaleY: 0.8 }}
+                    whileInView={{ opacity: 1, scaleY: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.8, delay: 0.7 }}
-                    className="bg-[#0d1017] border border-[#C8A55A]/5 p-5 h-[180px] relative overflow-hidden"
+                    className="bg-[#0d1017] border border-[#C8A55A]/5 p-5 h-[180px] relative overflow-hidden origin-bottom"
                     style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%)" }}
                   >
                     <p className="text-[10px] text-white/20 uppercase tracking-wider mb-4">Volume de Mensagens — Últimos 7 dias</p>
-                    {/* Simulated chart bars */}
                     <div className="flex items-end gap-2 h-[110px]">
                       {[65, 45, 80, 55, 90, 70, 95].map((h, i) => (
                         <motion.div
                           key={i}
-                          className="flex-1 bg-gradient-to-t from-[#C8A55A]/30 to-[#E8C875]/10 rounded-t-sm"
+                          className="flex-1 rounded-t-sm relative overflow-hidden"
+                          style={{ background: "linear-gradient(to top, rgba(200,165,90,0.4), rgba(232,200,117,0.15))" }}
                           initial={{ height: 0 }}
                           whileInView={{ height: `${h}%` }}
                           viewport={{ once: true }}
-                          transition={{ duration: 0.6, delay: 0.8 + i * 0.08, ease: "easeOut" }}
-                        />
+                          transition={{ duration: 0.8, delay: 0.9 + i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        >
+                          {/* Bar shimmer */}
+                          <motion.div
+                            className="absolute inset-0"
+                            style={{ background: "linear-gradient(180deg, rgba(232,200,117,0.2) 0%, transparent 100%)" }}
+                            animate={{ opacity: [0.3, 0.7, 0.3] }}
+                            transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+                          />
+                        </motion.div>
                       ))}
                     </div>
                   </motion.div>
                 </div>
 
-                {/* Hologram scan */}
                 <HologramScan />
               </div>
             </div>
@@ -631,16 +764,19 @@ const Landing = () => {
 
       {/* ── IMPACT / NUMBERS ─────────────────────── */}
       <section id="impacto" className="relative py-32 px-6">
+        <FloatingOrb color="rgba(200,165,90,0.04)" size={500} x="50%" y="50%" delay={1} />
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
-          <FadeIn>
-            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/60 mb-6">Impacto</p>
-            <RevealText className="text-4xl md:text-5xl font-extralight tracking-tight leading-tight">
+          <FadeIn direction="left">
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/50 mb-6">Impacto</p>
+            <AnimatedHeadline className="text-4xl md:text-5xl font-extralight tracking-tight text-white/90">
               Números que
-            </RevealText>
-            <RevealText className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[#C8A55A] to-[#E8C875] bg-clip-text text-transparent mt-1" delay={0.1}>
-              falam por si
-            </RevealText>
-            <p className="text-white/30 font-light mt-6 leading-relaxed max-w-md">
+            </AnimatedHeadline>
+            <AnimatedHeadline className="text-4xl md:text-5xl font-black tracking-tight mt-1" delay={0.1}>
+              <span style={{ background: "linear-gradient(135deg, #C8A55A, #E8C875)", WebkitBackgroundClip: "text", backgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                falam por si
+              </span>
+            </AnimatedHeadline>
+            <p className="text-white/25 font-light mt-6 leading-relaxed max-w-md text-base">
               Nossos clientes experimentam resultados transformadores desde o primeiro mês.
               A tecnologia ZapProBR não é uma promessa — é uma garantia de performance.
             </p>
@@ -648,20 +784,20 @@ const Landing = () => {
 
           <div className="grid grid-cols-2 gap-5">
             {IMPACT.map((m, i) => (
-              <AngularCard key={i} delay={i * 0.1}>
-                <div className="p-6 text-center">
+              <AngularCard key={i} delay={i * 0.12}>
+                <div className="p-7 text-center">
                   <div className="text-3xl md:text-4xl font-black bg-gradient-to-b from-[#E8C875] to-[#C8A55A] bg-clip-text text-transparent">
                     <AnimatedCounter value={m.value} suffix={m.suffix} />
                   </div>
-                  <p className="text-[11px] tracking-[0.12em] uppercase text-white/25 mt-2">{m.label}</p>
-                  {/* Animated progress bar */}
-                  <motion.div className="mt-4 h-[2px] bg-[#C8A55A]/10 overflow-hidden">
+                  <p className="text-[10px] tracking-[0.15em] uppercase text-white/20 mt-3">{m.label}</p>
+                  <motion.div className="mt-4 h-[2px] bg-[#C8A55A]/10 overflow-hidden rounded-full">
                     <motion.div
-                      className="h-full bg-gradient-to-r from-[#C8A55A] to-[#E8C875]"
+                      className="h-full rounded-full"
+                      style={{ background: "linear-gradient(90deg, #C8A55A, #E8C875)" }}
                       initial={{ width: 0 }}
                       whileInView={{ width: `${60 + i * 10}%` }}
                       viewport={{ once: true }}
-                      transition={{ duration: 1.2, delay: 0.3 + i * 0.1, ease: "easeOut" }}
+                      transition={{ duration: 1.5, delay: 0.4 + i * 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
                     />
                   </motion.div>
                 </div>
@@ -675,28 +811,30 @@ const Landing = () => {
       <section id="pricing" className="relative py-32 px-6">
         <div className="max-w-6xl mx-auto">
           <FadeIn className="text-center mb-20">
-            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/60 mb-4">Planos</p>
-            <RevealText className="text-4xl md:text-5xl font-extralight tracking-tight">
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/50 mb-5">Planos</p>
+            <AnimatedHeadline className="text-4xl md:text-5xl font-extralight tracking-tight text-white/90">
               Investimento que
-            </RevealText>
-            <RevealText className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[#C8A55A] to-[#E8C875] bg-clip-text text-transparent mt-1" delay={0.1}>
-              se paga sozinho
-            </RevealText>
+            </AnimatedHeadline>
+            <AnimatedHeadline className="text-4xl md:text-5xl font-black tracking-tight mt-1" delay={0.1}>
+              <span style={{ background: "linear-gradient(135deg, #C8A55A, #E8C875)", WebkitBackgroundClip: "text", backgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                se paga sozinho
+              </span>
+            </AnimatedHeadline>
           </FadeIn>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-6 items-start">
             {PLANS.map((plan, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 40 }}
+                initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.7, delay: i * 0.1 }}
+                transition={{ duration: 0.8, delay: i * 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
+                whileHover={{ y: -6, transition: { duration: 0.3 } }}
                 className="relative"
               >
-                {/* Pro plan: rotating gold border */}
                 {plan.featured && (
-                  <div className="absolute -inset-[1px] z-0 overflow-hidden"
+                  <div className="absolute -inset-[1.5px] z-0 overflow-hidden"
                     style={{
                       clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%)",
                       background: "conic-gradient(from var(--angle, 0deg), #C8A55A, transparent 30%, #E8C875 50%, transparent 70%, #C8A55A)",
@@ -706,7 +844,7 @@ const Landing = () => {
                 )}
 
                 <div
-                  className={`relative h-full p-8 ${plan.featured ? "bg-[#0a0d14]" : "bg-[#080b12] border border-[#C8A55A]/5"} ${plan.name === "Premium" ? "bg-[#0a0d14]" : ""}`}
+                  className={`relative h-full p-8 ${plan.featured ? "bg-[#0a0d14]" : "bg-[#080b12] border border-[#C8A55A]/5"}`}
                   style={{
                     clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%)",
                     backgroundImage: plan.name === "Premium"
@@ -715,29 +853,40 @@ const Landing = () => {
                   }}
                 >
                   {plan.featured && (
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#C8A55A]/10 border border-[#C8A55A]/20 mb-6 text-[10px] tracking-[0.15em] uppercase text-[#C8A55A]"
-                      style={{ clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)" }}>
+                    <motion.div
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#C8A55A]/10 border border-[#C8A55A]/20 mb-6 text-[10px] tracking-[0.15em] uppercase text-[#C8A55A]"
+                      style={{ clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)" }}
+                      animate={{ boxShadow: ["0 0 10px rgba(200,165,90,0)", "0 0 10px rgba(200,165,90,0.2)", "0 0 10px rgba(200,165,90,0)"] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
                       <Sparkles className="w-3 h-3" />
                       Mais popular
-                    </div>
+                    </motion.div>
                   )}
 
-                  <h3 className={`text-lg font-bold tracking-tight ${plan.featured ? "text-[#C8A55A]" : plan.name === "Premium" ? "text-[#E8C875]" : "text-white/60"}`}>
+                  <h3 className={`text-xl font-bold tracking-tight ${plan.featured ? "text-[#E8C875]" : plan.name === "Premium" ? "text-[#E8C875]/80" : "text-white/50"}`}>
                     {plan.name}
                   </h3>
-                  <p className="text-white/25 text-sm font-light mt-1">{plan.desc}</p>
+                  <p className="text-white/20 text-sm font-light mt-1">{plan.desc}</p>
 
                   <div className="mt-6 mb-8">
                     <span className="text-4xl md:text-5xl font-black text-white">{plan.price}</span>
-                    {plan.period && <span className="text-white/25 text-sm font-light">{plan.period}</span>}
+                    {plan.period && <span className="text-white/20 text-sm font-light">{plan.period}</span>}
                   </div>
 
                   <ul className="space-y-3 mb-8">
                     {plan.items.map((item, j) => (
-                      <li key={j} className="flex items-center gap-3 text-sm text-white/40 font-light">
-                        <Check className={`w-4 h-4 flex-shrink-0 ${plan.featured ? "text-[#C8A55A]" : "text-[#C8A55A]/40"}`} />
+                      <motion.li
+                        key={j}
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.3 + j * 0.04 }}
+                        className="flex items-center gap-3 text-sm text-white/35 font-light"
+                      >
+                        <Check className={`w-4 h-4 flex-shrink-0 ${plan.featured ? "text-[#C8A55A]" : "text-[#C8A55A]/30"}`} />
                         {item}
-                      </li>
+                      </motion.li>
                     ))}
                   </ul>
 
@@ -747,13 +896,13 @@ const Landing = () => {
                     </BorderGlowButton>
                   ) : (
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.02, borderColor: "rgba(200,165,90,0.3)" }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => navigate("/login")}
                       className={`w-full py-3.5 text-sm font-semibold tracking-wider uppercase transition-all duration-300 ${
                         plan.name === "Premium"
-                          ? "border border-[#C8A55A]/20 text-[#C8A55A] hover:bg-[#C8A55A]/5"
-                          : "border border-white/10 text-white/40 hover:text-white hover:border-white/20"
+                          ? "border border-[#C8A55A]/15 text-[#C8A55A]/80 hover:bg-[#C8A55A]/5"
+                          : "border border-white/8 text-white/35 hover:text-white/60 hover:border-white/15"
                       }`}
                       style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%)" }}
                     >
@@ -768,22 +917,24 @@ const Landing = () => {
       </section>
 
       {/* ── CTA FINAL ────────────────────────────── */}
-      <section className="relative py-32 px-6">
-        {/* Radial gold ambient */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(200,165,90,0.04),transparent_60%)] pointer-events-none" />
+      <section className="relative py-36 px-6">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(200,165,90,0.05),transparent_60%)] pointer-events-none" />
+        <FloatingOrb color="rgba(200,165,90,0.04)" size={600} x="50%" y="50%" delay={0} />
 
         <div className="relative z-10 max-w-3xl mx-auto text-center">
           <FadeIn>
-            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/60 mb-6">Pronto para começar?</p>
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/50 mb-8">Pronto para começar?</p>
           </FadeIn>
-          <RevealText className="text-4xl md:text-6xl font-extralight tracking-tight leading-tight">
+          <AnimatedHeadline className="text-4xl md:text-6xl font-extralight tracking-tight text-white/90">
             Eleve seu negócio ao
-          </RevealText>
-          <RevealText className="text-4xl md:text-6xl font-black bg-gradient-to-r from-[#C8A55A] via-[#E8C875] to-[#C8A55A] bg-clip-text text-transparent mt-2" delay={0.1}>
-            próximo nível
-          </RevealText>
+          </AnimatedHeadline>
+          <AnimatedHeadline className="text-4xl md:text-6xl font-black tracking-tight mt-2" delay={0.1}>
+            <span style={{ background: "linear-gradient(135deg, #C8A55A, #E8C875, #C8A55A)", WebkitBackgroundClip: "text", backgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              próximo nível
+            </span>
+          </AnimatedHeadline>
           <FadeIn delay={0.3}>
-            <p className="text-white/30 font-light mt-6 mb-10 max-w-lg mx-auto leading-relaxed">
+            <p className="text-white/25 font-light mt-8 mb-12 max-w-lg mx-auto leading-relaxed text-base">
               Junte-se a mais de 500 empresas que já transformaram seu atendimento com a plataforma mais avançada do mercado.
             </p>
           </FadeIn>
@@ -801,7 +952,6 @@ const Landing = () => {
 
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-4 gap-10">
-            {/* Brand */}
             <div>
               <div className="flex items-center gap-2.5 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C8A55A] to-[#E8C875] flex items-center justify-center">
@@ -811,23 +961,22 @@ const Landing = () => {
                   ZapProBR
                 </span>
               </div>
-              <p className="text-sm text-white/20 font-light leading-relaxed">
+              <p className="text-sm text-white/15 font-light leading-relaxed">
                 Tecnologia de elite para automação WhatsApp Business.
               </p>
             </div>
 
-            {/* Links */}
             {[
               { title: "Produto", links: ["Recursos", "Planos", "API", "Integrações"] },
               { title: "Empresa", links: ["Sobre", "Blog", "Carreiras", "Contato"] },
               { title: "Legal", links: ["Termos de Uso", "Privacidade", "LGPD", "Cookies"] },
             ].map((col, i) => (
               <div key={i}>
-                <h4 className="text-[11px] tracking-[0.2em] uppercase text-[#C8A55A]/40 mb-4 font-semibold">{col.title}</h4>
+                <h4 className="text-[11px] tracking-[0.2em] uppercase text-[#C8A55A]/30 mb-4 font-semibold">{col.title}</h4>
                 <ul className="space-y-2.5">
                   {col.links.map((link, j) => (
                     <li key={j}>
-                      <a href="#" className="text-sm text-white/20 hover:text-[#C8A55A] transition-colors duration-300 font-light">
+                      <a href="#" className="text-sm text-white/15 hover:text-[#C8A55A] transition-colors duration-300 font-light">
                         {link}
                       </a>
                     </li>
@@ -838,10 +987,10 @@ const Landing = () => {
           </div>
 
           <div className="mt-16 pt-8 border-t border-[#C8A55A]/5 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-[11px] text-white/15 tracking-wider">
+            <p className="text-[11px] text-white/10 tracking-wider">
               © 2025 ZapProBR. Todos os direitos reservados.
             </p>
-            <p className="text-[11px] text-white/10 tracking-wider">
+            <p className="text-[11px] text-white/8 tracking-wider">
               Feito com excelência no Brasil 🇧🇷
             </p>
           </div>
