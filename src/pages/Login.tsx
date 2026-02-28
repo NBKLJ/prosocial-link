@@ -57,9 +57,8 @@ const Login = () => {
       <div className="flex w-full lg:w-[55%] items-center justify-center p-8 sm:p-16" style={{ background: "#0A0D14" }}>
         <div className="w-full max-w-[380px]">
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-12">
-            <img src={birdlyLogo} alt="Birdly" className="h-12 w-12 rounded-xl object-contain" />
-            <span className="text-xl font-bold text-white tracking-tight">birdly</span>
+          <div className="mb-12">
+            <span className="text-3xl font-bold text-white tracking-tight">Birdly</span>
           </div>
 
           <div className="mb-8">
