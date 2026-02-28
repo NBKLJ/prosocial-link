@@ -380,7 +380,7 @@ const PLANS = [
   },
   {
     name: "Premium", price: "R$1.500", period: "/mês", desc: "Operações de alto volume.", highlight: false, featured: false,
-    items: ["Conexões ilimitadas", "Tudo do plano Pro", "API de integração", "Webhooks personalizados", "Multi-atendentes ilimitados", "White-label", "Gerente dedicado", "SLA 99.9%"],
+    items: ["Tudo do plano Pro", "Conexões ilimitadas", "IA para contratos personalizados", "Procuração e docs jurídicos automáticos", "Assinatura digital integrada", "Cobrança e confirmação automática", "Relatórios estratégicos por IA", "IA de pós-venda e acompanhamento"],
     cta: "Falar com consultor",
   },
 ];
