@@ -1,28 +1,238 @@
 import { useRef, useCallback, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import {
-  MessageSquare,
-  Bot,
-  Zap,
-  BarChart3,
-  Shield,
-  Users,
-  ArrowRight,
-  Check,
-  Play,
-  Headphones,
-  Send,
-  Brain,
-  Globe,
-  Clock,
-  ChevronDown,
-  Sparkles,
-  TrendingUp,
-  MousePointer,
+  MessageSquare, Bot, Zap, BarChart3, Shield, Users, ArrowRight, Check,
+  Send, Brain, Globe, Clock, Sparkles, TrendingUp, Crown,
 } from "lucide-react";
 
-// ── Animated Counter ─────────────────────────────────────────────
+// ── GOLD PARTICLES (Canvas) ─────────────────────────────────────
+function GoldParticles() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animId: number;
+    const particles: { x: number; y: number; vx: number; vy: number; size: number; alpha: number; decay: number }[] = [];
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    for (let i = 0; i < 60; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: -Math.random() * 0.4 - 0.1,
+        size: Math.random() * 2 + 0.5,
+        alpha: Math.random() * 0.5 + 0.1,
+        decay: Math.random() * 0.002 + 0.001,
+      });
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha += Math.sin(Date.now() * p.decay) * 0.01;
+        if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+        if (p.x < -10) p.x = canvas.width + 10;
+        if (p.x > canvas.width + 10) p.x = -10;
+
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
+        gradient.addColorStop(0, `rgba(200, 165, 90, ${Math.max(0, Math.min(0.6, p.alpha))})`);
+        gradient.addColorStop(1, `rgba(200, 165, 90, 0)`);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+      });
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize); };
+  }, []);
+
+  return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-[1]" />;
+}
+
+// ── PERSPECTIVE GRID ────────────────────────────────────────────
+function PerspectiveGrid() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div
+        className="absolute inset-0"
+        style={{
+          perspective: "800px",
+          perspectiveOrigin: "50% 30%",
+        }}
+      >
+        <motion.div
+          animate={{ opacity: [0.06, 0.12, 0.06] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          style={{
+            position: "absolute",
+            top: "20%",
+            left: "-20%",
+            right: "-20%",
+            bottom: "-60%",
+            transform: "rotateX(60deg)",
+            backgroundImage: `
+              linear-gradient(rgba(200,165,90,0.3) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(200,165,90,0.3) 1px, transparent 1px)
+            `,
+            backgroundSize: "80px 80px",
+          }}
+        />
+      </div>
+      {/* Radial fade */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,#05070A_70%)]" />
+    </div>
+  );
+}
+
+// ── REVEAL TEXT ──────────────────────────────────────────────────
+function RevealText({ children, className = "", delay = 0 }: { children: string; className?: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-40px" });
+  const words = children.split(" ");
+
+  return (
+    <div ref={ref} className={className}>
+      {words.map((word, i) => (
+        <span key={i} className="inline-block overflow-hidden mr-[0.3em]">
+          <motion.span
+            className="inline-block"
+            initial={{ y: "110%" }}
+            animate={isInView ? { y: 0 } : {}}
+            transition={{ duration: 0.6, delay: delay + i * 0.04, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            {word}
+          </motion.span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ── ANGULAR CARD ────────────────────────────────────────────────
+function AngularCard({ children, className = "", delay = 0, glowOnHover = true }: {
+  children: React.ReactNode; className?: string; delay?: number; glowOnHover?: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 40 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={`relative group ${className}`}
+      style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%)" }}
+    >
+      {/* Background */}
+      <div className="absolute inset-0 bg-[#0a0d14] transition-all duration-500" />
+      {/* Gold border glow on hover */}
+      {glowOnHover && (
+        <div className={`absolute inset-0 transition-opacity duration-500 ${hovered ? "opacity-100" : "opacity-0"}`}
+          style={{ boxShadow: "inset 0 0 0 1px rgba(200,165,90,0.4), 0 0 30px rgba(200,165,90,0.08)" }}
+        />
+      )}
+      {/* Corner accent */}
+      <div className="absolute bottom-0 right-0 w-[20px] h-[20px]"
+        style={{
+          background: hovered
+            ? "linear-gradient(135deg, transparent 50%, rgba(200,165,90,0.6) 50%)"
+            : "linear-gradient(135deg, transparent 50%, rgba(200,165,90,0.2) 50%)",
+          transition: "background 0.5s",
+        }}
+      />
+      <div className="relative z-10">{children}</div>
+    </motion.div>
+  );
+}
+
+// ── BORDER GLOW BUTTON ──────────────────────────────────────────
+function BorderGlowButton({ children, onClick, className = "" }: { children: React.ReactNode; onClick?: () => void; className?: string }) {
+  return (
+    <motion.button
+      onClick={onClick}
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
+      className={`relative group px-8 py-4 font-semibold text-sm tracking-wide uppercase overflow-hidden ${className}`}
+      style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%)" }}
+    >
+      {/* Rotating conic gradient border */}
+      <div
+        className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-500"
+        style={{
+          background: "conic-gradient(from var(--angle, 0deg), #C8A55A, transparent 40%, #C8A55A 60%, transparent)",
+          animation: "borderRotate 3s linear infinite",
+        }}
+      />
+      <div className="absolute inset-[1px] bg-[#05070A]"
+        style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%)" }}
+      />
+      <span className="relative z-10 text-[#E8C875] group-hover:text-white transition-colors duration-300">{children}</span>
+    </motion.button>
+  );
+}
+
+// ── HOLOGRAM SCAN ───────────────────────────────────────────────
+function HologramScan() {
+  return (
+    <motion.div
+      className="absolute inset-0 pointer-events-none z-20"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 1 }}
+    >
+      <motion.div
+        className="absolute left-0 right-0 h-[2px]"
+        style={{ background: "linear-gradient(90deg, transparent, rgba(200,165,90,0.6), rgba(232,200,117,0.8), rgba(200,165,90,0.6), transparent)" }}
+        animate={{ top: ["0%", "100%", "0%"] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+      />
+    </motion.div>
+  );
+}
+
+// ── MARQUEE ROW ─────────────────────────────────────────────────
+function MarqueeRow() {
+  const logos = ["TechCorp", "AutoFlow", "DataSync", "CloudNex", "SmartOps", "DigiPro", "NexaHub", "FlowAI"];
+  return (
+    <div className="overflow-hidden relative">
+      <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#05070A] to-transparent z-10" />
+      <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#05070A] to-transparent z-10" />
+      <motion.div
+        className="flex gap-16 items-center"
+        animate={{ x: [0, -800] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      >
+        {[...logos, ...logos].map((name, i) => (
+          <div key={i} className="flex-shrink-0 text-lg font-bold tracking-[0.2em] text-[#C8A55A]/20 uppercase select-none">
+            {name}
+          </div>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+// ── ANIMATED COUNTER ────────────────────────────────────────────
 function AnimatedCounter({ value, suffix = "", prefix = "" }: { value: number; suffix?: string; prefix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: true });
@@ -31,215 +241,45 @@ function AnimatedCounter({ value, suffix = "", prefix = "" }: { value: number; s
   useEffect(() => {
     if (!isInView) return;
     let start = 0;
-    const duration = 2000;
-    const step = (timestamp: number) => {
-      if (!start) start = timestamp;
-      const progress = Math.min((timestamp - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
+    const duration = 2200;
+    const step = (ts: number) => {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
       setCount(Math.floor(eased * value));
-      if (progress < 1) requestAnimationFrame(step);
+      if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   }, [isInView, value]);
 
-  return (
-    <span ref={ref}>
-      {prefix}{isInView ? count.toLocaleString("pt-BR") : "0"}{suffix}
-    </span>
-  );
+  return <span ref={ref}>{prefix}{isInView ? count.toLocaleString("pt-BR") : "0"}{suffix}</span>;
 }
 
-// ── Typewriter ───────────────────────────────────────────────────
-function Typewriter({ texts, speed = 50, pause = 2500 }: { texts: string[]; speed?: number; pause?: number }) {
-  const [display, setDisplay] = useState("");
-  const [textIdx, setTextIdx] = useState(0);
-  const [charIdx, setCharIdx] = useState(0);
-  const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    const current = texts[textIdx];
-    let timeout: ReturnType<typeof setTimeout>;
-
-    if (!deleting && charIdx < current.length) {
-      timeout = setTimeout(() => setCharIdx((c) => c + 1), speed);
-    } else if (!deleting && charIdx === current.length) {
-      timeout = setTimeout(() => setDeleting(true), pause);
-    } else if (deleting && charIdx > 0) {
-      timeout = setTimeout(() => setCharIdx((c) => c - 1), speed / 2);
-    } else if (deleting && charIdx === 0) {
-      setDeleting(false);
-      setTextIdx((i) => (i + 1) % texts.length);
-    }
-
-    setDisplay(current.slice(0, charIdx));
-    return () => clearTimeout(timeout);
-  }, [charIdx, deleting, textIdx, texts, speed, pause]);
-
-  return (
-    <span>
-      {display}
-      <motion.span
-        animate={{ opacity: [1, 0] }}
-        transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
-        className="text-[#4B83D6]"
-      >
-        |
-      </motion.span>
-    </span>
-  );
-}
-
-// ── Magnetic Button ──────────────────────────────────────────────
-function MagneticButton({ children, className = "", onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 300, damping: 20 });
-  const springY = useSpring(y, { stiffness: 300, damping: 20 });
-
-  const handleMouse = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    x.set((e.clientX - rect.left - rect.width / 2) * 0.15);
-    y.set((e.clientY - rect.top - rect.height / 2) * 0.15);
-  };
-
-  return (
-    <motion.button
-      style={{ x: springX, y: springY }}
-      onMouseMove={handleMouse}
-      onMouseLeave={() => { x.set(0); y.set(0); }}
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
-      onClick={onClick}
-      className={className}
-    >
-      {children}
-    </motion.button>
-  );
-}
-
-// ── FadeIn ───────────────────────────────────────────────────────
-function FadeIn({ children, className = "", delay = 0, direction = "up" }: {
-  children: React.ReactNode; className?: string; delay?: number; direction?: "up" | "left" | "right";
-}) {
+// ── FADE IN ─────────────────────────────────────────────────────
+function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-60px" });
-  const initial = direction === "up" ? { opacity: 0, y: 30 } : direction === "left" ? { opacity: 0, x: -30 } : { opacity: 0, x: 30 };
-
   return (
     <motion.div
       ref={ref}
-      initial={initial}
-      animate={isInView ? { opacity: 1, y: 0, x: 0 } : {}}
-      transition={{ duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-// ── 3D Tilt Card ─────────────────────────────────────────────────
-function TiltCard({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-60px" });
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouse = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    setMousePos({ x, y });
-  }, []);
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 40 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-      onMouseMove={handleMouse}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0, y: 0 }); }}
-      style={{
-        transform: isHovered
-          ? `perspective(800px) rotateY(${mousePos.x * 8}deg) rotateX(${-mousePos.y * 8}deg)`
-          : "perspective(800px) rotateY(0deg) rotateX(0deg)",
-        transition: isHovered ? "transform 0.1s ease-out" : "transform 0.4s ease-out",
-      }}
-      className={`group relative rounded-2xl border border-[#1a1f2e] bg-[#0d1017] overflow-hidden ${className}`}
+      className={className}
     >
-      {/* Cursor glow */}
-      <div
-        className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"
-        style={{
-          background: isHovered
-            ? `radial-gradient(400px circle at ${(mousePos.x + 0.5) * 100}% ${(mousePos.y + 0.5) * 100}%, rgba(75,131,214,0.08), transparent 60%)`
-            : "none",
-        }}
-      />
-      {/* Shine effect */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{
-          background: isHovered
-            ? `linear-gradient(${Math.atan2(mousePos.y, mousePos.x) * (180 / Math.PI) + 90}deg, transparent 30%, rgba(255,255,255,0.02) 50%, transparent 70%)`
-            : "none",
-        }}
-      />
-      <div className="relative z-10">{children}</div>
+      {children}
     </motion.div>
   );
 }
 
-// ── Floating Particles (subtle) ─────────────────────────────────
-function FloatingParticles() {
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-      {Array.from({ length: 20 }).map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 rounded-full bg-[#4B83D6]/20"
-          initial={{
-            x: `${Math.random() * 100}vw`,
-            y: `${Math.random() * 100}vh`,
-          }}
-          animate={{
-            y: [null, `${-20 + Math.random() * 40}vh`],
-            x: [null, `${Math.random() * 10 - 5}vw`],
-            opacity: [0, 0.6, 0],
-          }}
-          transition={{
-            duration: 8 + Math.random() * 12,
-            repeat: Infinity,
-            delay: Math.random() * 5,
-            ease: "linear",
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// ── Stagger Container ────────────────────────────────────────────
-const staggerContainer = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } },
-};
-
-const staggerItem = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] } },
-};
-
-// ── Data ─────────────────────────────────────────────────────────
+// ── DATA ────────────────────────────────────────────────────────
 const FEATURES = [
-  { icon: MessageSquare, title: "Disparos em massa", desc: "Envie milhares de mensagens personalizadas com segmentação inteligente e relatórios detalhados." },
-  { icon: Bot, title: "IAs Setoriais", desc: "Inteligência artificial dedicada para cada departamento da sua empresa, com respostas humanizadas." },
-  { icon: Zap, title: "Automações", desc: "Crie fluxos automatizados por gatilho que trabalham 24 horas por dia, 7 dias por semana." },
-  { icon: BarChart3, title: "Dashboard Analítico", desc: "Métricas em tempo real, funil de conversão e indicadores de desempenho da sua operação." },
-  { icon: Shield, title: "Segurança Enterprise", desc: "Criptografia de ponta a ponta, backups automáticos e controle de acesso por função." },
-  { icon: Users, title: "CRM Integrado", desc: "Pipeline visual com kanban, histórico completo e distribuição automática de leads." },
+  { icon: MessageSquare, title: "Disparos em Massa", desc: "Envie milhares de mensagens personalizadas com segmentação inteligente e relatórios em tempo real." },
+  { icon: Bot, title: "IAs Setoriais", desc: "IA dedicada para cada departamento com respostas humanizadas e aprendizado contínuo." },
+  { icon: Zap, title: "Automações", desc: "Fluxos automatizados por gatilho que operam 24/7 sem intervenção humana." },
+  { icon: BarChart3, title: "Dashboard Analítico", desc: "Métricas em tempo real, funil de conversão e KPIs de desempenho operacional." },
+  { icon: Shield, title: "Segurança Enterprise", desc: "Criptografia ponta a ponta, backups automáticos e controle de acesso granular." },
+  { icon: Users, title: "CRM Integrado", desc: "Pipeline visual kanban, histórico completo e distribuição automática de leads." },
 ];
 
 const STATS = [
@@ -251,30 +291,51 @@ const STATS = [
 
 const PLANS = [
   {
-    name: "Basic", price: "Grátis", period: "", desc: "Para quem está começando a automatizar.", highlight: false, color: "text-[#6B7A99]",
+    name: "Basic", price: "Grátis", period: "", desc: "Para quem está começando.", highlight: false, featured: false,
     items: ["Até 2 conexões", "Disparo de mensagens", "Painel básico", "Contatos ilimitados", "Suporte por e-mail"],
-    cta: "Começar grátis", ctaStyle: "border border-[#1a2236] text-[#8899B4] hover:bg-[#111827] hover:text-white",
+    cta: "Começar grátis",
   },
   {
-    name: "Pro", price: "R$197", period: "/mês", desc: "Para equipes que precisam escalar.", highlight: true, color: "text-[#4B83D6]",
-    items: ["Até 5 conexões", "IA de recepção inteligente", "IAs setoriais", "CRM com pipeline completo", "Automações por gatilho", "Agendamento Google Meet", "Distribuição round-robin", "Painel analítico avançado", "Suporte prioritário"],
-    cta: "Assinar Pro", ctaStyle: "bg-[#4B83D6] text-white hover:bg-[#3A6FBF]",
+    name: "Pro", price: "R$197", period: "/mês", desc: "Para equipes que precisam escalar.", highlight: true, featured: true,
+    items: ["Até 5 conexões", "IA de recepção inteligente", "IAs setoriais", "CRM com pipeline", "Automações por gatilho", "Agendamento Google Meet", "Distribuição round-robin", "Painel avançado", "Suporte prioritário"],
+    cta: "Assinar Pro",
   },
   {
-    name: "Premium", price: "R$497", period: "/mês", desc: "Para operações de alto volume.", highlight: false, color: "text-[#C9A84C]",
-    items: ["Conexões ilimitadas", "Tudo do plano Pro", "API de integração", "Webhooks personalizados", "Multi-atendentes ilimitados", "White-label disponível", "Gerente de conta dedicado", "SLA de 99.9%"],
-    cta: "Falar com consultor", ctaStyle: "border border-[#2a2520] text-[#C9A84C] hover:bg-[#1a1710] hover:text-[#E0BD5F]",
+    name: "Premium", price: "R$497", period: "/mês", desc: "Operações de alto volume.", highlight: false, featured: false,
+    items: ["Conexões ilimitadas", "Tudo do plano Pro", "API de integração", "Webhooks personalizados", "Multi-atendentes ilimitados", "White-label", "Gerente dedicado", "SLA 99.9%"],
+    cta: "Falar com consultor",
   },
 ];
 
-// ── MAIN ─────────────────────────────────────────────────────────
+const IMPACT = [
+  { value: 340, suffix: "%", label: "Aumento médio em conversões" },
+  { value: 85, suffix: "%", label: "Redução no tempo de resposta" },
+  { value: 12, suffix: "x", label: "ROI médio dos clientes" },
+  { value: 50, suffix: "K+", label: "Atendimentos automatizados/mês" },
+];
+
+// ── CSS for border rotation ─────────────────────────────────────
+const globalStyles = `
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes borderRotate {
+  to { --angle: 360deg; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+`;
+
+// ── MAIN ────────────────────────────────────────────────────────
 const Landing = () => {
   const navigate = useNavigate();
   const { scrollYProgress } = useScroll();
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.12], [1, 0.96]);
-  const heroY = useTransform(scrollYProgress, [0, 0.12], [0, 50]);
-  const navBg = useTransform(scrollYProgress, [0, 0.02], [0, 1]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.1], [1, 0.95]);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -284,587 +345,506 @@ const Landing = () => {
   }, []);
 
   return (
-    <div className="relative bg-[#080A0F] text-white min-h-screen overflow-x-hidden selection:bg-[#4B83D6]/20">
-      <FloatingParticles />
+    <div className="relative bg-[#05070A] text-white min-h-screen overflow-x-hidden selection:bg-[#C8A55A]/20">
+      <style>{globalStyles}</style>
+      <GoldParticles />
 
-      {/* Ambient gradient */}
-      <div className="fixed inset-0 pointer-events-none">
-        <motion.div
-          animate={{ opacity: [0.03, 0.05, 0.03] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-[#4B83D6] rounded-full blur-[150px]"
-        />
-        <div className="absolute bottom-0 right-0 w-[600px] h-[400px] bg-[#3B5998]/[0.02] rounded-full blur-[100px]" />
-      </div>
-
-      {/* ── NAV ─────────────────────────────────────── */}
+      {/* ── NAV ───────────────────────────────────── */}
       <motion.nav
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? "border-b border-[#111827]" : "border-b border-transparent"
-        }`}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "border-b border-[#C8A55A]/10" : ""}`}
       >
-        <div className={`transition-all duration-300 ${scrolled ? "bg-[#080A0F]/90 backdrop-blur-xl" : "bg-transparent"}`}>
-          <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-            <motion.div
-              className="flex items-center gap-2.5"
-              whileHover={{ scale: 1.02 }}
-            >
-              <motion.div
-                className="w-8 h-8 rounded-lg bg-[#4B83D6] flex items-center justify-center"
-                whileHover={{ rotate: 10 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Zap className="w-4 h-4 text-white" />
-              </motion.div>
-              <span className="text-lg font-bold tracking-tight text-white">ZapProBR</span>
+        <div className={`transition-all duration-500 ${scrolled ? "bg-[#05070A]/80 backdrop-blur-2xl" : "bg-transparent"}`}>
+          <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-5">
+            <motion.div className="flex items-center gap-3" whileHover={{ scale: 1.02 }}>
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#C8A55A] to-[#E8C875] flex items-center justify-center shadow-lg shadow-[#C8A55A]/20">
+                <Zap className="w-5 h-5 text-[#05070A]" />
+              </div>
+              <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-[#C8A55A] to-[#E8C875] bg-clip-text text-transparent">
+                ZapProBR
+              </span>
             </motion.div>
 
-            <div className="hidden md:flex items-center gap-8 text-[13px] text-[#6B7A99]">
+            <div className="hidden md:flex items-center gap-10 text-[13px] font-light tracking-[0.08em] uppercase text-white/40">
               {[
                 { href: "#features", label: "Recursos" },
-                { href: "#demo", label: "Demonstração" },
+                { href: "#sistema", label: "Sistema" },
+                { href: "#impacto", label: "Impacto" },
                 { href: "#pricing", label: "Planos" },
               ].map((link) => (
-                <motion.a
-                  key={link.href}
-                  href={link.href}
-                  whileHover={{ y: -1 }}
-                  className="hover:text-white transition-colors duration-200 relative group"
-                >
+                <a key={link.href} href={link.href}
+                  className="hover:text-[#C8A55A] transition-colors duration-300 relative group">
                   {link.label}
-                  <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#4B83D6] group-hover:w-full transition-all duration-300" />
-                </motion.a>
+                  <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-gradient-to-r from-[#C8A55A] to-[#E8C875] group-hover:w-full transition-all duration-300" />
+                </a>
               ))}
             </div>
 
-            <div className="flex items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                onClick={() => navigate("/login")}
-                className="px-5 py-2 text-[13px] font-medium rounded-lg text-[#8899B4] hover:text-white transition-colors duration-200"
-              >
+            <div className="flex items-center gap-4">
+              <button onClick={() => navigate("/login")}
+                className="px-5 py-2.5 text-[13px] font-light tracking-wider uppercase text-white/50 hover:text-[#C8A55A] transition-colors duration-300">
                 Entrar
-              </motion.button>
-              <MagneticButton
-                onClick={() => navigate("/login")}
-                className="px-5 py-2 text-[13px] font-medium rounded-lg bg-[#4B83D6] text-white hover:bg-[#3A6FBF] transition-colors duration-200"
-              >
+              </button>
+              <BorderGlowButton onClick={() => navigate("/login")}>
                 Começar agora
-              </MagneticButton>
+              </BorderGlowButton>
             </div>
           </div>
         </div>
       </motion.nav>
 
-      {/* ── HERO ────────────────────────────────────── */}
-      <motion.section
-        style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
-        className="relative min-h-screen flex items-center justify-center px-6 pt-20"
-      >
-        {/* Animated grid */}
-        <motion.div
-          animate={{ opacity: [0.02, 0.04, 0.02] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `linear-gradient(rgba(75,131,214,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(75,131,214,0.15) 1px, transparent 1px)`,
-            backgroundSize: "60px 60px",
-          }}
-        />
+      {/* ── HERO ──────────────────────────────────── */}
+      <motion.section style={{ opacity: heroOpacity, scale: heroScale }} className="relative min-h-screen flex items-center justify-center px-6 pt-24">
+        <PerspectiveGrid />
 
-        {/* Radial center glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#4B83D6]/[0.04] rounded-full blur-[120px] pointer-events-none" />
+        {/* Ambient glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-[#C8A55A]/[0.03] rounded-full blur-[150px] pointer-events-none" />
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-8">
+        <div className="relative z-10 max-w-5xl mx-auto text-center space-y-10">
+          {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.6, type: "spring", stiffness: 200 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
           >
             <motion.div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#1a2236] bg-[#0d1017]/80 backdrop-blur-sm text-[13px] text-[#6B7A99] mb-8"
-              whileHover={{ borderColor: "#4B83D6", scale: 1.02 }}
-              transition={{ duration: 0.2 }}
+              className="inline-flex items-center gap-3 px-5 py-2.5 border border-[#C8A55A]/20 bg-[#C8A55A]/5 backdrop-blur-sm text-[12px] tracking-[0.15em] uppercase text-[#C8A55A]"
+              style={{ clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)" }}
+              animate={{ boxShadow: ["0 0 20px rgba(200,165,90,0)", "0 0 20px rgba(200,165,90,0.15)", "0 0 20px rgba(200,165,90,0)"] }}
+              transition={{ duration: 3, repeat: Infinity }}
             >
-              <motion.div
-                className="w-2 h-2 rounded-full bg-[#4B83D6]"
-                animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              Plataforma líder em automação WhatsApp Business
+              <Crown className="w-3.5 h-3.5" />
+              Plataforma #1 do Brasil em Automação WhatsApp
             </motion.div>
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.15 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-[68px] font-bold tracking-tight leading-[1.08]"
-          >
-            <span className="text-white">Automatize, gerencie</span>
-            <br />
-            <span className="text-white">e escale com </span>
-            <motion.span
-              className="text-[#4B83D6] inline-block"
-              animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-              style={{
-                backgroundImage: "linear-gradient(90deg, #4B83D6, #6B9FE8, #4B83D6)",
-                backgroundSize: "200% 100%",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              inteligência.
-            </motion.span>
-          </motion.h1>
+          {/* Headline */}
+          <div>
+            <RevealText className="text-5xl md:text-7xl lg:text-8xl font-extralight tracking-tight leading-[0.95]" delay={0.6}>
+              O futuro da
+            </RevealText>
+            <RevealText className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[0.95] bg-gradient-to-r from-[#C8A55A] via-[#E8C875] to-[#C8A55A] bg-clip-text text-transparent mt-2" delay={0.75}>
+              automação
+            </RevealText>
+            <RevealText className="text-5xl md:text-7xl lg:text-8xl font-extralight tracking-tight leading-[0.95] mt-2" delay={0.9}>
+              começa aqui
+            </RevealText>
+          </div>
 
+          {/* Subheadline */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 1.2 }}
+            className="text-lg md:text-xl font-light text-white/40 max-w-2xl mx-auto leading-relaxed tracking-wide"
+          >
+            Transforme seu WhatsApp em uma máquina de vendas com inteligência artificial,
+            automações e CRM integrado. Tecnologia de elite para resultados extraordinários.
+          </motion.p>
+
+          {/* CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.25 }}
-            className="text-base md:text-lg text-[#6B7A99] max-w-2xl mx-auto leading-relaxed h-8"
+            transition={{ duration: 0.6, delay: 1.4 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Typewriter
-              texts={[
-                "Automatize conversas com inteligência artificial.",
-                "Converta leads em clientes sem esforço.",
-                "Gerencie milhares de contatos em um painel.",
-                "Dispare campanhas em escala enterprise.",
-              ]}
-            />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.35 }}
-            className="flex flex-col sm:flex-row gap-3 justify-center pt-6"
-          >
-            <MagneticButton
-              onClick={() => navigate("/login")}
-              className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-[#4B83D6] text-white font-semibold text-sm hover:bg-[#3A6FBF] transition-all duration-200 relative overflow-hidden"
-            >
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                animate={{ x: ["-200%", "200%"] }}
-                transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
-              />
-              <span className="relative z-10 flex items-center gap-2">
-                Começar gratuitamente
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
-              </span>
-            </MagneticButton>
-            <motion.a
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              href="#demo"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border border-[#1a2236] text-[#8899B4] font-semibold text-sm hover:bg-[#111827] hover:text-white hover:border-[#2a3348] transition-all duration-300"
-            >
-              <Play className="w-4 h-4" />
+            <BorderGlowButton onClick={() => navigate("/login")} className="text-base">
+              Iniciar gratuitamente <ArrowRight className="inline w-4 h-4 ml-2" />
+            </BorderGlowButton>
+            <a href="#sistema" className="text-sm font-light tracking-wider uppercase text-white/30 hover:text-[#C8A55A] transition-colors duration-300 flex items-center gap-2">
               Ver demonstração
-            </motion.a>
+              <motion.div animate={{ y: [0, 4, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+                <ArrowRight className="w-3 h-3 rotate-90" />
+              </motion.div>
+            </a>
           </motion.div>
 
-          {/* Trust badges */}
+          {/* Inline Stats */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
-            className="flex flex-wrap items-center justify-center gap-6 pt-8 text-[12px] text-[#4A5568]"
+            transition={{ duration: 0.8, delay: 1.6 }}
+            className="flex flex-wrap items-center justify-center gap-8 md:gap-14 pt-8"
           >
-            {["Sem cartão necessário", "Setup em 2 minutos", "Suporte em português"].map((text, i) => (
-              <motion.span
-                key={text}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 + i * 0.1 }}
-                className="flex items-center gap-1.5"
-              >
-                <Check className="w-3.5 h-3.5 text-[#4B83D6]" />
-                {text}
-              </motion.span>
+            {STATS.map((s, i) => (
+              <div key={i} className="text-center">
+                <div className="text-2xl md:text-3xl font-bold bg-gradient-to-b from-[#E8C875] to-[#C8A55A] bg-clip-text text-transparent">
+                  <AnimatedCounter value={s.value} suffix={s.suffix} prefix={s.prefix} />
+                </div>
+                <div className="text-[11px] tracking-[0.15em] uppercase text-white/25 mt-1">{s.label}</div>
+              </div>
             ))}
           </motion.div>
         </div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2"
-        >
-          <motion.span
-            animate={{ opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-[10px] text-[#4A5568] uppercase tracking-widest"
-          >
-            Scroll
-          </motion.span>
-          <ChevronDown className="w-4 h-4 text-[#4A5568]" />
-        </motion.div>
       </motion.section>
 
-      {/* ── STATS ──────────────────────────────────── */}
-      <section className="relative py-20 px-6">
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-2xl border border-[#1a1f2e] overflow-hidden bg-[#1a1f2e]"
-          >
-            {STATS.map((s) => (
-              <motion.div key={s.label} variants={staggerItem} className="bg-[#0d1017] p-8 text-center group hover:bg-[#0f1420] transition-colors duration-300">
-                <p className="text-2xl md:text-3xl font-bold text-white">
-                  <AnimatedCounter value={s.value} suffix={s.suffix} prefix={s.prefix || ""} />
-                </p>
-                <p className="text-xs text-[#6B7A99] mt-1.5 uppercase tracking-wider">{s.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
+      {/* ── PARTNERS MARQUEE ──────────────────────── */}
+      <section className="relative py-16">
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C8A55A]/20 to-transparent mb-16" />
+        <FadeIn className="text-center mb-10">
+          <p className="text-[11px] tracking-[0.3em] uppercase text-white/20">Empresas que confiam no ZapProBR</p>
+        </FadeIn>
+        <MarqueeRow />
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C8A55A]/20 to-transparent mt-16" />
       </section>
 
-      {/* ── FEATURES ───────────────────────────────── */}
-      <section id="features" className="relative py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-16">
-            <motion.p
-              className="text-xs font-semibold tracking-[0.2em] uppercase text-[#4B83D6] mb-3"
-              initial={{ opacity: 0, letterSpacing: "0.1em" }}
-              whileInView={{ opacity: 1, letterSpacing: "0.2em" }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              Recursos
-            </motion.p>
-            <h2 className="text-3xl md:text-4xl font-bold text-white">
-              Tudo o que sua operação precisa
-            </h2>
-            <p className="text-[#6B7A99] mt-4 max-w-lg mx-auto text-sm">
-              Ferramentas profissionais para equipes que levam comunicação a sério.
-            </p>
+      {/* ── FEATURES ─────────────────────────────── */}
+      <section id="features" className="relative py-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <FadeIn className="text-center mb-20">
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/60 mb-4">Recursos</p>
+            <RevealText className="text-4xl md:text-5xl font-extralight tracking-tight">
+              Tecnologia de ponta
+            </RevealText>
+            <RevealText className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[#C8A55A] to-[#E8C875] bg-clip-text text-transparent mt-1" delay={0.1}>
+              para resultados reais
+            </RevealText>
           </FadeIn>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((f, i) => (
-              <TiltCard key={f.title} delay={i * 0.08} className="h-full hover:border-[#2a3348] transition-all duration-500">
-                <div className="p-7">
-                  <motion.div
-                    className="w-11 h-11 rounded-xl bg-[#131825] border border-[#1a2236] flex items-center justify-center mb-5"
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    <f.icon className="w-5 h-5 text-[#4B83D6]" />
-                  </motion.div>
-                  <h3 className="text-[15px] font-semibold text-white mb-2 group-hover:text-[#4B83D6] transition-colors duration-300">{f.title}</h3>
-                  <p className="text-sm text-[#6B7A99] leading-relaxed">{f.desc}</p>
+              <AngularCard key={i} delay={i * 0.08}>
+                <div className="p-8">
+                  <div className="relative w-12 h-12 mb-6">
+                    <motion.div
+                      className="absolute inset-0 rounded-xl border border-[#C8A55A]/20"
+                      whileHover={{ borderColor: "rgba(200,165,90,0.6)", boxShadow: "0 0 20px rgba(200,165,90,0.15)" }}
+                      transition={{ duration: 0.3 }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <f.icon className="w-5 h-5 text-[#C8A55A]" />
+                    </div>
+                    {/* Pulsing ring on hover */}
+                    <motion.div
+                      className="absolute inset-0 rounded-xl border border-[#C8A55A]/0 group-hover:border-[#C8A55A]/30"
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+                    />
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-2 tracking-tight">{f.title}</h3>
+                  <p className="text-sm text-white/30 leading-relaxed font-light">{f.desc}</p>
                 </div>
-              </TiltCard>
+              </AngularCard>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ───────────────────────────── */}
-      <section className="relative py-24 px-6">
-        <div className="max-w-5xl mx-auto">
-          <FadeIn className="text-center mb-16">
-            <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#4B83D6] mb-3">Como funciona</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-white">
-              Simples de configurar, poderoso em resultados
-            </h2>
-          </FadeIn>
-
-          <div className="grid md:grid-cols-3 gap-8 relative">
-            {/* Connecting line */}
-            <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-px">
-              <motion.div
-                className="h-full bg-gradient-to-r from-transparent via-[#4B83D6]/20 to-transparent"
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.2, delay: 0.3 }}
-              />
-            </div>
-
-            {[
-              { step: "01", icon: Send, title: "Conecte seu WhatsApp", desc: "Escaneie o QR Code e conecte em segundos. Sem complicações técnicas." },
-              { step: "02", icon: Brain, title: "Configure suas IAs", desc: "Defina as regras e treine a IA para cada departamento da sua empresa." },
-              { step: "03", icon: BarChart3, title: "Acompanhe os resultados", desc: "Monitore métricas, conversões e desempenho em tempo real no dashboard." },
-            ].map((item, i) => (
-              <FadeIn key={item.step} delay={i * 0.15}>
-                <div className="relative text-center md:text-left">
-                  <motion.div
-                    className="w-14 h-14 rounded-2xl bg-[#131825] border border-[#1a2236] flex items-center justify-center mb-5 mx-auto md:mx-0"
-                    whileHover={{ scale: 1.1, borderColor: "#4B83D6" }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    <item.icon className="w-6 h-6 text-[#4B83D6]" />
-                  </motion.div>
-                  <span className="text-[10px] font-bold text-[#4B83D6]/40 tracking-widest uppercase mb-2 block">Passo {item.step}</span>
-                  <h3 className="text-[15px] font-semibold text-white mb-2">{item.title}</h3>
-                  <p className="text-sm text-[#6B7A99] leading-relaxed">{item.desc}</p>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── DEMO ───────────────────────────────────── */}
-      <section id="demo" className="relative py-24 px-6">
+      {/* ── O SISTEMA (Demo) ─────────────────────── */}
+      <section id="sistema" className="relative py-32 px-6">
         <div className="max-w-6xl mx-auto">
           <FadeIn className="text-center mb-16">
-            <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#4B83D6] mb-3">Demonstração</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-white">
-              Conheça o painel de controle
-            </h2>
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/60 mb-4">O Sistema</p>
+            <RevealText className="text-4xl md:text-5xl font-extralight tracking-tight">
+              Veja o poder em
+            </RevealText>
+            <RevealText className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[#C8A55A] to-[#E8C875] bg-clip-text text-transparent mt-1" delay={0.1}>
+              ação
+            </RevealText>
           </FadeIn>
 
-          <FadeIn delay={0.1}>
-            <motion.div
-              className="rounded-2xl border border-[#1a1f2e] bg-[#0d1017] overflow-hidden"
-              whileHover={{ borderColor: "#2a3348" }}
-              transition={{ duration: 0.3 }}
-            >
-              {/* Browser chrome */}
-              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[#141a27]">
-                <div className="flex gap-1.5">
-                  <motion.div whileHover={{ scale: 1.3 }} className="w-2.5 h-2.5 rounded-full bg-[#3a2020]" />
-                  <motion.div whileHover={{ scale: 1.3 }} className="w-2.5 h-2.5 rounded-full bg-[#3a3018]" />
-                  <motion.div whileHover={{ scale: 1.3 }} className="w-2.5 h-2.5 rounded-full bg-[#1a3a1a]" />
-                </div>
-                <div className="flex-1 mx-4">
-                  <div className="bg-[#111827] rounded-md px-4 py-1.5 text-[11px] text-[#4A5568] max-w-xs mx-auto text-center font-mono">
-                    app.zapprobr.com/dashboard
+          {/* Dashboard Mockup */}
+          <FadeIn delay={0.2}>
+            <div className="relative">
+              {/* Chamfered gold frame */}
+              <div className="absolute -inset-[2px] bg-gradient-to-br from-[#C8A55A]/30 via-transparent to-[#C8A55A]/30"
+                style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%)" }}
+              />
+              <div className="relative bg-[#0a0d14] overflow-hidden"
+                style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%)" }}
+              >
+                {/* Browser chrome */}
+                <div className="flex items-center gap-2 px-5 py-3 bg-[#0d1017] border-b border-[#C8A55A]/10">
+                  <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#C8A55A]/20" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#C8A55A]/15" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#C8A55A]/10" />
+                  </div>
+                  <div className="flex-1 text-center">
+                    <span className="text-[10px] tracking-[0.1em] text-white/15">app.zapprobr.com</span>
                   </div>
                 </div>
-              </div>
 
-              {/* Mock dashboard */}
-              <div className="p-6 space-y-4">
-                <motion.div
-                  variants={staggerContainer}
-                  initial="hidden"
-                  whileInView="show"
-                  viewport={{ once: true }}
-                  className="grid grid-cols-2 md:grid-cols-4 gap-3"
-                >
-                  {[
-                    { label: "Conversas ativas", val: "1.247", trend: "+12%", icon: MessageSquare },
-                    { label: "Mensagens hoje", val: "12.840", trend: "+8.3%", icon: Send },
-                    { label: "Taxa de resposta", val: "94.2%", trend: "+2.1%", icon: TrendingUp },
-                    { label: "Novos leads", val: "328", trend: "+15%", icon: Users },
-                  ].map((card) => (
-                    <motion.div
-                      key={card.label}
-                      variants={staggerItem}
-                      whileHover={{ y: -2, borderColor: "#2a3348" }}
-                      className="rounded-xl bg-[#111827] border border-[#1a2236] p-4 transition-all"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-[10px] text-[#4A5568] uppercase tracking-wider">{card.label}</p>
-                        <card.icon className="w-3.5 h-3.5 text-[#4B83D6]/40" />
-                      </div>
-                      <div className="flex items-end gap-2">
-                        <p className="text-xl font-bold text-white">{card.val}</p>
-                        <span className="text-[10px] text-[#3B8764] font-medium mb-0.5">{card.trend}</span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </motion.div>
-
-                {/* Chart */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.4 }}
-                  className="rounded-xl bg-[#111827] border border-[#1a2236] p-6 h-48 flex items-end gap-1"
-                >
-                  {Array.from({ length: 24 }).map((_, i) => {
-                    const h = 25 + Math.sin(i * 0.4) * 25 + (i / 24) * 30;
-                    return (
+                {/* Dashboard content with stagger */}
+                <div className="p-6 space-y-4 min-h-[350px]">
+                  {/* Top metrics */}
+                  <div className="grid grid-cols-4 gap-3">
+                    {[
+                      { label: "Mensagens Hoje", val: "12.847", icon: Send, change: "+24%" },
+                      { label: "Leads Novos", val: "384", icon: Users, change: "+18%" },
+                      { label: "Taxa de Resposta", val: "94.2%", icon: TrendingUp, change: "+5.2%" },
+                      { label: "Automações Ativas", val: "47", icon: Zap, change: "+3" },
+                    ].map((m, i) => (
                       <motion.div
                         key={i}
-                        initial={{ height: 0 }}
-                        whileInView={{ height: `${h}%` }}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ delay: 0.5 + i * 0.03, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        whileHover={{ backgroundColor: "rgba(75,131,214,0.7)" }}
-                        className="flex-1 rounded-sm bg-[#4B83D6]/30 cursor-pointer transition-colors"
-                      />
-                    );
-                  })}
-                </motion.div>
+                        transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
+                        className="bg-[#0d1017] border border-[#C8A55A]/5 p-4"
+                        style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%)" }}
+                      >
+                        <m.icon className="w-4 h-4 text-[#C8A55A]/40 mb-2" />
+                        <p className="text-[10px] text-white/25 uppercase tracking-wider">{m.label}</p>
+                        <p className="text-xl font-bold text-white mt-1">{m.val}</p>
+                        <p className="text-[10px] text-[#C8A55A]/60 mt-1">{m.change}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Chart area */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: 0.7 }}
+                    className="bg-[#0d1017] border border-[#C8A55A]/5 p-5 h-[180px] relative overflow-hidden"
+                    style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%)" }}
+                  >
+                    <p className="text-[10px] text-white/20 uppercase tracking-wider mb-4">Volume de Mensagens — Últimos 7 dias</p>
+                    {/* Simulated chart bars */}
+                    <div className="flex items-end gap-2 h-[110px]">
+                      {[65, 45, 80, 55, 90, 70, 95].map((h, i) => (
+                        <motion.div
+                          key={i}
+                          className="flex-1 bg-gradient-to-t from-[#C8A55A]/30 to-[#E8C875]/10 rounded-t-sm"
+                          initial={{ height: 0 }}
+                          whileInView={{ height: `${h}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.6, delay: 0.8 + i * 0.08, ease: "easeOut" }}
+                        />
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Hologram scan */}
+                <HologramScan />
               </div>
-            </motion.div>
+            </div>
           </FadeIn>
         </div>
       </section>
 
-      {/* ── PRICING ────────────────────────────────── */}
-      <section id="pricing" className="relative py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-16">
-            <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#4B83D6] mb-3">Planos</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-white">
-              Planos transparentes, sem surpresas
-            </h2>
-            <p className="text-[#6B7A99] mt-4 max-w-lg mx-auto text-sm">
-              Comece grátis e escale conforme sua operação cresce.
+      {/* ── IMPACT / NUMBERS ─────────────────────── */}
+      <section id="impacto" className="relative py-32 px-6">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+          <FadeIn>
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/60 mb-6">Impacto</p>
+            <RevealText className="text-4xl md:text-5xl font-extralight tracking-tight leading-tight">
+              Números que
+            </RevealText>
+            <RevealText className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[#C8A55A] to-[#E8C875] bg-clip-text text-transparent mt-1" delay={0.1}>
+              falam por si
+            </RevealText>
+            <p className="text-white/30 font-light mt-6 leading-relaxed max-w-md">
+              Nossos clientes experimentam resultados transformadores desde o primeiro mês.
+              A tecnologia ZapProBR não é uma promessa — é uma garantia de performance.
             </p>
           </FadeIn>
 
-          <div className="grid md:grid-cols-3 gap-4 items-start">
+          <div className="grid grid-cols-2 gap-5">
+            {IMPACT.map((m, i) => (
+              <AngularCard key={i} delay={i * 0.1}>
+                <div className="p-6 text-center">
+                  <div className="text-3xl md:text-4xl font-black bg-gradient-to-b from-[#E8C875] to-[#C8A55A] bg-clip-text text-transparent">
+                    <AnimatedCounter value={m.value} suffix={m.suffix} />
+                  </div>
+                  <p className="text-[11px] tracking-[0.12em] uppercase text-white/25 mt-2">{m.label}</p>
+                  {/* Animated progress bar */}
+                  <motion.div className="mt-4 h-[2px] bg-[#C8A55A]/10 overflow-hidden">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-[#C8A55A] to-[#E8C875]"
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${60 + i * 10}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1.2, delay: 0.3 + i * 0.1, ease: "easeOut" }}
+                    />
+                  </motion.div>
+                </div>
+              </AngularCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRICING ──────────────────────────────── */}
+      <section id="pricing" className="relative py-32 px-6">
+        <div className="max-w-6xl mx-auto">
+          <FadeIn className="text-center mb-20">
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/60 mb-4">Planos</p>
+            <RevealText className="text-4xl md:text-5xl font-extralight tracking-tight">
+              Investimento que
+            </RevealText>
+            <RevealText className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[#C8A55A] to-[#E8C875] bg-clip-text text-transparent mt-1" delay={0.1}>
+              se paga sozinho
+            </RevealText>
+          </FadeIn>
+
+          <div className="grid md:grid-cols-3 gap-6">
             {PLANS.map((plan, i) => (
-              <FadeIn key={plan.name} delay={i * 0.1}>
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className={`relative rounded-2xl p-7 flex flex-col h-full transition-all duration-300 ${
-                    plan.highlight
-                      ? "bg-[#0d1017] border-2 border-[#4B83D6]/30 hover:border-[#4B83D6]/50"
-                      : "bg-[#0d1017] border border-[#1a1f2e] hover:border-[#2a3348]"
-                  }`}
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, delay: i * 0.1 }}
+                className="relative"
+              >
+                {/* Pro plan: rotating gold border */}
+                {plan.featured && (
+                  <div className="absolute -inset-[1px] z-0 overflow-hidden"
+                    style={{
+                      clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%)",
+                      background: "conic-gradient(from var(--angle, 0deg), #C8A55A, transparent 30%, #E8C875 50%, transparent 70%, #C8A55A)",
+                      animation: "borderRotate 4s linear infinite",
+                    }}
+                  />
+                )}
+
+                <div
+                  className={`relative h-full p-8 ${plan.featured ? "bg-[#0a0d14]" : "bg-[#080b12] border border-[#C8A55A]/5"} ${plan.name === "Premium" ? "bg-[#0a0d14]" : ""}`}
+                  style={{
+                    clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%)",
+                    backgroundImage: plan.name === "Premium"
+                      ? "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(200,165,90,0.02) 10px, rgba(200,165,90,0.02) 11px)"
+                      : "none",
+                  }}
                 >
-                  {plan.highlight && (
-                    <>
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <motion.span
-                          animate={{ boxShadow: ["0 0 10px rgba(75,131,214,0.3)", "0 0 20px rgba(75,131,214,0.5)", "0 0 10px rgba(75,131,214,0.3)"] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                          className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-[#4B83D6] text-white"
-                        >
-                          Recomendado
-                        </motion.span>
-                      </div>
-                      <div className="absolute inset-0 rounded-2xl bg-[#4B83D6]/[0.02]" />
-                    </>
+                  {plan.featured && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#C8A55A]/10 border border-[#C8A55A]/20 mb-6 text-[10px] tracking-[0.15em] uppercase text-[#C8A55A]"
+                      style={{ clipPath: "polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)" }}>
+                      <Sparkles className="w-3 h-3" />
+                      Mais popular
+                    </div>
                   )}
 
-                  <p className={`text-xs font-semibold tracking-[0.15em] uppercase mb-4 ${plan.color} relative z-10`}>
+                  <h3 className={`text-lg font-bold tracking-tight ${plan.featured ? "text-[#C8A55A]" : plan.name === "Premium" ? "text-[#E8C875]" : "text-white/60"}`}>
                     {plan.name}
-                  </p>
-                  <div className="flex items-end gap-1 mb-1 relative z-10">
-                    <span className="text-3xl font-bold text-white">{plan.price}</span>
-                    {plan.period && <span className="text-sm text-[#4A5568] mb-0.5">{plan.period}</span>}
-                  </div>
-                  <p className="text-sm text-[#4A5568] mb-7 relative z-10">{plan.desc}</p>
+                  </h3>
+                  <p className="text-white/25 text-sm font-light mt-1">{plan.desc}</p>
 
-                  <ul className="space-y-3 text-sm text-[#6B7A99] mb-8 flex-1 relative z-10">
+                  <div className="mt-6 mb-8">
+                    <span className="text-4xl md:text-5xl font-black text-white">{plan.price}</span>
+                    {plan.period && <span className="text-white/25 text-sm font-light">{plan.period}</span>}
+                  </div>
+
+                  <ul className="space-y-3 mb-8">
                     {plan.items.map((item, j) => (
-                      <motion.li
-                        key={item}
-                        initial={{ opacity: 0, x: -10 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.3 + j * 0.04 }}
-                        className="flex items-center gap-2.5"
-                      >
-                        <Check className={`w-3.5 h-3.5 flex-shrink-0 ${plan.highlight ? "text-[#4B83D6]" : "text-[#3B4A66]"}`} />
+                      <li key={j} className="flex items-center gap-3 text-sm text-white/40 font-light">
+                        <Check className={`w-4 h-4 flex-shrink-0 ${plan.featured ? "text-[#C8A55A]" : "text-[#C8A55A]/40"}`} />
                         {item}
-                      </motion.li>
+                      </li>
                     ))}
                   </ul>
 
-                  <MagneticButton
-                    onClick={() => navigate("/login")}
-                    className={`w-full py-3 rounded-xl font-semibold text-sm transition-all duration-200 relative z-10 ${plan.ctaStyle}`}
-                  >
-                    {plan.cta}
-                  </MagneticButton>
-                </motion.div>
-              </FadeIn>
+                  {plan.featured ? (
+                    <BorderGlowButton onClick={() => navigate("/login")} className="w-full text-center">
+                      {plan.cta}
+                    </BorderGlowButton>
+                  ) : (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => navigate("/login")}
+                      className={`w-full py-3.5 text-sm font-semibold tracking-wider uppercase transition-all duration-300 ${
+                        plan.name === "Premium"
+                          ? "border border-[#C8A55A]/20 text-[#C8A55A] hover:bg-[#C8A55A]/5"
+                          : "border border-white/10 text-white/40 hover:text-white hover:border-white/20"
+                      }`}
+                      style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%)" }}
+                    >
+                      {plan.cta}
+                    </motion.button>
+                  )}
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── CTA FINAL ──────────────────────────────── */}
-      <section className="relative py-24 px-6">
-        <div className="max-w-4xl mx-auto">
-          <FadeIn>
-            <motion.div
-              className="relative rounded-2xl border border-[#1a1f2e] bg-[#0d1017] overflow-hidden"
-              whileHover={{ borderColor: "#2a3348" }}
-            >
-              {/* Animated glow */}
-              <motion.div
-                animate={{ opacity: [0.03, 0.06, 0.03] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-[#4B83D6] rounded-full blur-[100px]"
-              />
+      {/* ── CTA FINAL ────────────────────────────── */}
+      <section className="relative py-32 px-6">
+        {/* Radial gold ambient */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(200,165,90,0.04),transparent_60%)] pointer-events-none" />
 
-              <div className="relative z-10 text-center py-16 md:py-20 px-8 space-y-6">
-                <motion.h2
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  className="text-3xl md:text-4xl font-bold text-white leading-tight"
-                >
-                  Pronto para transformar sua
-                  <br />
-                  <span className="text-[#4B83D6]">operação?</span>
-                </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.15 }}
-                  className="text-[#6B7A99] text-sm max-w-md mx-auto"
-                >
-                  Junte-se a centenas de empresas que já automatizaram sua comunicação com o ZapProBR.
-                </motion.p>
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.25 }}
-                  className="flex flex-col sm:flex-row gap-3 justify-center pt-2"
-                >
-                  <MagneticButton
-                    onClick={() => navigate("/login")}
-                    className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-[#4B83D6] text-white font-semibold text-sm hover:bg-[#3A6FBF] transition-all duration-200"
-                  >
-                    Começar gratuitamente
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
-                  </MagneticButton>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate("/login")}
-                    className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border border-[#1a2236] text-[#8899B4] font-semibold text-sm hover:bg-[#111827] hover:text-white transition-all duration-200"
-                  >
-                    <Headphones className="w-4 h-4" />
-                    Falar com especialista
-                  </motion.button>
-                </motion.div>
-              </div>
-            </motion.div>
+        <div className="relative z-10 max-w-3xl mx-auto text-center">
+          <FadeIn>
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[#C8A55A]/60 mb-6">Pronto para começar?</p>
+          </FadeIn>
+          <RevealText className="text-4xl md:text-6xl font-extralight tracking-tight leading-tight">
+            Eleve seu negócio ao
+          </RevealText>
+          <RevealText className="text-4xl md:text-6xl font-black bg-gradient-to-r from-[#C8A55A] via-[#E8C875] to-[#C8A55A] bg-clip-text text-transparent mt-2" delay={0.1}>
+            próximo nível
+          </RevealText>
+          <FadeIn delay={0.3}>
+            <p className="text-white/30 font-light mt-6 mb-10 max-w-lg mx-auto leading-relaxed">
+              Junte-se a mais de 500 empresas que já transformaram seu atendimento com a plataforma mais avançada do mercado.
+            </p>
+          </FadeIn>
+          <FadeIn delay={0.4}>
+            <BorderGlowButton onClick={() => navigate("/login")} className="text-base mx-auto">
+              Começar agora — é grátis <ArrowRight className="inline w-4 h-4 ml-2" />
+            </BorderGlowButton>
           </FadeIn>
         </div>
       </section>
 
-      {/* ── FOOTER ─────────────────────────────────── */}
-      <footer className="relative border-t border-[#111827] py-8 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-[13px] text-[#4A5568]">
-          <motion.div
-            className="flex items-center gap-2"
-            whileHover={{ scale: 1.02 }}
-          >
-            <div className="w-6 h-6 rounded-md bg-[#4B83D6] flex items-center justify-center">
-              <Zap className="w-3 h-3 text-white" />
+      {/* ── FOOTER ───────────────────────────────── */}
+      <footer className="relative border-t border-[#C8A55A]/10 pt-16 pb-10 px-6">
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C8A55A]/30 to-transparent absolute top-0 left-0 right-0" />
+
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-10">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C8A55A] to-[#E8C875] flex items-center justify-center">
+                  <Zap className="w-4 h-4 text-[#05070A]" />
+                </div>
+                <span className="text-lg font-bold bg-gradient-to-r from-[#C8A55A] to-[#E8C875] bg-clip-text text-transparent">
+                  ZapProBR
+                </span>
+              </div>
+              <p className="text-sm text-white/20 font-light leading-relaxed">
+                Tecnologia de elite para automação WhatsApp Business.
+              </p>
             </div>
-            <span className="font-semibold text-[#6B7A99]">ZapProBR</span>
-          </motion.div>
-          <p>© 2025 ZapProBR. Todos os direitos reservados.</p>
+
+            {/* Links */}
+            {[
+              { title: "Produto", links: ["Recursos", "Planos", "API", "Integrações"] },
+              { title: "Empresa", links: ["Sobre", "Blog", "Carreiras", "Contato"] },
+              { title: "Legal", links: ["Termos de Uso", "Privacidade", "LGPD", "Cookies"] },
+            ].map((col, i) => (
+              <div key={i}>
+                <h4 className="text-[11px] tracking-[0.2em] uppercase text-[#C8A55A]/40 mb-4 font-semibold">{col.title}</h4>
+                <ul className="space-y-2.5">
+                  {col.links.map((link, j) => (
+                    <li key={j}>
+                      <a href="#" className="text-sm text-white/20 hover:text-[#C8A55A] transition-colors duration-300 font-light">
+                        {link}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-16 pt-8 border-t border-[#C8A55A]/5 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-[11px] text-white/15 tracking-wider">
+              © 2025 ZapProBR. Todos os direitos reservados.
+            </p>
+            <p className="text-[11px] text-white/10 tracking-wider">
+              Feito com excelência no Brasil 🇧🇷
+            </p>
+          </div>
         </div>
       </footer>
     </div>
