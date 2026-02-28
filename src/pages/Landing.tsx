@@ -109,7 +109,7 @@ function RevealText({ children, className = "", delay = 0 }: { children: string;
   return (
     <div ref={ref} className={className}>
       {words.map((word, i) => (
-        <span key={i} className="inline-block overflow-hidden mr-[0.3em]">
+        <span key={i} className="inline-block overflow-hidden mr-[0.3em] py-[0.1em]">
           <motion.span
             className="inline-block"
             initial={{ y: "110%" }}
@@ -422,15 +422,15 @@ const Landing = () => {
 
           {/* Headline */}
           <div>
-            <RevealText className="text-5xl md:text-7xl lg:text-8xl font-extralight tracking-tight leading-[0.95]" delay={0.6}>
-              O futuro da
-            </RevealText>
-            <RevealText className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[0.95] bg-gradient-to-r from-[#C8A55A] via-[#E8C875] to-[#C8A55A] bg-clip-text text-transparent mt-2" delay={0.75}>
-              automação
-            </RevealText>
-            <RevealText className="text-5xl md:text-7xl lg:text-8xl font-extralight tracking-tight leading-[0.95] mt-2" delay={0.9}>
-              começa aqui
-            </RevealText>
+          <RevealText className="text-5xl md:text-7xl lg:text-8xl font-extralight tracking-tight leading-[1.1]" delay={0.6}>
+            O futuro da
+          </RevealText>
+          <RevealText className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.1] bg-gradient-to-r from-[#C8A55A] via-[#E8C875] to-[#C8A55A] bg-clip-text text-transparent mt-2" delay={0.75}>
+            automação
+          </RevealText>
+          <RevealText className="text-5xl md:text-7xl lg:text-8xl font-extralight tracking-tight leading-[1.1] mt-2" delay={0.9}>
+            começa aqui
+          </RevealText>
           </div>
 
           {/* Subheadline */}
