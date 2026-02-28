@@ -19,6 +19,7 @@ import Automacoes from "./pages/Automacoes";
 import Agendamentos from "./pages/Agendamentos";
 import IAsSetoriais from "./pages/IAsSetoriais";
 import Landing from "./pages/Landing";
+import Contratos from "./pages/Contratos";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
           <Route path="/agendamentos" element={<ProtectedRoute><Agendamentos /></ProtectedRoute>} />
           <Route path="/ias-setoriais" element={<ProtectedRoute><IAsSetoriais /></ProtectedRoute>} />
           <Route path="/contatos" element={<ProtectedRoute><Contatos /></ProtectedRoute>} />
+          <Route path="/contratos" element={<ProtectedRoute><Contratos /></ProtectedRoute>} />
           <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>

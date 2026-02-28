@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   MessageCircle, BarChart3, Megaphone, Users, Settings, Search, ChevronDown,
   Send, MessageSquarePlus, Mic, Clock, Bot, Brain, CalendarDays, LayoutDashboard, MessageSquare,
+  FileText,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -32,6 +33,7 @@ const menuItems: MenuItem[] = [
   { title: "Automações", url: "/automacoes", icon: Bot },
   { title: "Agendamentos", url: "/agendamentos", icon: CalendarDays },
   { title: "IAs Setoriais", url: "/ias-setoriais", icon: Brain, proBadge: true },
+  { title: "Contratos", url: "/contratos", icon: FileText, proBadge: true },
 ];
 
 export function AppSidebar() {
