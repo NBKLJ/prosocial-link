@@ -955,24 +955,57 @@ const Landing = () => {
               </p>
             </div>
 
-            {[
-              { title: "Produto", links: ["Recursos", "Planos", "API", "Integrações"] },
-              { title: "Empresa", links: ["Sobre", "Blog", "Carreiras", "Contato"] },
-              { title: "Legal", links: ["Termos de Uso", "Privacidade", "LGPD", "Cookies"] },
-            ].map((col, i) => (
-              <div key={i}>
-                <h4 className="text-[11px] tracking-[0.2em] uppercase text-[#C8A55A]/30 mb-4 font-semibold">{col.title}</h4>
-                <ul className="space-y-2.5">
-                  {col.links.map((link, j) => (
-                    <li key={j}>
-                      <a href="#" className="text-sm text-white/15 hover:text-[#C8A55A] transition-colors duration-300 font-light">
-                        {link}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            {/* Consultor de Vendas */}
+            <div>
+              <h4 className="text-[11px] tracking-[0.2em] uppercase text-[#C8A55A]/30 mb-4 font-semibold">Vendas</h4>
+              <ul className="space-y-2.5">
+                <li className="text-sm text-white/15 font-light">Fale com um consultor</li>
+                <li>
+                  <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="text-sm text-white/15 hover:text-[#C8A55A] transition-colors duration-300 font-light flex items-center gap-2">
+                    📱 WhatsApp Comercial
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:vendas@birdly.com" className="text-sm text-white/15 hover:text-[#C8A55A] transition-colors duration-300 font-light flex items-center gap-2">
+                    ✉️ vendas@birdly.com
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Suporte Técnico */}
+            <div>
+              <h4 className="text-[11px] tracking-[0.2em] uppercase text-[#C8A55A]/30 mb-4 font-semibold">Suporte</h4>
+              <ul className="space-y-2.5">
+                <li>
+                  <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="text-sm text-white/15 hover:text-[#C8A55A] transition-colors duration-300 font-light flex items-center gap-2">
+                    🛠️ Suporte Técnico
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:suporte@birdly.com" className="text-sm text-white/15 hover:text-[#C8A55A] transition-colors duration-300 font-light flex items-center gap-2">
+                    ✉️ suporte@birdly.com
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Treinamento */}
+            <div>
+              <h4 className="text-[11px] tracking-[0.2em] uppercase text-[#C8A55A]/30 mb-4 font-semibold">Treinamento</h4>
+              <ul className="space-y-2.5">
+                <li>
+                  <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="text-sm text-white/15 hover:text-[#C8A55A] transition-colors duration-300 font-light flex items-center gap-2">
+                    🎓 Agendar treinamento
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:treinamento@birdly.com" className="text-sm text-white/15 hover:text-[#C8A55A] transition-colors duration-300 font-light flex items-center gap-2">
+                    ✉️ treinamento@birdly.com
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
 
           <div className="mt-16 pt-8 border-t border-[#C8A55A]/5 flex flex-col md:flex-row items-center justify-between gap-4">
