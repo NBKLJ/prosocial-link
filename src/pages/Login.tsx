@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
-import birdlyLogo from "@/assets/birdly-logo.png";
+import { Eye, EyeOff, MessageCircle, Send, Zap, Shield } from "lucide-react";
+import { motion } from "framer-motion";
 import illustration from "@/assets/login-illustration.png";
 
 const Login = () => {
@@ -40,31 +40,121 @@ const Login = () => {
     }, 600);
   };
 
+  const features = [
+    { icon: MessageCircle, title: "Conversas inteligentes", desc: "IA que entende o contexto" },
+    { icon: Send, title: "Disparos em massa", desc: "Alcance milhares em segundos" },
+    { icon: Zap, title: "Automações", desc: "Fluxos automáticos 24/7" },
+    { icon: Shield, title: "Segurança total", desc: "Dados criptografados" },
+  ];
+
   return (
     <div className="flex min-h-screen w-full" style={{ background: "#05070A" }}>
-      {/* Left Panel */}
-      <div className="hidden lg:flex lg:w-[45%] flex-col justify-end relative overflow-hidden" style={{ background: "#05070A" }}>
-        <img src={illustration} alt="Ilustração" className="absolute inset-0 w-full h-full object-contain p-12" />
-        <div className="relative z-10 w-full px-12 pb-12 pt-8 bg-gradient-to-t from-black/70 to-transparent">
-          <h2 className="text-lg font-bold text-white mb-1">Automatize suas conversas</h2>
-          <p style={{ color: "rgba(255,255,255,0.5)" }} className="text-sm">
-            Gerencie mensagens, contatos e campanhas em um só lugar.
-          </p>
+      {/* Left Panel - Features & Branding */}
+      <div className="hidden lg:flex lg:w-[48%] flex-col relative overflow-hidden" style={{ background: "#0A0D14" }}>
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-20 left-10 w-72 h-72 rounded-full" style={{ background: "radial-gradient(circle, #C8A55A 0%, transparent 70%)" }} />
+          <div className="absolute bottom-32 right-16 w-56 h-56 rounded-full" style={{ background: "radial-gradient(circle, #C8A55A 0%, transparent 70%)" }} />
+        </div>
+
+        <div className="relative z-10 flex flex-col h-full px-12 py-10">
+          {/* Top - Logo + Bird */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex items-center gap-4"
+          >
+            <img src={illustration} alt="Birdly" className="w-10 h-10 object-contain" />
+            <span className="text-2xl font-bold text-white tracking-tight">Birdly</span>
+          </motion.div>
+
+          {/* Center - Hero */}
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative mb-10"
+            >
+              <div className="absolute inset-0 blur-3xl opacity-20 rounded-full" style={{ background: "#C8A55A" }} />
+              <img src={illustration} alt="Birdly" className="w-32 h-32 object-contain relative z-10" />
+            </motion.div>
+
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-2xl font-bold text-white text-center mb-3"
+            >
+              Voe mais alto com suas
+              <br />
+              <span style={{ color: "#C8A55A" }}>conversas automatizadas</span>
+            </motion.h2>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="text-sm text-center mb-12 max-w-xs"
+              style={{ color: "rgba(255,255,255,0.45)" }}
+            >
+              Assim como um pássaro mensageiro, o Birdly entrega suas mensagens no momento certo.
+            </motion.p>
+
+            {/* Feature cards */}
+            <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+              {features.map((f, i) => (
+                <motion.div
+                  key={f.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.7 + i * 0.1 }}
+                  className="rounded-xl p-4 transition-all hover:scale-[1.02]"
+                  style={{
+                    background: "rgba(200,165,90,0.06)",
+                    border: "1px solid rgba(200,165,90,0.12)",
+                  }}
+                >
+                  <f.icon className="w-5 h-5 mb-2" style={{ color: "#C8A55A" }} />
+                  <p className="text-xs font-semibold text-white mb-0.5">{f.title}</p>
+                  <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>{f.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2 }}
+            className="text-[11px] text-center"
+            style={{ color: "rgba(255,255,255,0.25)" }}
+          >
+            © 2026 Birdly. Todos os direitos reservados.
+          </motion.p>
         </div>
       </div>
 
-      {/* Right Panel */}
-      <div className="flex w-full lg:w-[55%] items-center justify-center p-8 sm:p-16" style={{ background: "#0A0D14" }}>
-        <div className="w-full max-w-[380px]">
-          {/* Logo */}
-          <div className="mb-12">
-            <span className="text-3xl font-bold text-white tracking-tight">Birdly</span>
+      {/* Right Panel - Login Form */}
+      <div className="flex w-full lg:w-[52%] items-center justify-center p-8 sm:p-16" style={{ background: "#05070A" }}>
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.7 }}
+          className="w-full max-w-[400px]"
+        >
+          {/* Mobile logo */}
+          <div className="flex items-center gap-3 mb-10 lg:hidden">
+            <img src={illustration} alt="Birdly" className="w-8 h-8 object-contain" />
+            <span className="text-xl font-bold text-white">Birdly</span>
           </div>
 
           <div className="mb-8">
-            <h1 className="text-xl font-bold text-white mb-1">Bem-Vindo de volta</h1>
-            <p style={{ color: "rgba(255,255,255,0.5)" }} className="text-sm">
-              Entre com suas credenciais para acessar o painel.
+            <h1 className="text-2xl font-bold text-white mb-2">Bem-vindo de volta 👋</h1>
+            <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
+              Entre com suas credenciais para acessar o ninho.
             </p>
           </div>
 
@@ -76,13 +166,13 @@ const Login = () => {
               <input
                 id="email" type="email" placeholder="seu@email.com" value={email}
                 onChange={(e) => setEmail(e.target.value)} autoComplete="email"
-                className="w-full h-12 rounded-lg px-4 text-sm text-white placeholder:text-white/30 outline-none transition-all"
+                className="w-full h-12 rounded-xl px-4 text-sm text-white placeholder:text-white/30 outline-none transition-all"
                 style={{
-                  background: "rgba(200,165,90,0.08)",
-                  border: "1px solid rgba(200,165,90,0.2)",
+                  background: "rgba(200,165,90,0.06)",
+                  border: "1px solid rgba(200,165,90,0.15)",
                 }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = "#C8A55A"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(200,165,90,0.15)"; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(200,165,90,0.2)"; e.currentTarget.style.boxShadow = "none"; }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "#C8A55A"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(200,165,90,0.1)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(200,165,90,0.15)"; e.currentTarget.style.boxShadow = "none"; }}
               />
             </div>
 
@@ -94,13 +184,13 @@ const Login = () => {
                 <input
                   id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password}
                   onChange={(e) => setPassword(e.target.value)} autoComplete="current-password"
-                  className="w-full h-12 rounded-lg px-4 pr-10 text-sm text-white placeholder:text-white/30 outline-none transition-all"
+                  className="w-full h-12 rounded-xl px-4 pr-10 text-sm text-white placeholder:text-white/30 outline-none transition-all"
                   style={{
-                    background: "rgba(200,165,90,0.08)",
-                    border: "1px solid rgba(200,165,90,0.2)",
+                    background: "rgba(200,165,90,0.06)",
+                    border: "1px solid rgba(200,165,90,0.15)",
                   }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = "#C8A55A"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(200,165,90,0.15)"; }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(200,165,90,0.2)"; e.currentTarget.style.boxShadow = "none"; }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#C8A55A"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(200,165,90,0.1)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(200,165,90,0.15)"; e.currentTarget.style.boxShadow = "none"; }}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
@@ -116,10 +206,10 @@ const Login = () => {
                 <input
                   type="checkbox" id="remember" checked={remember}
                   onChange={(e) => setRemember(e.target.checked)}
-                  className="h-4 w-4 rounded accent-[#C8A55A]"
-                  style={{ accentColor: "#C8A55A", borderColor: "#C8A55A" }}
+                  className="h-4 w-4 rounded"
+                  style={{ accentColor: "#C8A55A" }}
                 />
-                <label htmlFor="remember" className="text-sm cursor-pointer" style={{ color: "rgba(255,255,255,0.5)" }}>
+                <label htmlFor="remember" className="text-sm cursor-pointer" style={{ color: "rgba(255,255,255,0.45)" }}>
                   Lembrar-me
                 </label>
               </div>
@@ -130,16 +220,23 @@ const Login = () => {
             </div>
 
             <button type="submit" disabled={loading}
-              className="w-full h-12 text-base font-semibold rounded-lg transition-all hover:brightness-110 disabled:opacity-50"
+              className="w-full h-12 text-base font-semibold rounded-xl transition-all hover:brightness-110 hover:shadow-lg disabled:opacity-50"
               style={{
-                background: "linear-gradient(to right, #C8A55A, #E8C875)",
+                background: "linear-gradient(135deg, #C8A55A, #E8C875)",
                 color: "#05070A",
+                boxShadow: "0 4px 20px rgba(200,165,90,0.25)",
               }}
             >
-              {loading ? "Entrando..." : "Entrar"}
+              {loading ? "Entrando..." : "Entrar no Ninho"}
             </button>
           </form>
-        </div>
+
+          {/* Trusted badge */}
+          <div className="mt-8 flex items-center justify-center gap-2 text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>
+            <Shield className="w-3 h-3" />
+            <span>Conexão segura e criptografada</span>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
