@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Eye, EyeOff, MessageCircle, Send, Zap, Shield } from "lucide-react";
+import { Eye, EyeOff, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import illustration from "@/assets/login-illustration.png";
 
@@ -40,25 +40,24 @@ const Login = () => {
     }, 600);
   };
 
-  const features = [
-    { icon: MessageCircle, title: "Conversas inteligentes", desc: "IA que entende o contexto" },
-    { icon: Send, title: "Disparos em massa", desc: "Alcance milhares em segundos" },
-    { icon: Zap, title: "Automações", desc: "Fluxos automáticos 24/7" },
-    { icon: Shield, title: "Segurança total", desc: "Dados criptografados" },
+  const steps = [
+    { num: "01", title: "Conecte", desc: "Vincule seu WhatsApp em poucos cliques" },
+    { num: "02", title: "Configure", desc: "Crie fluxos e respostas automáticas" },
+    { num: "03", title: "Automatize", desc: "Deixe o Birdly trabalhar por você 24/7" },
   ];
 
   return (
     <div className="flex min-h-screen w-full" style={{ background: "#05070A" }}>
-      {/* Left Panel - Features & Branding */}
+      {/* Left Panel */}
       <div className="hidden lg:flex lg:w-[48%] flex-col relative overflow-hidden" style={{ background: "#0A0D14" }}>
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-5">
+        {/* Glow */}
+        <div className="absolute inset-0 opacity-[0.04]">
           <div className="absolute top-20 left-10 w-72 h-72 rounded-full" style={{ background: "radial-gradient(circle, #C8A55A 0%, transparent 70%)" }} />
           <div className="absolute bottom-32 right-16 w-56 h-56 rounded-full" style={{ background: "radial-gradient(circle, #C8A55A 0%, transparent 70%)" }} />
         </div>
 
         <div className="relative z-10 flex flex-col h-full px-12 py-10">
-          {/* Top - Logo + Bird */}
+          {/* Top logo */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -69,56 +68,68 @@ const Login = () => {
             <span className="text-2xl font-bold text-white tracking-tight">Birdly</span>
           </motion.div>
 
-          {/* Center - Hero */}
+          {/* Center */}
           <div className="flex-1 flex flex-col items-center justify-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative mb-10"
+              className="relative mb-8"
             >
               <div className="absolute inset-0 blur-3xl opacity-20 rounded-full" style={{ background: "#C8A55A" }} />
-              <img src={illustration} alt="Birdly" className="w-32 h-32 object-contain relative z-10" />
+              <img src={illustration} alt="Birdly" className="w-28 h-28 object-contain relative z-10" />
             </motion.div>
 
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-2xl font-bold text-white text-center mb-3"
+              className="text-2xl font-bold text-white text-center mb-2"
             >
-              Voe mais alto com suas
-              <br />
-              <span style={{ color: "#C8A55A" }}>conversas automatizadas</span>
+              Como funciona?
             </motion.h2>
-
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              className="text-sm text-center mb-12 max-w-xs"
-              style={{ color: "rgba(255,255,255,0.45)" }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="text-sm text-center mb-10"
+              style={{ color: "rgba(255,255,255,0.4)" }}
             >
-              Assim como um pássaro mensageiro, o Birdly entrega suas mensagens no momento certo.
+              Três passos para voar mais alto
             </motion.p>
 
-            {/* Feature cards */}
-            <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
-              {features.map((f, i) => (
+            {/* Timeline */}
+            <div className="w-full max-w-xs space-y-0">
+              {steps.map((step, i) => (
                 <motion.div
-                  key={f.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.7 + i * 0.1 }}
-                  className="rounded-xl p-4 transition-all hover:scale-[1.02]"
-                  style={{
-                    background: "rgba(200,165,90,0.06)",
-                    border: "1px solid rgba(200,165,90,0.12)",
-                  }}
+                  key={step.num}
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.6 + i * 0.15 }}
+                  className="flex gap-4 relative"
                 >
-                  <f.icon className="w-5 h-5 mb-2" style={{ color: "#C8A55A" }} />
-                  <p className="text-xs font-semibold text-white mb-0.5">{f.title}</p>
-                  <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>{f.desc}</p>
+                  {/* Vertical line + dot */}
+                  <div className="flex flex-col items-center">
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                      style={{
+                        background: "rgba(200,165,90,0.15)",
+                        color: "#C8A55A",
+                        border: "1px solid rgba(200,165,90,0.3)",
+                      }}
+                    >
+                      {step.num}
+                    </div>
+                    {i < steps.length - 1 && (
+                      <div className="w-px flex-1 min-h-[32px]" style={{ background: "rgba(200,165,90,0.15)" }} />
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="pb-8">
+                    <p className="text-sm font-semibold text-white">{step.title}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{step.desc}</p>
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -130,7 +141,7 @@ const Login = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
             className="text-[11px] text-center"
-            style={{ color: "rgba(255,255,255,0.25)" }}
+            style={{ color: "rgba(255,255,255,0.2)" }}
           >
             © 2026 Birdly. Todos os direitos reservados.
           </motion.p>
@@ -231,7 +242,6 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Trusted badge */}
           <div className="mt-8 flex items-center justify-center gap-2 text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>
             <Shield className="w-3 h-3" />
             <span>Conexão segura e criptografada</span>
