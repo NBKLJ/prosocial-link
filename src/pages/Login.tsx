@@ -43,12 +43,11 @@ const Login = () => {
   return (
     <div className="flex min-h-screen w-full" style={{ background: "#05070A" }}>
       {/* Left Panel */}
-      <div className="hidden lg:flex lg:w-[45%] flex-col justify-end relative overflow-hidden">
-        <img src={illustration} alt="Ilustração" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative z-10 w-full px-12 pb-12 pt-8 bg-gradient-to-t from-black/70 to-transparent">
+      <div className="hidden lg:flex lg:w-[45%] flex-col items-center justify-center relative" style={{ background: "#05070A" }}>
+        <img src={illustration} alt="Ilustração" className="w-64 h-64 object-contain" />
+        <div className="mt-8 text-center px-12">
           <h2 className="text-lg font-bold text-white mb-1">Automatize suas conversas</h2>
-          <p style={{ color: "rgba(255,255,255,0.7)" }} className="text-sm">
+          <p style={{ color: "rgba(255,255,255,0.5)" }} className="text-sm">
             Gerencie mensagens, contatos e campanhas em um só lugar.
           </p>
         </div>
