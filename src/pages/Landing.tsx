@@ -6,6 +6,7 @@ import {
   Send, Sparkles, TrendingUp, Crown, ChevronDown,
 } from "lucide-react";
 import birdlyLogo from "@/assets/birdly-logo.png";
+import workflowPreview from "@/assets/workflow-preview.png";
 
 // ── GOLD PARTICLES (Canvas) ─────────────────────────────────────
 function GoldParticles() {
@@ -360,25 +361,25 @@ const FEATURES = [
 ];
 
 const STATS = [
-  { value: 10, suffix: "M+", label: "Mensagens processadas" },
-  { value: 99, suffix: ".9%", label: "Disponibilidade" },
+  { value: 100, suffix: "K+", label: "Mensagens processadas" },
+  { value: 100, suffix: "%", label: "Disponibilidade" },
   { value: 500, suffix: "+", label: "Empresas ativas" },
   { value: 1, prefix: "<", suffix: "s", label: "Tempo de resposta" },
 ];
 
 const PLANS = [
   {
-    name: "Basic", price: "Grátis", period: "", desc: "Para quem está começando.", highlight: false, featured: false,
+    name: "Basic", price: "R$150", period: "/mês", desc: "Para quem está começando.", highlight: false, featured: false,
     items: ["Até 2 conexões", "Disparo de mensagens", "Painel básico", "Contatos ilimitados", "Suporte por e-mail"],
-    cta: "Começar grátis",
+    cta: "Começar agora",
   },
   {
-    name: "Pro", price: "R$197", period: "/mês", desc: "Para equipes que precisam escalar.", highlight: true, featured: true,
+    name: "Pro", price: "R$550", period: "/mês", desc: "Para equipes que precisam escalar.", highlight: true, featured: true,
     items: ["Até 5 conexões", "IA de recepção inteligente", "IAs setoriais", "CRM com pipeline", "Automações por gatilho", "Agendamento Google Meet", "Distribuição round-robin", "Painel avançado", "Suporte prioritário"],
-    cta: "Assinar Pro",
+    cta: "Começar agora",
   },
   {
-    name: "Premium", price: "R$497", period: "/mês", desc: "Operações de alto volume.", highlight: false, featured: false,
+    name: "Premium", price: "R$1.500", period: "/mês", desc: "Operações de alto volume.", highlight: false, featured: false,
     items: ["Conexões ilimitadas", "Tudo do plano Pro", "API de integração", "Webhooks personalizados", "Multi-atendentes ilimitados", "White-label", "Gerente dedicado", "SLA 99.9%"],
     cta: "Falar com consultor",
   },
@@ -549,7 +550,7 @@ const Landing = () => {
             className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-12"
           >
             <BorderGlowButton onClick={() => navigate("/login")} className="text-base">
-              Iniciar gratuitamente <ArrowRight className="inline w-4 h-4 ml-2" />
+              Começar agora <ArrowRight className="inline w-4 h-4 ml-2" />
             </BorderGlowButton>
             <a href="#sistema" className="text-sm font-light tracking-wider uppercase text-white/25 hover:text-[#C8A55A] transition-all duration-300 flex items-center gap-2 group">
               Ver demonstração
@@ -602,15 +603,8 @@ const Landing = () => {
         </div>
       </motion.section>
 
-      {/* ── PARTNERS MARQUEE ──────────────────────── */}
-      <section className="relative py-20">
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C8A55A]/25 to-transparent mb-16" />
-        <FadeIn className="text-center mb-12">
-          <p className="text-[11px] tracking-[0.3em] uppercase text-white/15">Empresas que confiam no Birdly</p>
-        </FadeIn>
-        <MarqueeRow />
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C8A55A]/25 to-transparent mt-16" />
-      </section>
+      {/* Divider */}
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C8A55A]/25 to-transparent" />
 
       {/* ── FEATURES ─────────────────────────────── */}
       <section id="features" className="relative py-32 px-6">
@@ -672,88 +666,90 @@ const Landing = () => {
             </AnimatedHeadline>
           </FadeIn>
 
-          <FadeIn delay={0.2}>
-            <div className="relative">
-              <div className="absolute -inset-[2px] bg-gradient-to-br from-[#C8A55A]/30 via-transparent to-[#C8A55A]/30"
-                style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%)" }}
-              />
-              <div className="relative bg-[#0a0d14] overflow-hidden"
-                style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%)" }}
-              >
-                <div className="flex items-center gap-2 px-5 py-3 bg-[#0d1017] border-b border-[#C8A55A]/10">
-                  <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            {/* Workflow Image */}
+            <FadeIn direction="left" delay={0.2}>
+              <div className="relative group">
+                <div className="absolute -inset-[2px] bg-gradient-to-br from-[#C8A55A]/30 via-transparent to-[#C8A55A]/30 rounded-xl" />
+                <div className="relative bg-[#0a0d14] rounded-xl overflow-hidden border border-[#C8A55A]/10">
+                  <div className="flex items-center gap-2 px-5 py-3 bg-[#0d1017] border-b border-[#C8A55A]/10">
+                    <div className="flex gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
+                    </div>
+                    <div className="flex-1 text-center">
+                      <span className="text-[10px] tracking-[0.1em] text-white/15">Fluxo de automação — Birdly AI</span>
+                    </div>
                   </div>
-                  <div className="flex-1 text-center">
-                    <span className="text-[10px] tracking-[0.1em] text-white/15">app.birdly.com</span>
+                  <div className="relative overflow-hidden">
+                    <img src={workflowPreview} alt="Fluxo de automação IA" className="w-full" />
+                    {/* Animated scan line */}
+                    <motion.div
+                      className="absolute inset-x-0 h-[2px] pointer-events-none"
+                      style={{ background: "linear-gradient(90deg, transparent, #C8A55A, transparent)" }}
+                      animate={{ top: ["0%", "100%", "0%"] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    />
+                    {/* Animated pulse dots on nodes */}
+                    <motion.div
+                      className="absolute top-[30%] left-[15%] w-3 h-3 rounded-full"
+                      style={{ background: "#C8A55A", boxShadow: "0 0 15px #C8A55A" }}
+                      animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                    <motion.div
+                      className="absolute top-[35%] left-[45%] w-3 h-3 rounded-full"
+                      style={{ background: "#C8A55A", boxShadow: "0 0 15px #C8A55A" }}
+                      animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 0.6 }}
+                    />
+                    <motion.div
+                      className="absolute top-[20%] right-[25%] w-3 h-3 rounded-full"
+                      style={{ background: "#C8A55A", boxShadow: "0 0 15px #C8A55A" }}
+                      animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 1.2 }}
+                    />
                   </div>
                 </div>
+              </div>
+            </FadeIn>
 
-                <div className="p-6 space-y-4 min-h-[350px]">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { label: "Mensagens Hoje", val: "12.847", icon: Send, change: "+24%" },
-                      { label: "Leads Novos", val: "384", icon: Users, change: "+18%" },
-                      { label: "Taxa de Resposta", val: "94.2%", icon: TrendingUp, change: "+5.2%" },
-                      { label: "Automações Ativas", val: "47", icon: Zap, change: "+3" },
-                    ].map((m, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 25, scale: 0.95 }}
-                        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.3 + i * 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        whileHover={{ scale: 1.03, borderColor: "rgba(200,165,90,0.2)" }}
-                        className="bg-[#0d1017] border border-[#C8A55A]/5 p-4 transition-colors"
-                        style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%)" }}
-                      >
-                        <m.icon className="w-4 h-4 text-[#C8A55A]/40 mb-2" />
-                        <p className="text-[10px] text-white/25 uppercase tracking-wider">{m.label}</p>
-                        <p className="text-xl font-bold text-white mt-1">{m.val}</p>
-                        <p className="text-[10px] text-emerald-500/60 mt-1">{m.change}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-
+            {/* Flow description */}
+            <FadeIn direction="right" delay={0.4}>
+              <div className="space-y-6">
+                <p className="text-white/30 text-sm font-light leading-relaxed">
+                  O Birdly conecta seus canais a fluxos de IA inteligentes que processam, respondem e atualizam seu CRM automaticamente — tudo rodando 24/7.
+                </p>
+                {[
+                  { step: "01", title: "Mensagem recebida", desc: "O WhatsApp captura a mensagem e envia ao fluxo" },
+                  { step: "02", title: "IA processa", desc: "O chatbot analisa intenção e contexto da conversa" },
+                  { step: "03", title: "CRM atualizado", desc: "Lead é criado ou atualizado automaticamente" },
+                  { step: "04", title: "Resposta enviada", desc: "A resposta personalizada chega em segundos" },
+                ].map((item, i) => (
                   <motion.div
-                    initial={{ opacity: 0, scaleY: 0.8 }}
-                    whileInView={{ opacity: 1, scaleY: 1 }}
+                    key={item.step}
+                    initial={{ opacity: 0, x: 30 }}
+                    whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.8, delay: 0.7 }}
-                    className="bg-[#0d1017] border border-[#C8A55A]/5 p-5 h-[180px] relative overflow-hidden origin-bottom"
-                    style={{ clipPath: "polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%)" }}
+                    transition={{ duration: 0.5, delay: 0.5 + i * 0.12 }}
+                    className="flex gap-4 items-start"
                   >
-                    <p className="text-[10px] text-white/20 uppercase tracking-wider mb-4">Volume de Mensagens — Últimos 7 dias</p>
-                    <div className="flex items-end gap-2 h-[110px]">
-                      {[65, 45, 80, 55, 90, 70, 95].map((h, i) => (
-                        <motion.div
-                          key={i}
-                          className="flex-1 rounded-t-sm relative overflow-hidden"
-                          style={{ background: "linear-gradient(to top, rgba(200,165,90,0.4), rgba(232,200,117,0.15))" }}
-                          initial={{ height: 0 }}
-                          whileInView={{ height: `${h}%` }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.8, delay: 0.9 + i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        >
-                          {/* Bar shimmer */}
-                          <motion.div
-                            className="absolute inset-0"
-                            style={{ background: "linear-gradient(180deg, rgba(232,200,117,0.2) 0%, transparent 100%)" }}
-                            animate={{ opacity: [0.3, 0.7, 0.3] }}
-                            transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
-                          />
-                        </motion.div>
-                      ))}
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                      style={{ background: "rgba(200,165,90,0.1)", color: "#C8A55A", border: "1px solid rgba(200,165,90,0.2)" }}
+                    >
+                      {item.step}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white/80">{item.title}</p>
+                      <p className="text-xs text-white/30 mt-0.5">{item.desc}</p>
                     </div>
                   </motion.div>
-                </div>
-
-                <HologramScan />
+                ))}
               </div>
-            </div>
-          </FadeIn>
+            </FadeIn>
+          </div>
         </div>
       </section>
 
@@ -935,7 +931,7 @@ const Landing = () => {
           </FadeIn>
           <FadeIn delay={0.4}>
             <BorderGlowButton onClick={() => navigate("/login")} className="text-base mx-auto">
-              Começar agora — é grátis <ArrowRight className="inline w-4 h-4 ml-2" />
+              Começar agora <ArrowRight className="inline w-4 h-4 ml-2" />
             </BorderGlowButton>
           </FadeIn>
         </div>
