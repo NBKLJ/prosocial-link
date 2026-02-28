@@ -1,12 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
-import logo from "@/assets/logo.png";
+import birdlyLogo from "@/assets/birdly-logo.png";
 import illustration from "@/assets/login-illustration.png";
 
 const Login = () => {
@@ -25,33 +21,15 @@ const Login = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim() || !email.includes("@")) { toast.error("Informe um e-mail válido"); return; }
+    if (password.length < 4) { toast.error("A senha deve ter pelo menos 4 caracteres"); return; }
 
-    if (!email.trim() || !email.includes("@")) {
-      toast.error("Informe um e-mail válido");
-      return;
-    }
-    if (password.length < 4) {
-      toast.error("A senha deve ter pelo menos 4 caracteres");
-      return;
-    }
-
-    // Check fixed users
-    let user = USERS.find(
-      (u) => u.email === email.toLowerCase().trim() && u.password === password
-    );
-
-    // Check dynamic users from Configuracoes
+    let user = USERS.find((u) => u.email === email.toLowerCase().trim() && u.password === password);
     if (!user) {
       const dynamicUsers = JSON.parse(localStorage.getItem("zapprobr_dynamic_users") || "[]");
-      user = dynamicUsers.find(
-        (u: any) => u.email === email.toLowerCase().trim() && u.password === password
-      );
+      user = dynamicUsers.find((u: any) => u.email === email.toLowerCase().trim() && u.password === password);
     }
-
-    if (!user) {
-      toast.error("E-mail ou senha incorretos");
-      return;
-    }
+    if (!user) { toast.error("E-mail ou senha incorretos"); return; }
 
     setLoading(true);
     setTimeout(() => {
@@ -63,51 +41,105 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full" style={{ background: "#05070A" }}>
       {/* Left Panel */}
       <div className="hidden lg:flex lg:w-[45%] flex-col justify-end relative overflow-hidden">
-        <img src={illustration} alt="Ilustração de automação de conversas" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="relative z-10 w-full px-12 pb-12 pt-8 bg-gradient-to-t from-black/50 to-transparent">
+        <img src={illustration} alt="Ilustração" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="relative z-10 w-full px-12 pb-12 pt-8 bg-gradient-to-t from-black/70 to-transparent">
           <h2 className="text-lg font-bold text-white mb-1">Automatize suas conversas</h2>
-          <p className="text-white/80 text-sm">Gerencie mensagens, contatos e campanhas em um só lugar.</p>
+          <p style={{ color: "rgba(255,255,255,0.7)" }} className="text-sm">
+            Gerencie mensagens, contatos e campanhas em um só lugar.
+          </p>
         </div>
       </div>
 
       {/* Right Panel */}
-      <div className="flex w-full lg:w-[55%] items-center justify-center bg-card p-8 sm:p-16">
+      <div className="flex w-full lg:w-[55%] items-center justify-center p-8 sm:p-16" style={{ background: "#0A0D14" }}>
         <div className="w-full max-w-[380px]">
-          <div className="flex items-center gap-2.5 mb-12">
-            <img src={logo} alt="ZapProBR" className="h-9 w-auto" />
-            <span className="text-lg font-bold text-foreground">Zap<span className="text-primary">Pro</span>BR</span>
+          {/* Logo */}
+          <div className="flex items-center gap-3 mb-12">
+            <img src={birdlyLogo} alt="Birdly" className="h-12 w-12 rounded-xl object-contain" />
+            <span className="text-xl font-bold text-white tracking-tight">birdly</span>
           </div>
+
           <div className="mb-8">
-            <h1 className="text-xl font-bold text-foreground mb-1">Bem-Vindo de volta</h1>
-            <p className="text-muted-foreground text-sm">Entre com suas credenciais para acessar o painel.</p>
+            <h1 className="text-xl font-bold text-white mb-1">Bem-Vindo de volta</h1>
+            <p style={{ color: "rgba(255,255,255,0.5)" }} className="text-sm">
+              Entre com suas credenciais para acessar o painel.
+            </p>
           </div>
+
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">E-mail</Label>
-              <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 bg-muted/40 border-0 text-sm rounded-lg" autoComplete="email" />
+              <label htmlFor="email" className="text-[11px] uppercase tracking-widest font-medium" style={{ color: "#C8A55A" }}>
+                E-mail
+              </label>
+              <input
+                id="email" type="email" placeholder="seu@email.com" value={email}
+                onChange={(e) => setEmail(e.target.value)} autoComplete="email"
+                className="w-full h-12 rounded-lg px-4 text-sm text-white placeholder:text-white/30 outline-none transition-all"
+                style={{
+                  background: "rgba(200,165,90,0.08)",
+                  border: "1px solid rgba(200,165,90,0.2)",
+                }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "#C8A55A"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(200,165,90,0.15)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(200,165,90,0.2)"; e.currentTarget.style.boxShadow = "none"; }}
+              />
             </div>
+
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Senha</Label>
+              <label htmlFor="password" className="text-[11px] uppercase tracking-widest font-medium" style={{ color: "#C8A55A" }}>
+                Senha
+              </label>
               <div className="relative">
-                <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 bg-muted/40 border-0 pr-10 text-sm rounded-lg" autoComplete="current-password" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                <input
+                  id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password}
+                  onChange={(e) => setPassword(e.target.value)} autoComplete="current-password"
+                  className="w-full h-12 rounded-lg px-4 pr-10 text-sm text-white placeholder:text-white/30 outline-none transition-all"
+                  style={{
+                    background: "rgba(200,165,90,0.08)",
+                    border: "1px solid rgba(200,165,90,0.2)",
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#C8A55A"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(200,165,90,0.15)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(200,165,90,0.2)"; e.currentTarget.style.boxShadow = "none"; }}
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
+
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Checkbox id="remember" checked={remember} onCheckedChange={(checked) => setRemember(checked === true)} />
-                <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">Lembrar-me</Label>
+                <input
+                  type="checkbox" id="remember" checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="h-4 w-4 rounded accent-[#C8A55A]"
+                  style={{ accentColor: "#C8A55A", borderColor: "#C8A55A" }}
+                />
+                <label htmlFor="remember" className="text-sm cursor-pointer" style={{ color: "rgba(255,255,255,0.5)" }}>
+                  Lembrar-me
+                </label>
               </div>
-              <button type="button" onClick={() => toast.info("Funcionalidade em breve")} className="text-sm text-primary hover:underline">Esqueceu a senha?</button>
+              <button type="button" onClick={() => toast.info("Funcionalidade em breve")}
+                className="text-sm hover:underline" style={{ color: "#C8A55A" }}>
+                Esqueceu a senha?
+              </button>
             </div>
-            <Button type="submit" className="w-full h-12 text-base font-semibold rounded-lg" disabled={loading}>
+
+            <button type="submit" disabled={loading}
+              className="w-full h-12 text-base font-semibold rounded-lg transition-all hover:brightness-110 disabled:opacity-50"
+              style={{
+                background: "linear-gradient(to right, #C8A55A, #E8C875)",
+                color: "#05070A",
+              }}
+            >
               {loading ? "Entrando..." : "Entrar"}
-            </Button>
+            </button>
           </form>
         </div>
       </div>
