@@ -258,6 +258,7 @@ const Landing = () => {
           <div className="hidden md:flex items-center gap-8 text-sm text-white/50">
             <a href="#about" className="hover:text-white transition-colors">Sobre</a>
             <a href="#features" className="hover:text-white transition-colors">Recursos</a>
+            <a href="#pricing" className="hover:text-white transition-colors">Planos</a>
             <a href="#demo" className="hover:text-white transition-colors">Demo</a>
           </div>
           <button
@@ -581,6 +582,149 @@ const Landing = () => {
             </div>
           </div>
         </GlowCard>
+      </Section>
+
+      {/* ── PLANOS ─────────────────────────────────── */}
+      <Section id="pricing">
+        <div className="text-center mb-16 space-y-4">
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-indigo-400 text-sm font-semibold tracking-widest uppercase"
+          >
+            Planos
+          </motion.p>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-5xl font-black"
+          >
+            Escolha o plano
+            <br />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+              ideal para você.
+            </span>
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-white/40 max-w-lg mx-auto"
+          >
+            Comece grátis e escale conforme seu negócio cresce.
+          </motion.p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 items-start">
+          {/* Basic */}
+          <GlowCard delay={0} className="p-8 flex flex-col">
+            <p className="text-xs font-semibold tracking-widest uppercase text-white/40 mb-4">Basic</p>
+            <div className="flex items-end gap-1 mb-1">
+              <span className="text-4xl font-black text-white">Grátis</span>
+            </div>
+            <p className="text-sm text-white/30 mb-8">Para quem está começando.</p>
+            <ul className="space-y-3 text-sm text-white/50 mb-8 flex-1">
+              {[
+                "Até 2 conexões",
+                "Disparo de mensagens",
+                "Painel básico",
+                "Contatos ilimitados",
+                "Suporte por e-mail",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => navigate("/login")}
+              className="w-full py-3 rounded-xl border border-white/10 text-white/60 font-semibold text-sm hover:bg-white/[0.04] hover:text-white transition-all"
+            >
+              Começar grátis
+            </button>
+          </GlowCard>
+
+          {/* Pro – destaque */}
+          <GlowCard delay={0.1} className="p-8 flex flex-col relative border-indigo-500/30">
+            <div className="absolute -top-px left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500" />
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <span className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                Popular
+              </span>
+            </div>
+            <p className="text-xs font-semibold tracking-widest uppercase text-indigo-400 mb-4">Pro</p>
+            <div className="flex items-end gap-1 mb-1">
+              <span className="text-4xl font-black text-white">R$197</span>
+              <span className="text-sm text-white/30 mb-1">/mês</span>
+            </div>
+            <p className="text-sm text-white/30 mb-8">Para equipes que querem escalar.</p>
+            <ul className="space-y-3 text-sm text-white/50 mb-8 flex-1">
+              {[
+                "Até 5 conexões",
+                "IA de recepção inteligente",
+                "IAs setoriais (Comercial, Suporte…)",
+                "CRM com pipeline completo",
+                "Automações por gatilho",
+                "Agendamento Google Meet",
+                "Distribuição de leads round-robin",
+                "Painel analítico avançado",
+                "Suporte prioritário",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => navigate("/login")}
+              className="group relative w-full py-3.5 rounded-xl font-bold text-sm text-white overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl" />
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl blur-lg opacity-40 group-hover:opacity-70 transition-opacity" />
+              <span className="relative z-10">Assinar Pro</span>
+            </motion.button>
+          </GlowCard>
+
+          {/* Premium */}
+          <GlowCard delay={0.2} className="p-8 flex flex-col">
+            <p className="text-xs font-semibold tracking-widest uppercase text-amber-400 mb-4">Premium</p>
+            <div className="flex items-end gap-1 mb-1">
+              <span className="text-4xl font-black text-white">R$497</span>
+              <span className="text-sm text-white/30 mb-1">/mês</span>
+            </div>
+            <p className="text-sm text-white/30 mb-8">Para operações de alto volume.</p>
+            <ul className="space-y-3 text-sm text-white/50 mb-8 flex-1">
+              {[
+                "Conexões ilimitadas",
+                "Tudo do plano Pro",
+                "API de integração",
+                "Webhooks personalizados",
+                "Multi-atendentes ilimitados",
+                "White-label disponível",
+                "Gerente de conta dedicado",
+                "SLA de 99.9%",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400/60" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => navigate("/login")}
+              className="w-full py-3 rounded-xl border border-amber-500/20 text-amber-400/80 font-semibold text-sm hover:bg-amber-500/[0.06] hover:text-amber-300 transition-all"
+            >
+              Falar com consultor
+            </button>
+          </GlowCard>
+        </div>
       </Section>
 
       {/* ── CTA FINAL ──────────────────────────────── */}
