@@ -165,7 +165,7 @@ const Login = () => {
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-white mb-2">Bem-vindo de volta 👋</h1>
             <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
-              Entre com suas credenciais para acessar o ninho.
+              Insira seus dados para continuar de onde parou.
             </p>
           </div>
 
