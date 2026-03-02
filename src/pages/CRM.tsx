@@ -340,25 +340,25 @@ const CRM = () => {
         )}
 
         {activeTab === "dashboard" && premium && (
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <ExecutiveDashboard pipelines={pipelines} />
           </div>
         )}
 
         {activeTab === "atendimento" && premium && (
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <AttendanceEngine />
           </div>
         )}
 
         {activeTab === "automacao" && premium && (
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <BehavioralAutomation />
           </div>
         )}
 
         {activeTab === "compliance" && premium && (
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <CompliancePanel />
           </div>
         )}
