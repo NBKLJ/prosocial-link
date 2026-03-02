@@ -1,7 +1,14 @@
 import { AppLayout } from "@/components/AppLayout";
-import { Users, Search, Plus, MessageCircle, UserPlus, Settings2, MoreVertical } from "lucide-react";
-import { useState } from "react";
+import {
+  Users, Search, Plus, MessageCircle, UserPlus, Settings2, MoreVertical,
+  Mic, X, Send as SendIcon, Smile, Image, FileText, Sticker,
+  Trash2, Pause, Play, CircleStop,
+} from "lucide-react";
+import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { getAudioStore } from "@/pages/DisparoAudio";
+import { getMensagemStore } from "@/pages/DisparoMensagem";
 
 interface Group {
   id: string;
@@ -23,22 +30,99 @@ const mockGroups: Group[] = [
   { id: "6", name: "Pós-Venda", avatar: "PV", members: 5, lastMessage: "Cliente satisfeito com onboarding", lastMessageTime: "Seg", unread: 0, description: "Acompanhamento pós-venda" },
 ];
 
+interface Message {
+  id: string;
+  text: string;
+  time: string;
+  sent: boolean;
+  sender?: string;
+  senderAvatar?: string;
+}
+
+const initialMessages: Message[] = [
+  { id: "1", text: "Bom dia pessoal! Temos novidades sobre o cliente X.", time: "10:30", sent: false, sender: "João Carlos", senderAvatar: "JC" },
+  { id: "2", text: "Ótimo! Fechamos o contrato do cliente X! 🎉", time: "10:32", sent: false, sender: "Maria Lima", senderAvatar: "ML" },
+  { id: "3", text: "Parabéns equipe! Vamos agendar onboarding para amanhã.", time: "10:35", sent: true },
+];
+
 export default function Grupos() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(mockGroups[0]);
+  const [chatMessages, setChatMessages] = useState<Message[]>(initialMessages);
+  const [messageText, setMessageText] = useState("");
+
+  // Input bar state (same as Conversas)
+  const [showAudioList, setShowAudioList] = useState(false);
+  const [showMensagemList, setShowMensagemList] = useState(false);
+  const [showAttach, setShowAttach] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [recordTime, setRecordTime] = useState(0);
+  const recordInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const filtered = mockGroups.filter(g =>
     g.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const startRecording = () => {
+    setIsRecording(true);
+    setIsPaused(false);
+    setRecordTime(0);
+    recordInterval.current = setInterval(() => {
+      setRecordTime((t) => t + 1);
+    }, 1000);
+  };
+
+  const pauseRecording = () => {
+    setIsPaused(true);
+    if (recordInterval.current) clearInterval(recordInterval.current);
+  };
+
+  const resumeRecording = () => {
+    setIsPaused(false);
+    recordInterval.current = setInterval(() => {
+      setRecordTime((t) => t + 1);
+    }, 1000);
+  };
+
+  const stopRecording = () => {
+    setIsRecording(false);
+    setIsPaused(false);
+    setRecordTime(0);
+    if (recordInterval.current) clearInterval(recordInterval.current);
+  };
+
+  const formatRecordTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const sendMessage = () => {
+    if (!messageText.trim()) return;
+    const now = new Date();
+    const time = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+    setChatMessages((prev) => [
+      ...prev,
+      { id: Date.now().toString(), text: messageText, time, sent: true },
+    ]);
+    setMessageText("");
+  };
+
+  const insertEmoji = (emoji: string) => {
+    setMessageText((prev) => prev + emoji);
+    setShowEmoji(false);
+  };
 
   return (
     <AppLayout fullHeight>
       <div className="flex h-screen gap-0 overflow-hidden bg-card">
         {/* Lista de grupos */}
         <div className="w-[340px] flex flex-col border-r border-border">
-          <div className="p-4 space-y-3">
+          <div className="p-4 space-y-3 border-b border-border">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-foreground">Grupos</h2>
+              <h2 className="text-lg font-semibold text-foreground">Grupos</h2>
               <button className="p-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                 <Plus className="w-4 h-4" />
               </button>
@@ -50,12 +134,12 @@ export default function Grupos() {
                 placeholder="Buscar grupo..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-muted/50 border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full bg-muted rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
               />
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-2 space-y-0.5">
+          <div className="flex-1 overflow-y-auto">
             {filtered.map(group => {
               const isSelected = selectedGroup?.id === group.id;
               return (
@@ -63,13 +147,13 @@ export default function Grupos() {
                   key={group.id}
                   onClick={() => setSelectedGroup(group)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-all",
-                    isSelected ? "bg-primary/10 border border-primary/20" : "hover:bg-muted/50"
+                    "w-full flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left border-b border-border/40",
+                    isSelected && "bg-muted"
                   )}
                 >
                   <div className={cn(
-                    "w-11 h-11 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
-                    isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    "w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5",
+                    isSelected ? "gradient-green text-primary-foreground" : "bg-muted text-muted-foreground"
                   )}>
                     {group.avatar}
                   </div>
@@ -81,11 +165,12 @@ export default function Grupos() {
                     <div className="flex items-center justify-between mt-0.5">
                       <span className="text-xs text-muted-foreground truncate">{group.lastMessage}</span>
                       {group.unread > 0 && (
-                        <span className="min-w-[20px] h-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5 flex-shrink-0">
+                        <span className="min-w-[20px] h-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5 flex-shrink-0 ml-2">
                           {group.unread}
                         </span>
                       )}
                     </div>
+                    <span className="text-[11px] text-muted-foreground">{group.members} membros</span>
                   </div>
                 </button>
               );
@@ -97,9 +182,9 @@ export default function Grupos() {
         {selectedGroup ? (
           <div className="flex-1 flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
+                <div className="w-10 h-10 rounded-full gradient-green flex items-center justify-center text-xs font-bold text-primary-foreground">
                   {selectedGroup.avatar}
                 </div>
                 <div>
@@ -121,49 +206,207 @@ export default function Grupos() {
             </div>
 
             {/* Área de mensagens */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
               <div className="flex justify-center">
                 <span className="text-xs text-muted-foreground bg-muted/50 px-3 py-1 rounded-full">Hoje</span>
               </div>
 
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0">JC</div>
-                <div className="bg-muted/50 border border-border rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[60%]">
-                  <span className="text-xs font-semibold text-primary block mb-1">João Carlos</span>
-                  <p className="text-sm text-foreground">Bom dia pessoal! Temos novidades sobre o cliente X.</p>
-                  <span className="text-[10px] text-muted-foreground mt-1 block text-right">10:30</span>
+              {chatMessages.map((msg) => (
+                <div key={msg.id} className={cn("flex gap-3", msg.sent && "justify-end")}>
+                  {!msg.sent && (
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0">
+                      {msg.senderAvatar || "?"}
+                    </div>
+                  )}
+                  <div className={cn(
+                    "rounded-2xl px-4 py-2.5 max-w-[60%]",
+                    msg.sent
+                      ? "bg-primary/10 border border-primary/20 rounded-tr-md"
+                      : "bg-muted/50 border border-border rounded-tl-md"
+                  )}>
+                    {!msg.sent && msg.sender && (
+                      <span className="text-xs font-semibold text-primary block mb-1">{msg.sender}</span>
+                    )}
+                    <p className="text-sm text-foreground">{msg.text}</p>
+                    <span className="text-[10px] text-muted-foreground mt-1 block text-right">{msg.time}</span>
+                  </div>
                 </div>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0">ML</div>
-                <div className="bg-muted/50 border border-border rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[60%]">
-                  <span className="text-xs font-semibold text-primary block mb-1">Maria Lima</span>
-                  <p className="text-sm text-foreground">Ótimo! Fechamos o contrato do cliente X! 🎉</p>
-                  <span className="text-[10px] text-muted-foreground mt-1 block text-right">10:32</span>
-                </div>
-              </div>
-
-              <div className="flex gap-3 justify-end">
-                <div className="bg-primary/10 border border-primary/20 rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[60%]">
-                  <p className="text-sm text-foreground">Parabéns equipe! Vamos agendar onboarding para amanhã.</p>
-                  <span className="text-[10px] text-muted-foreground mt-1 block text-right">10:35</span>
-                </div>
-              </div>
+              ))}
             </div>
 
-            {/* Input */}
-            <div className="px-6 py-4 border-t border-border">
-              <div className="flex items-center gap-3">
-                <input
-                  type="text"
-                  placeholder="Digite uma mensagem..."
-                  className="flex-1 bg-muted/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                />
-                <button className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                  <MessageCircle className="w-4 h-4" />
-                </button>
-              </div>
+            {/* Input bar - idêntica à de Conversas */}
+            <div className="px-5 py-3 border-t border-border relative">
+              {/* Audio list popup */}
+              {showAudioList && (
+                <div className="absolute bottom-full left-5 right-5 mb-2 bg-card border border-border rounded-xl shadow-lg max-h-60 overflow-y-auto z-10">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                    <span className="text-sm font-semibold text-foreground">Áudios Programados</span>
+                    <button onClick={() => setShowAudioList(false)} className="p-1 rounded hover:bg-muted">
+                      <X className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                  {getAudioStore().length === 0 ? (
+                    <p className="px-4 py-6 text-sm text-muted-foreground text-center">Nenhum áudio salvo</p>
+                  ) : (
+                    getAudioStore().map((audio) => (
+                      <button
+                        key={audio.id}
+                        onClick={() => setShowAudioList(false)}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Mic className="w-4 h-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{audio.title}</p>
+                          <p className="text-xs text-muted-foreground">{audio.duration}</p>
+                        </div>
+                        <SendIcon className="w-4 h-4 text-primary flex-shrink-0" />
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* Mensagens programadas list popup */}
+              {showMensagemList && (
+                <div className="absolute bottom-full left-5 right-5 mb-2 bg-card border border-border rounded-xl shadow-lg max-h-60 overflow-y-auto z-10">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                    <span className="text-sm font-semibold text-foreground">Mensagens Programadas</span>
+                    <button onClick={() => setShowMensagemList(false)} className="p-1 rounded hover:bg-muted">
+                      <X className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                  {getMensagemStore().length === 0 ? (
+                    <p className="px-4 py-6 text-sm text-muted-foreground text-center">Nenhuma mensagem salva</p>
+                  ) : (
+                    getMensagemStore().map((msg) => (
+                      <button
+                        key={msg.id}
+                        onClick={() => {
+                          setMessageText(msg.message);
+                          setShowMensagemList(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <MessageCircle className="w-4 h-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{msg.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{msg.message}</p>
+                        </div>
+                        <SendIcon className="w-4 h-4 text-primary flex-shrink-0" />
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* Attach popup */}
+              {showAttach && (
+                <div className="absolute bottom-full left-5 mb-2 bg-card border border-border rounded-xl shadow-lg z-10 w-56">
+                  <div className="py-2">
+                    {[
+                      { icon: Image, label: "Imagem", color: "text-blue-500" },
+                      { icon: FileText, label: "Documento", color: "text-orange-500" },
+                      { icon: Mic, label: "Áudios Programados", color: "text-primary", action: () => { setShowAttach(false); setShowAudioList(true); setShowMensagemList(false); } },
+                      { icon: MessageCircle, label: "Mensagens Programadas", color: "text-emerald-500", action: () => { setShowAttach(false); setShowMensagemList(true); setShowAudioList(false); } },
+                      { icon: Sticker, label: "Figurinha", color: "text-pink-500" },
+                    ].map((item) => (
+                      <button
+                        key={item.label}
+                        onClick={() => { if (item.action) { item.action(); } else { setShowAttach(false); toast.info("Funcionalidade em breve"); } }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors text-left"
+                      >
+                        <item.icon className={cn("w-5 h-5", item.color)} />
+                        <span className="text-sm font-medium text-foreground">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Emoji picker popup */}
+              {showEmoji && (
+                <div className="absolute bottom-full right-5 mb-2 bg-card border border-border rounded-xl shadow-lg z-10 p-4 w-72">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-foreground">Emojis</span>
+                    <button onClick={() => setShowEmoji(false)} className="p-1 rounded hover:bg-muted">
+                      <X className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-8 gap-1">
+                    {["😀","😂","😍","🥰","😎","🤩","😢","😡","👍","👎","❤️","🔥","🎉","✅","⭐","💬","📞","📸","🎁","💰","🙏","👋","🤝","💪","🏆","🎯","📌","⏰","📅","💡","🚀","✨"].map((emoji) => (
+                      <button
+                        key={emoji}
+                        onClick={() => insertEmoji(emoji)}
+                        className="w-8 h-8 flex items-center justify-center text-lg hover:bg-muted rounded transition-colors"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {isRecording ? (
+                <div className="flex gap-2 items-center">
+                  <span className="text-xs text-muted-foreground mr-1 cursor-pointer hover:text-foreground transition-colors" onClick={stopRecording}>Cancelar</span>
+                  <button onClick={stopRecording} className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive transition-colors flex-shrink-0" title="Descartar">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-center gap-2 px-3">
+                    <div className={cn("w-2.5 h-2.5 rounded-full bg-destructive", !isPaused && "animate-pulse")} />
+                    <span className="text-sm font-mono font-semibold text-foreground min-w-[36px]">{formatRecordTime(recordTime)}</span>
+                  </div>
+                  <div className="flex-1 flex items-center justify-center gap-[3px] h-8 overflow-hidden">
+                    {Array.from({ length: 30 }).map((_, i) => (
+                      <div key={i} className={cn("w-[3px] rounded-full bg-muted-foreground/40 transition-all", !isPaused && "animate-pulse")} style={{ height: `${Math.max(4, Math.random() * 24 + 4)}px`, animationDelay: `${i * 50}ms` }} />
+                    ))}
+                  </div>
+                  <button onClick={isPaused ? resumeRecording : pauseRecording} className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors flex-shrink-0" title={isPaused ? "Continuar" : "Pausar"}>
+                    {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                  </button>
+                  <button onClick={stopRecording} className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors flex-shrink-0" title="Parar">
+                    <CircleStop className="w-4 h-4" />
+                  </button>
+                  <button onClick={stopRecording} className="w-10 h-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center flex-shrink-0" title="Enviar áudio">
+                    <SendIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2 items-center">
+                  <button
+                    onClick={() => { setShowAttach(!showAttach); setShowEmoji(false); setShowAudioList(false); setShowMensagemList(false); }}
+                    className={cn("p-2.5 rounded-lg transition-colors flex-shrink-0", showAttach ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
+                    title="Anexar"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => { setShowEmoji(!showEmoji); setShowAttach(false); setShowAudioList(false); }}
+                    className={cn("p-2.5 rounded-lg transition-colors flex-shrink-0", showEmoji ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
+                    title="Emoji"
+                  >
+                    <Smile className="w-5 h-5" />
+                  </button>
+                  <input
+                    type="text"
+                    placeholder="Digite uma mensagem..."
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                    className="flex-1 bg-muted rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  />
+                  <button onClick={startRecording} className="p-2.5 rounded-lg transition-colors flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted" title="Gravar áudio">
+                    <Mic className="w-5 h-5" />
+                  </button>
+                  <button onClick={sendMessage} className="p-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex-shrink-0">
+                    <SendIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ) : (
