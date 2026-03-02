@@ -1,47 +1,58 @@
 
 
-## Plano: Redesign Completo da Página de Detalhe de Tarefa
+## Plano: Redesign Completo da Página IAs Setoriais
 
-### Problemas identificados
-1. A seção "Sobre" com o atendimento vinculado existe mas não está visualmente destacada como na imagem de referência
-2. Os botões da toolbar de comentários (Bold, Italic, Underline, Link, Image, etc.) são apenas visuais -- nenhum funciona
-3. O botão "anexar arquivo" não faz nada
-4. O layout geral não está fiel à imagem de referência
-5. Tarefas sem `conversationId` não mostram nada útil na seção "Sobre"
+Baseado na imagem de referência, a página será completamente reestruturada para seguir o mesmo padrão visual e funcional de um gerenciador de agentes de IA profissional.
 
-### O que será feito
+---
 
-**1. Redesenhar o layout para ficar fiel à imagem de referência**
-- Botão "VOLTAR" vermelho com borda no topo esquerdo
-- Título grande em lowercase + "Finalizar Tarefa" e "deletar tarefa" alinhados à direita
-- Grid de 3 colunas com borda (Responsável | Prazo | Prioridade) exatamente como na imagem
-- Seção "Descrição" com link "editar" e "anexar arquivo"
-- Seção "Sobre" com card do atendimento vinculado (número clicável + avatar do contato + badge "Resolvido")
-- Indicador de tempo ("há X dias") + ícone WhatsApp alinhado à direita
-- Área de comentários com toolbar e textarea na parte inferior
+### Nova Estrutura da Página
 
-**2. Tornar funcionalidades dos comentários operacionais**
-- **Bold/Italic/Underline**: aplicar formatação simples ao texto selecionado usando marcadores markdown (`**bold**`, `*italic*`, `__underline__`)
-- **Anexar arquivo**: abrir um file input nativo, mostrar o nome do arquivo selecionado (simulado, sem upload real já que não há backend)
-- **Enviar comentário**: já funciona, manter
-- **H1/H2/Sans Serif/Link/Image/Save**: mostrar toast informando que é funcionalidade PRO ou simplesmente aplicar formatação markdown básica
+**1. Bloco Topo — "Criador de IAs Setoriais"**
+- Card com ícone + título "Criador de IAs Setoriais" + subtítulo "Crie sua IA setorial personalizada"
+- Duas opções lado a lado:
+  - **Assistente de Criação** (com badge "Recomendado" verde) — "Responda perguntas simples e criaremos a IA perfeita para você"
+  - **Criação Avançada** — "Configure manualmente prompt, tom de voz e regras"
+- Ambas abrem modais de criação (simulado por enquanto)
 
-**3. Garantir a seção "Sobre" com link para o atendimento**
-- Quando a tarefa tem `conversationId`, mostrar "Atendimento #XXXXX" como link clicável que navega para `/conversas?atendimento=ID`
-- Mostrar avatar + nome do contato de origem (`fromContact`) + badge de status
-- Quando não tem atendimento vinculado, mostrar mensagem "Tarefa criada manualmente"
+**2. Barra de Busca e Ações**
+- Input "Buscar IAs setoriais..."
+- Botão "Modelos" com ícone
+- Botão escuro "+ Criar do zero"
 
-**4. Funcionalidade do "anexar arquivo"**
-- Adicionar `<input type="file">` oculto, trigger pelo botão
-- Manter lista de arquivos anexados no state (nome + tamanho)
-- Exibir os arquivos anexados como chips removíveis
-- Tanto na descrição quanto nos comentários
+**3. Banner de Alerta** (condicional)
+- Alerta amarelo/laranja: "Nenhuma IA vinculada a uma conexão — Para que uma IA faça o primeiro atendimento, vincule-a a uma conexão do WhatsApp."
+- Aparece se alguma IA ativa não tem conexão vinculada
 
-### Detalhes técnicos
+**4. Seção "IAs ATIVAS" (collapsible)**
+- Header: "IAS ATIVAS (N)" com chevron para expandir/recolher
+- Grid de cards (até 3 por linha), cada card contém:
+  - Ícone do setor + Nome em bold + botão power (toggle ativo/inativo)
+  - Indicadores de status: Gatilhos, Regras, Etapas, FAQ — cada um "CONFIGURADO" (verde) ou "NÃO CONFIG." (vermelho)
+  - Seção "VINCULAR CONEXÃO" com dropdown Select para escolher uma conexão WhatsApp
 
-**Arquivo editado**: `src/pages/TarefaDetalhe.tsx` (reescrita significativa do componente)
+**5. Seção "IAs INATIVAS" (collapsible)**
+- Mesmo padrão, mostra IAs com `active: false`
+- Recolhida por padrão
 
-**Mudanças no `TaskComment` em `src/lib/taskStore.ts`**: adicionar campo opcional `attachments?: { name: string; size: string }[]` para persistir arquivos nos comentários.
+---
 
-O layout segue fielmente a imagem: card único com fundo branco, bordas suaves, seções divididas por `border-t`, e a toolbar de comentários com fundo `muted/50`.
+### Modelo de Dados Expandido
+
+Adicionar campos ao `SectorIA`:
+- `triggers: boolean` — gatilhos configurados
+- `rules: boolean` — regras configuradas
+- `steps: boolean` — etapas configuradas
+- `faq: boolean` — FAQ configurado
+- `connectionId: string | null` — conexão vinculada
+
+---
+
+### Detalhes Técnicos
+
+**Arquivo principal**: `src/pages/IAsSetoriais.tsx` — reescrita completa
+
+**Componentes utilizados**: `Select` (radix), `Collapsible` (radix), `Input`, `Button`, `Badge`, `ProGate`, `ProBadge`
+
+**Padrão visual**: bordas `border-border`, fundo `bg-card`, sombras suaves, sem glassmorphism pesado. Cards com `rounded-xl border border-border bg-card`. Badges de status com cores verde/vermelho e texto uppercase `text-[11px] font-bold tracking-wide`.
 
