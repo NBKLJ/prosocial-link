@@ -2,13 +2,17 @@ import { AppLayout } from "@/components/AppLayout";
 import {
   Users, Search, Plus, MessageCircle, UserPlus, Settings2, MoreVertical,
   Mic, X, Send as SendIcon, Smile, Image, FileText, Sticker,
-  Trash2, Pause, Play, CircleStop,
+  Trash2, Pause, Play, CircleStop, LogOut, Bell, BellOff, Archive,
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getAudioStore } from "@/pages/DisparoAudio";
 import { getMensagemStore } from "@/pages/DisparoMensagem";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface Group {
   id: string;
@@ -52,7 +56,7 @@ export default function Grupos() {
   const [chatMessages, setChatMessages] = useState<Message[]>(initialMessages);
   const [messageText, setMessageText] = useState("");
 
-  // Input bar state (same as Conversas)
+  // Input bar state
   const [showAudioList, setShowAudioList] = useState(false);
   const [showMensagemList, setShowMensagemList] = useState(false);
   const [showAttach, setShowAttach] = useState(false);
@@ -61,6 +65,24 @@ export default function Grupos() {
   const [isPaused, setIsPaused] = useState(false);
   const [recordTime, setRecordTime] = useState(0);
   const recordInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Dialog states
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  // Create group form
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupDesc, setNewGroupDesc] = useState("");
+
+  // Add member form
+  const [memberPhone, setMemberPhone] = useState("");
+
+  // Settings form
+  const [editGroupName, setEditGroupName] = useState("");
+  const [editGroupDesc, setEditGroupDesc] = useState("");
+  const [muteNotifications, setMuteNotifications] = useState(false);
 
   const filtered = mockGroups.filter(g =>
     g.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -124,7 +146,7 @@ export default function Grupos() {
           <div className="p-4 space-y-3 border-b border-border">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-foreground">Grupos</h2>
-              <button className="p-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+              <button onClick={() => { setNewGroupName(""); setNewGroupDesc(""); setShowCreateGroup(true); }} className="p-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                 <Plus className="w-4 h-4" />
               </button>
             </div>
@@ -200,15 +222,33 @@ export default function Grupos() {
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <button className="p-2 rounded-lg hover:bg-muted/50 transition-colors text-muted-foreground">
+                <button onClick={() => { setMemberPhone(""); setShowAddMember(true); }} className="p-2 rounded-lg hover:bg-muted/50 transition-colors text-muted-foreground" title="Adicionar membro">
                   <UserPlus className="w-4 h-4" />
                 </button>
-                <button className="p-2 rounded-lg hover:bg-muted/50 transition-colors text-muted-foreground">
+                <button onClick={() => { setEditGroupName(selectedGroup.name); setEditGroupDesc(selectedGroup.description); setShowSettings(true); }} className="p-2 rounded-lg hover:bg-muted/50 transition-colors text-muted-foreground" title="Configurações">
                   <Settings2 className="w-4 h-4" />
                 </button>
-                <button className="p-2 rounded-lg hover:bg-muted/50 transition-colors text-muted-foreground">
-                  <MoreVertical className="w-4 h-4" />
-                </button>
+                <div className="relative">
+                  <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="p-2 rounded-lg hover:bg-muted/50 transition-colors text-muted-foreground" title="Mais opções">
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                  {showMoreMenu && (
+                    <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-xl shadow-lg z-20 w-52 py-1">
+                      <button onClick={() => { setMuteNotifications(!muteNotifications); setShowMoreMenu(false); toast.success(muteNotifications ? "Notificações ativadas" : "Notificações silenciadas"); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors text-left">
+                        {muteNotifications ? <Bell className="w-4 h-4 text-muted-foreground" /> : <BellOff className="w-4 h-4 text-muted-foreground" />}
+                        <span className="text-sm text-foreground">{muteNotifications ? "Ativar notificações" : "Silenciar grupo"}</span>
+                      </button>
+                      <button onClick={() => { setShowMoreMenu(false); toast.info("Grupo arquivado"); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors text-left">
+                        <Archive className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-foreground">Arquivar grupo</span>
+                      </button>
+                      <button onClick={() => { setShowMoreMenu(false); toast.info("Você saiu do grupo"); }} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors text-left">
+                        <LogOut className="w-4 h-4 text-destructive" />
+                        <span className="text-sm text-destructive">Sair do grupo</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -425,6 +465,74 @@ export default function Grupos() {
           </div>
         )}
       </div>
+
+      {/* Dialog: Criar Grupo */}
+      <Dialog open={showCreateGroup} onOpenChange={setShowCreateGroup}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Criar Novo Grupo</DialogTitle>
+            <DialogDescription>Preencha as informações do novo grupo.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Nome do grupo</label>
+              <input value={newGroupName} onChange={e => setNewGroupName(e.target.value)} placeholder="Ex: Equipe de Vendas" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Descrição</label>
+              <input value={newGroupDesc} onChange={e => setNewGroupDesc(e.target.value)} placeholder="Descreva o propósito do grupo" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateGroup(false)}>Cancelar</Button>
+            <Button onClick={() => { if (!newGroupName.trim()) { toast.error("Informe o nome do grupo"); return; } toast.success(`Grupo "${newGroupName}" criado com sucesso!`); setShowCreateGroup(false); }}>Criar Grupo</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Adicionar Membro */}
+      <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar Membro</DialogTitle>
+            <DialogDescription>Adicione um novo membro ao grupo {selectedGroup?.name}.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Número do WhatsApp</label>
+              <input value={memberPhone} onChange={e => setMemberPhone(e.target.value)} placeholder="(11) 99999-9999" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddMember(false)}>Cancelar</Button>
+            <Button onClick={() => { if (!memberPhone.trim()) { toast.error("Informe o número"); return; } toast.success(`Membro adicionado ao grupo!`); setShowAddMember(false); }}>Adicionar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Configurações do Grupo */}
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Configurações do Grupo</DialogTitle>
+            <DialogDescription>Edite as informações do grupo.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Nome do grupo</label>
+              <input value={editGroupName} onChange={e => setEditGroupName(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Descrição</label>
+              <input value={editGroupDesc} onChange={e => setEditGroupDesc(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSettings(false)}>Cancelar</Button>
+            <Button onClick={() => { toast.success("Configurações salvas!"); setShowSettings(false); }}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
