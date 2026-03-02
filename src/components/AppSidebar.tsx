@@ -18,6 +18,7 @@ interface MenuItem { title: string; url: string; icon: typeof MessageCircle; cou
 const menuItems: MenuItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Conversas", url: "/conversas", icon: MessageCircle, count: 6 },
+  { title: "Grupos", url: "/grupos", icon: Users },
   { title: "CRM", url: "/crm", icon: BarChart3 },
   {
     title: "Disparos", url: "/disparos", icon: Megaphone, expandable: true,
