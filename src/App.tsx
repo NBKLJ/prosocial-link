@@ -21,6 +21,10 @@ import IAsSetoriais from "./pages/IAsSetoriais";
 import Landing from "./pages/Landing";
 import Contratos from "./pages/Contratos";
 import Grupos from "./pages/Grupos";
+import GestaoTarefas from "./pages/GestaoTarefas";
+import GestaoCalendarios from "./pages/GestaoCalendarios";
+import GestaoUsuarios from "./pages/GestaoUsuarios";
+import GestaoProdutividade from "./pages/GestaoProdutividade";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +59,10 @@ const App = () => (
           <Route path="/contatos" element={<ProtectedRoute><Contatos /></ProtectedRoute>} />
           <Route path="/contratos" element={<ProtectedRoute><Contratos /></ProtectedRoute>} />
           <Route path="/grupos" element={<ProtectedRoute><Grupos /></ProtectedRoute>} />
+          <Route path="/gestao/tarefas" element={<ProtectedRoute><GestaoTarefas /></ProtectedRoute>} />
+          <Route path="/gestao/calendarios" element={<ProtectedRoute><GestaoCalendarios /></ProtectedRoute>} />
+          <Route path="/gestao/usuarios" element={<ProtectedRoute><GestaoUsuarios /></ProtectedRoute>} />
+          <Route path="/gestao/produtividade" element={<ProtectedRoute><GestaoProdutividade /></ProtectedRoute>} />
           <Route path="/configuracoes" element={<ProtectedRoute><Configuracoes /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
