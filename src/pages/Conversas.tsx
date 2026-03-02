@@ -6,12 +6,13 @@ import {
   Search, Check, CheckCheck, Mic, X, Send as SendIcon,
   Smile, Image, FileText, Sticker, Plus,
   Trash2, Pause, Play, CircleStop, ArrowRightLeft, ChevronDown, CircleX,
-  Phone, Filter, Clock, User, MessageCircle,
+  Phone, Filter, Clock, User, MessageCircle, ListTodo,
 } from "lucide-react";
 import { getAudioStore } from "@/pages/DisparoAudio";
 import { getMensagemStore } from "@/pages/DisparoMensagem";
 import { getTagColor, getTagStore } from "@/lib/tagStore";
 import { ClientDetailPanel } from "@/components/conversas/ClientDetailPanel";
+import { addTask, availableAssignees } from "@/lib/taskStore";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -111,6 +112,13 @@ const Conversas = () => {
   });
   const [showClientPanel, setShowClientPanel] = useState(false);
   const [removedConvIds, setRemovedConvIds] = useState<string[]>([]);
+
+  // Task from message
+  const [showTaskDialog, setShowTaskDialog] = useState(false);
+  const [taskMessage, setTaskMessage] = useState("");
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskAssignee, setTaskAssignee] = useState(availableAssignees[0]);
+  const [taskPriority, setTaskPriority] = useState<"low" | "medium" | "high">("medium");
 
   // Advanced filters
   const [showAdvFilters, setShowAdvFilters] = useState(false);
@@ -221,6 +229,32 @@ const Conversas = () => {
     // Select next available conversation
     const remaining = activeConversations.filter(c => c.id !== selected);
     if (remaining.length > 0) setSelected(remaining[0].id);
+  };
+
+  const openTaskFromMessage = (msgText: string) => {
+    setTaskMessage(msgText);
+    setTaskTitle(`Tarefa: ${msgText.substring(0, 60)}${msgText.length > 60 ? "..." : ""}`);
+    setTaskAssignee(availableAssignees[0]);
+    setTaskPriority("medium");
+    setShowTaskDialog(true);
+  };
+
+  const handleCreateTaskFromMessage = () => {
+    if (!taskTitle.trim()) { toast.error("Título obrigatório"); return; }
+    addTask({
+      title: taskTitle,
+      description: taskMessage,
+      status: "todo",
+      priority: taskPriority,
+      assignee: taskAssignee,
+      dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split("T")[0],
+      tags: ["conversa"],
+      fromMessage: taskMessage,
+      fromContact: selectedConv?.name || "",
+    });
+    window.dispatchEvent(new Event("tasks-updated"));
+    setShowTaskDialog(false);
+    toast.success(`Tarefa criada para ${taskAssignee}`);
   };
 
   return (
@@ -534,7 +568,16 @@ const Conversas = () => {
                 );
               }
               return (
-                <div key={msg.id} className={cn("flex", msg.sent ? "justify-end" : "justify-start")}>
+                <div key={msg.id} className={cn("flex group/msg items-end gap-1", msg.sent ? "justify-end" : "justify-start")}>
+                  {!msg.sent && (
+                    <button
+                      onClick={() => openTaskFromMessage(msg.text)}
+                      className="opacity-0 group-hover/msg:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted mb-1"
+                      title="Criar tarefa a partir desta mensagem"
+                    >
+                      <ListTodo className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  )}
                   <div className={cn(
                     "max-w-[65%] px-4 py-2.5 rounded-2xl text-sm",
                     msg.sent
@@ -547,6 +590,15 @@ const Conversas = () => {
                       {msg.sent && (msg.read ? <CheckCheck className="w-3 h-3" /> : <Check className="w-3 h-3" />)}
                     </div>
                   </div>
+                  {msg.sent && (
+                    <button
+                      onClick={() => openTaskFromMessage(msg.text)}
+                      className="opacity-0 group-hover/msg:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted mb-1"
+                      title="Criar tarefa a partir desta mensagem"
+                    >
+                      <ListTodo className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -783,6 +835,50 @@ const Conversas = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowTransferDialog(false)}>Cancelar</Button>
             <Button onClick={handleTransfer} disabled={!transferUser}>Transferir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Task from Message Dialog */}
+      <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><ListTodo className="w-5 h-5 text-primary" />Criar Tarefa da Mensagem</DialogTitle>
+            <DialogDescription>Crie uma tarefa a partir desta mensagem e atribua a um usuário</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-muted/50 border border-border rounded-lg p-3">
+              <p className="text-xs text-muted-foreground mb-1">Mensagem original:</p>
+              <p className="text-sm text-foreground italic">"{taskMessage}"</p>
+              {selectedConv && <p className="text-xs text-primary mt-1">De: {selectedConv.name}</p>}
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Título da Tarefa</label>
+              <input value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)}
+                className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Atribuir para</label>
+                <select value={taskAssignee} onChange={(e) => setTaskAssignee(e.target.value)}
+                  className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50">
+                  {availableAssignees.map((a) => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Prioridade</label>
+                <select value={taskPriority} onChange={(e) => setTaskPriority(e.target.value as "low" | "medium" | "high")}
+                  className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50">
+                  <option value="low">Baixa</option>
+                  <option value="medium">Média</option>
+                  <option value="high">Alta</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTaskDialog(false)}>Cancelar</Button>
+            <Button onClick={handleCreateTaskFromMessage}>Criar Tarefa</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

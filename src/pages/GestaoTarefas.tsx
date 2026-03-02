@@ -3,29 +3,12 @@ import { ProGate } from "@/components/ui/ProGate";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, CheckCircle2, Clock, AlertCircle, MoreHorizontal, Calendar, User } from "lucide-react";
-import { useState } from "react";
+import { Plus, CheckCircle2, Clock, AlertCircle, MoreHorizontal, Calendar, User, Filter, MessageCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: "todo" | "in_progress" | "done";
-  priority: "low" | "medium" | "high";
-  assignee: string;
-  dueDate: string;
-  tags: string[];
-}
-
-const mockTasks: Task[] = [
-  { id: "1", title: "Follow-up com cliente MegaCorp", description: "Enviar proposta revisada", status: "todo", priority: "high", assignee: "Carlos", dueDate: "2026-03-05", tags: ["vendas", "urgente"] },
-  { id: "2", title: "Preparar apresentação Q1", description: "Relatório trimestral de vendas", status: "in_progress", priority: "medium", assignee: "Ana", dueDate: "2026-03-10", tags: ["relatório"] },
-  { id: "3", title: "Atualizar base de contatos", description: "Limpar leads inativos há 90 dias", status: "todo", priority: "low", assignee: "João", dueDate: "2026-03-15", tags: ["operacional"] },
-  { id: "4", title: "Configurar automação de boas-vindas", description: "Novo fluxo para leads do site", status: "done", priority: "medium", assignee: "Carlos", dueDate: "2026-03-01", tags: ["automação"] },
-  { id: "5", title: "Reunião com equipe comercial", description: "Alinhamento de metas mensais", status: "in_progress", priority: "high", assignee: "Ana", dueDate: "2026-03-03", tags: ["reunião"] },
-  { id: "6", title: "Revisar contratos pendentes", description: "3 contratos aguardando assinatura", status: "todo", priority: "high", assignee: "João", dueDate: "2026-03-04", tags: ["contratos", "urgente"] },
-];
+import { getTaskStore, saveTaskStore, addTask, availableAssignees, type Task } from "@/lib/taskStore";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 const priorityConfig = {
   high: { label: "Alta", color: "bg-red-500/15 text-red-600 border-red-500/20" },
@@ -46,7 +29,46 @@ const columns: { key: Task["status"]; label: string }[] = [
 ];
 
 export default function GestaoTarefas() {
-  const [tasks] = useState<Task[]>(mockTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [filterUser, setFilterUser] = useState<string>("todos");
+  const [showNewTask, setShowNewTask] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [newAssignee, setNewAssignee] = useState(availableAssignees[0]);
+  const [newPriority, setNewPriority] = useState<Task["priority"]>("medium");
+  const [newDueDate, setNewDueDate] = useState("");
+
+  useEffect(() => {
+    setTasks(getTaskStore());
+    const handler = () => setTasks(getTaskStore());
+    window.addEventListener("tasks-updated", handler);
+    return () => window.removeEventListener("tasks-updated", handler);
+  }, []);
+
+  const filteredTasks = filterUser === "todos" ? tasks : tasks.filter((t) => t.assignee === filterUser);
+
+  const handleStatusChange = (id: string, newStatus: Task["status"]) => {
+    const updated = tasks.map((t) => (t.id === id ? { ...t, status: newStatus } : t));
+    setTasks(updated);
+    saveTaskStore(updated);
+  };
+
+  const handleCreateTask = () => {
+    if (!newTitle.trim()) { toast.error("Título obrigatório"); return; }
+    addTask({
+      title: newTitle,
+      description: newDesc,
+      status: "todo",
+      priority: newPriority,
+      assignee: newAssignee,
+      dueDate: newDueDate || new Date().toISOString().split("T")[0],
+      tags: [],
+    });
+    setTasks(getTaskStore());
+    setShowNewTask(false);
+    setNewTitle(""); setNewDesc("");
+    toast.success("Tarefa criada com sucesso!");
+  };
 
   return (
     <AppLayout>
@@ -57,15 +79,31 @@ export default function GestaoTarefas() {
               <h1 className="text-2xl font-bold text-foreground">Tarefas</h1>
               <p className="text-sm text-muted-foreground">Gerencie as tarefas da sua equipe em formato Kanban</p>
             </div>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              Nova Tarefa
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <select
+                  value={filterUser}
+                  onChange={(e) => setFilterUser(e.target.value)}
+                  className="bg-muted border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                >
+                  <option value="todos">Todos os Usuários</option>
+                  {availableAssignees.map((a) => (
+                    <option key={a} value={a}>{a}</option>
+                  ))}
+                </select>
+              </div>
+              <Button className="gap-2" onClick={() => setShowNewTask(true)}>
+                <Plus className="w-4 h-4" />
+                Nova Tarefa
+              </Button>
+            </div>
           </div>
 
+          {/* Kanban columns */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {columns.map((col) => {
-              const colTasks = tasks.filter((t) => t.status === col.key);
+              const colTasks = filteredTasks.filter((t) => t.status === col.key);
               const StatusIcon = statusConfig[col.key].icon;
               return (
                 <div key={col.key} className="space-y-3">
@@ -74,17 +112,36 @@ export default function GestaoTarefas() {
                     <span className="text-sm font-semibold text-foreground">{col.label}</span>
                     <Badge variant="secondary" className="text-xs">{colTasks.length}</Badge>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-h-[100px]">
                     {colTasks.map((task) => (
-                      <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                      <Card key={task.id} className="hover:shadow-md transition-shadow">
                         <CardContent className="p-4 space-y-3">
                           <div className="flex items-start justify-between">
                             <h3 className="text-sm font-semibold text-foreground leading-tight">{task.title}</h3>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
-                              <MoreHorizontal className="w-3.5 h-3.5" />
-                            </Button>
+                            <div className="relative group">
+                              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                                <MoreHorizontal className="w-3.5 h-3.5" />
+                              </Button>
+                              <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-10 w-40 hidden group-hover:block">
+                                {columns.filter((c) => c.key !== task.status).map((c) => (
+                                  <button
+                                    key={c.key}
+                                    onClick={() => handleStatusChange(task.id, c.key)}
+                                    className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-muted transition-colors first:rounded-t-lg last:rounded-b-lg"
+                                  >
+                                    Mover para {c.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                           <p className="text-xs text-muted-foreground">{task.description}</p>
+                          {task.fromContact && (
+                            <div className="flex items-center gap-1 text-xs text-primary">
+                              <MessageCircle className="w-3 h-3" />
+                              <span>De: {task.fromContact}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-2 flex-wrap">
                             <Badge variant="outline" className={cn("text-[10px]", priorityConfig[task.priority].color)}>
                               {priorityConfig[task.priority].label}
@@ -100,12 +157,67 @@ export default function GestaoTarefas() {
                         </CardContent>
                       </Card>
                     ))}
+                    {colTasks.length === 0 && (
+                      <div className="border-2 border-dashed border-border rounded-xl p-6 text-center text-xs text-muted-foreground">
+                        Nenhuma tarefa
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
+
+        {/* New Task Dialog */}
+        <Dialog open={showNewTask} onOpenChange={setShowNewTask}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Nova Tarefa</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Título</label>
+                <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
+                  className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  placeholder="Título da tarefa" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Descrição</label>
+                <textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} rows={3}
+                  className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
+                  placeholder="Descreva a tarefa..." />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Responsável</label>
+                  <select value={newAssignee} onChange={(e) => setNewAssignee(e.target.value)}
+                    className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50">
+                    {availableAssignees.map((a) => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Prioridade</label>
+                  <select value={newPriority} onChange={(e) => setNewPriority(e.target.value as Task["priority"])}
+                    className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50">
+                    <option value="low">Baixa</option>
+                    <option value="medium">Média</option>
+                    <option value="high">Alta</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Data de Entrega</label>
+                <input type="date" value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)}
+                  className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowNewTask(false)}>Cancelar</Button>
+              <Button onClick={handleCreateTask}>Criar Tarefa</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </ProGate>
     </AppLayout>
   );
