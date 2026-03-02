@@ -19,15 +19,16 @@ interface Group {
   lastMessageTime: string;
   unread: number;
   description: string;
+  connection: string;
 }
 
 const mockGroups: Group[] = [
-  { id: "1", name: "Equipe Comercial", avatar: "EC", members: 12, lastMessage: "Fechamos o contrato do cliente X!", lastMessageTime: "10:32", unread: 3, description: "Grupo da equipe de vendas" },
-  { id: "2", name: "Suporte Técnico", avatar: "ST", members: 8, lastMessage: "Ticket #432 resolvido", lastMessageTime: "09:45", unread: 0, description: "Atendimento e suporte ao cliente" },
-  { id: "3", name: "Marketing Digital", avatar: "MD", members: 6, lastMessage: "Campanha aprovada pelo cliente", lastMessageTime: "Ontem", unread: 5, description: "Estratégias de marketing" },
-  { id: "4", name: "Financeiro", avatar: "FN", members: 4, lastMessage: "NF enviada para o cliente Y", lastMessageTime: "Ontem", unread: 0, description: "Controle financeiro e cobranças" },
-  { id: "5", name: "Leads Quentes 🔥", avatar: "LQ", members: 15, lastMessage: "Novo lead qualificado via site", lastMessageTime: "08:12", unread: 12, description: "Leads com alta chance de conversão" },
-  { id: "6", name: "Pós-Venda", avatar: "PV", members: 5, lastMessage: "Cliente satisfeito com onboarding", lastMessageTime: "Seg", unread: 0, description: "Acompanhamento pós-venda" },
+  { id: "1", name: "Equipe Comercial", avatar: "EC", members: 12, lastMessage: "Fechamos o contrato do cliente X!", lastMessageTime: "10:32", unread: 3, description: "Grupo da equipe de vendas", connection: "Comercial 1" },
+  { id: "2", name: "Suporte Técnico", avatar: "ST", members: 8, lastMessage: "Ticket #432 resolvido", lastMessageTime: "09:45", unread: 0, description: "Atendimento e suporte ao cliente", connection: "Suporte" },
+  { id: "3", name: "Marketing Digital", avatar: "MD", members: 6, lastMessage: "Campanha aprovada pelo cliente", lastMessageTime: "Ontem", unread: 5, description: "Estratégias de marketing", connection: "Comercial 1" },
+  { id: "4", name: "Financeiro", avatar: "FN", members: 4, lastMessage: "NF enviada para o cliente Y", lastMessageTime: "Ontem", unread: 0, description: "Controle financeiro e cobranças", connection: "Comercial 2" },
+  { id: "5", name: "Leads Quentes 🔥", avatar: "LQ", members: 15, lastMessage: "Novo lead qualificado via site", lastMessageTime: "08:12", unread: 12, description: "Leads com alta chance de conversão", connection: "Comercial 1" },
+  { id: "6", name: "Pós-Venda", avatar: "PV", members: 5, lastMessage: "Cliente satisfeito com onboarding", lastMessageTime: "Seg", unread: 0, description: "Acompanhamento pós-venda", connection: "Suporte" },
 ];
 
 interface Message {
@@ -170,7 +171,13 @@ export default function Grupos() {
                         </span>
                       )}
                     </div>
-                    <span className="text-[11px] text-muted-foreground">{group.members} membros</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[11px] text-muted-foreground">{group.members} membros</span>
+                      <div className="flex items-center gap-1 text-[11px] text-primary">
+                        <MessageCircle className="w-3 h-3" />
+                        <span>{group.connection}</span>
+                      </div>
+                    </div>
                   </div>
                 </button>
               );
