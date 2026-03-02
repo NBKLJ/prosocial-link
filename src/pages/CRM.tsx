@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState, useRef, useCallback, DragEvent } from "react";
-import { Plus, Search, SlidersHorizontal, Users as UsersIcon } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, Users as UsersIcon, BarChart3, Zap, Shield } from "lucide-react";
 import { Pipeline, Lead } from "@/components/crm/types";
 import { getPipelineStore, setPipelineStore } from "@/lib/crmStore";
 import { PipelineColumn } from "@/components/crm/PipelineColumn";
@@ -12,11 +12,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { isPro } from "@/lib/planAccess";
+import { isPro, isPremium } from "@/lib/planAccess";
 import { ProBadge } from "@/components/ui/ProBadge";
-// LeadOriginChart available for future use
+import { ExecutiveDashboard } from "@/components/crm/ExecutiveDashboard";
+import { AttendanceEngine } from "@/components/crm/AttendanceEngine";
+import { BehavioralAutomation } from "@/components/crm/BehavioralAutomation";
+
+type CRMTab = "pipeline" | "dashboard" | "atendimento" | "automacao";
 
 const CRM = () => {
+  const [activeTab, setActiveTab] = useState<CRMTab>("pipeline");
   const [pipelines, setPipelines] = useState<Pipeline[]>(getPipelineStore());
   const [draggedLead, setDraggedLead] = useState<{ lead: Lead; fromColumnId: string } | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
@@ -46,6 +51,7 @@ const CRM = () => {
   const sellers = ["VS", "AL", "MR", "JP"];
 
   const pro = isPro();
+  const premium = isPremium();
 
   const updatePipelines = useCallback((updater: (prev: Pipeline[]) => Pipeline[]) => {
     setPipelines((prev) => {
@@ -152,81 +158,132 @@ const CRM = () => {
         {/* Header */}
         <div className="flex items-center justify-between flex-shrink-0">
           <div>
-            <h1 className="text-xl font-bold text-foreground tracking-tight">Pipeline de Vendas</h1>
+            <h1 className="text-xl font-bold text-foreground tracking-tight">CRM</h1>
             <p className="text-[13px] text-muted-foreground mt-0.5">Gerencie e acompanhe suas oportunidades</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-              <input type="text" placeholder="Buscar por nome, valor, email, telefone..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-[300px] pl-9 pr-4 py-2 rounded-lg bg-muted/50 border border-border/50 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all" />
-            </div>
-            <button onClick={() => setShowFilters(!showFilters)} className={cn("inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border/50 text-sm transition-colors", showFilters ? "bg-primary/10 text-primary border-primary/30" : "bg-card text-muted-foreground hover:bg-muted")}>
-              <SlidersHorizontal className="w-3.5 h-3.5" />Filtros
-            </button>
-            {pro && (
-              <button onClick={() => setShowDistModal(true)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border/50 text-sm bg-card text-muted-foreground hover:bg-muted transition-colors">
-                <UsersIcon className="w-3.5 h-3.5" />Distribuição <ProBadge />
+          {activeTab === "pipeline" && (
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+                <input type="text" placeholder="Buscar por nome, valor, email, telefone..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-[300px] pl-9 pr-4 py-2 rounded-lg bg-muted/50 border border-border/50 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all" />
+              </div>
+              <button onClick={() => setShowFilters(!showFilters)} className={cn("inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border/50 text-sm transition-colors", showFilters ? "bg-primary/10 text-primary border-primary/30" : "bg-card text-muted-foreground hover:bg-muted")}>
+                <SlidersHorizontal className="w-3.5 h-3.5" />Filtros
               </button>
+              {pro && (
+                <button onClick={() => setShowDistModal(true)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border/50 text-sm bg-card text-muted-foreground hover:bg-muted transition-colors">
+                  <UsersIcon className="w-3.5 h-3.5" />Distribuição <ProBadge />
+                </button>
+              )}
+              <button onClick={() => openNewLeadModal()} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors shadow-sm">
+                <Plus className="w-4 h-4" />Novo Lead
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Premium Tabs */}
+        {premium && (
+          <div className="flex items-center gap-1 bg-muted/30 rounded-xl p-1 flex-shrink-0 w-fit">
+            {([
+              { id: "pipeline" as CRMTab, label: "Pipeline", icon: BarChart3 },
+              { id: "dashboard" as CRMTab, label: "Dashboard Executivo", icon: BarChart3 },
+              { id: "atendimento" as CRMTab, label: "Motor de Atendimento", icon: Shield },
+              { id: "automacao" as CRMTab, label: "Automação Comportamental", icon: Zap },
+            ]).map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                  activeTab === tab.id
+                    ? "bg-card text-foreground shadow-sm border border-border/50"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <tab.icon className="w-3.5 h-3.5" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Tab Content */}
+        {activeTab === "pipeline" && (
+          <>
+            {/* Pro metrics row */}
+            {pro && (
+              <div className="flex gap-3 flex-shrink-0">
+                <div className="flex items-center gap-2 bg-card border border-border/50 rounded-lg px-4 py-2">
+                  <span className="text-xs text-muted-foreground">Total Leads:</span><span className="text-sm font-bold text-foreground">{totalLeads}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-card border border-border/50 rounded-lg px-4 py-2">
+                  <span className="text-xs text-muted-foreground">Pipeline:</span><span className="text-sm font-bold text-foreground">R$ {totalValue.toLocaleString("pt-BR")}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-card border border-border/50 rounded-lg px-4 py-2">
+                  <span className="text-xs text-muted-foreground">Conversão:</span><span className="text-sm font-bold text-foreground">{conversionRate}%</span>
+                </div>
+              </div>
             )}
-            <button onClick={() => openNewLeadModal()} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors shadow-sm">
-              <Plus className="w-4 h-4" />Novo Lead
-            </button>
-          </div>
-        </div>
 
-        {/* Pro metrics row */}
-        {pro && (
-          <div className="flex gap-3 flex-shrink-0">
-            <div className="flex items-center gap-2 bg-card border border-border/50 rounded-lg px-4 py-2">
-              <span className="text-xs text-muted-foreground">Total Leads:</span><span className="text-sm font-bold text-foreground">{totalLeads}</span>
+            {/* Advanced Filters */}
+            {showFilters && (
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 flex-shrink-0">
+                <div className="flex-1">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">E-mail</label>
+                  <input value={filterEmail} onChange={(e) => setFilterEmail(e.target.value)} placeholder="Filtrar por email" className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1" />
+                </div>
+                <div className="flex-1">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Telefone</label>
+                  <input value={filterPhone} onChange={(e) => setFilterPhone(e.target.value)} placeholder="Filtrar por telefone" className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1" />
+                </div>
+                <div className="w-32">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Valor mín.</label>
+                  <input type="number" value={filterValueMin} onChange={(e) => setFilterValueMin(e.target.value)} placeholder="0" className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1" />
+                </div>
+                <div className="w-32">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Valor máx.</label>
+                  <input type="number" value={filterValueMax} onChange={(e) => setFilterValueMax(e.target.value)} placeholder="∞" className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1" />
+                </div>
+                <button onClick={() => { setFilterEmail(""); setFilterPhone(""); setFilterValueMin(""); setFilterValueMax(""); }} className="mt-4 text-xs text-muted-foreground hover:text-foreground transition-colors">Limpar</button>
+              </div>
+            )}
+
+            {/* Kanban Board */}
+            <div className="flex gap-3 overflow-x-auto flex-1 pb-2 min-h-0">
+              {filteredPipelines.map((pipeline) => (
+                <PipelineColumn key={pipeline.id} pipeline={pipeline} dragOverColumn={dragOverColumn} draggedFromColumn={draggedLead?.fromColumnId || null}
+                  onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}
+                  isDraggingColumn={draggedColumnId === pipeline.id} isColumnDropTarget={dragOverColumnId === pipeline.id && draggedColumnId !== pipeline.id}
+                  onColumnDragStart={handleColumnDragStart} onColumnDragOver={handleColumnDragOver} onColumnDrop={handleColumnDrop} onColumnDragEnd={handleColumnDragEnd}
+                  onAddLead={() => openNewLeadModal(pipeline.id)} onRenameColumn={() => handleRenameColumn(pipeline.id)} onClearColumn={() => handleClearColumn(pipeline.id)} onDeleteColumn={() => handleDeleteColumn(pipeline.id)}
+                />
+              ))}
+              <button onClick={() => { setStageName(""); setShowStageModal(true); }} className="flex-shrink-0 w-[310px] rounded-xl border-2 border-dashed border-border/40 hover:border-primary/30 hover:bg-primary/5 flex items-center justify-center gap-2 text-sm text-muted-foreground/50 hover:text-primary/60 transition-all h-[120px] self-start">
+                <Plus className="w-4 h-4" />Adicionar Estágio
+              </button>
             </div>
-            <div className="flex items-center gap-2 bg-card border border-border/50 rounded-lg px-4 py-2">
-              <span className="text-xs text-muted-foreground">Pipeline:</span><span className="text-sm font-bold text-foreground">R$ {totalValue.toLocaleString("pt-BR")}</span>
-            </div>
-            <div className="flex items-center gap-2 bg-card border border-border/50 rounded-lg px-4 py-2">
-              <span className="text-xs text-muted-foreground">Conversão:</span><span className="text-sm font-bold text-foreground">{conversionRate}%</span>
-            </div>
+          </>
+        )}
+
+        {activeTab === "dashboard" && premium && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <ExecutiveDashboard pipelines={pipelines} />
           </div>
         )}
 
-        {/* Advanced Filters */}
-        {showFilters && (
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 flex-shrink-0">
-            <div className="flex-1">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">E-mail</label>
-              <input value={filterEmail} onChange={(e) => setFilterEmail(e.target.value)} placeholder="Filtrar por email" className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1" />
-            </div>
-            <div className="flex-1">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Telefone</label>
-              <input value={filterPhone} onChange={(e) => setFilterPhone(e.target.value)} placeholder="Filtrar por telefone" className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1" />
-            </div>
-            <div className="w-32">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Valor mín.</label>
-              <input type="number" value={filterValueMin} onChange={(e) => setFilterValueMin(e.target.value)} placeholder="0" className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1" />
-            </div>
-            <div className="w-32">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Valor máx.</label>
-              <input type="number" value={filterValueMax} onChange={(e) => setFilterValueMax(e.target.value)} placeholder="∞" className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1" />
-            </div>
-            <button onClick={() => { setFilterEmail(""); setFilterPhone(""); setFilterValueMin(""); setFilterValueMax(""); }} className="mt-4 text-xs text-muted-foreground hover:text-foreground transition-colors">Limpar</button>
+        {activeTab === "atendimento" && premium && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <AttendanceEngine />
           </div>
         )}
 
-        {/* Kanban Board */}
-        <div className="flex gap-3 overflow-x-auto flex-1 pb-2 min-h-0">
-          {filteredPipelines.map((pipeline) => (
-            <PipelineColumn key={pipeline.id} pipeline={pipeline} dragOverColumn={dragOverColumn} draggedFromColumn={draggedLead?.fromColumnId || null}
-              onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}
-              isDraggingColumn={draggedColumnId === pipeline.id} isColumnDropTarget={dragOverColumnId === pipeline.id && draggedColumnId !== pipeline.id}
-              onColumnDragStart={handleColumnDragStart} onColumnDragOver={handleColumnDragOver} onColumnDrop={handleColumnDrop} onColumnDragEnd={handleColumnDragEnd}
-              onAddLead={() => openNewLeadModal(pipeline.id)} onRenameColumn={() => handleRenameColumn(pipeline.id)} onClearColumn={() => handleClearColumn(pipeline.id)} onDeleteColumn={() => handleDeleteColumn(pipeline.id)}
-            />
-          ))}
-          <button onClick={() => { setStageName(""); setShowStageModal(true); }} className="flex-shrink-0 w-[310px] rounded-xl border-2 border-dashed border-border/40 hover:border-primary/30 hover:bg-primary/5 flex items-center justify-center gap-2 text-sm text-muted-foreground/50 hover:text-primary/60 transition-all h-[120px] self-start">
-            <Plus className="w-4 h-4" />Adicionar Estágio
-          </button>
-        </div>
+        {activeTab === "automacao" && premium && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <BehavioralAutomation />
+          </div>
+        )}
       </div>
 
       {/* New Lead Modal */}
