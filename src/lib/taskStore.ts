@@ -19,6 +19,7 @@ export interface TaskComment {
   text: string;
   by: string;
   createdAt: string;
+  attachments?: { name: string; size: string }[];
 }
 
 const STORAGE_KEY = "birdly_tasks";
