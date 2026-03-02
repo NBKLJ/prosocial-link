@@ -171,9 +171,9 @@ export default function Grupos() {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex items-center justify-between mt-0.5">
                       <span className="text-[11px] text-muted-foreground">{group.members} membros</span>
-                      <div className="flex items-center gap-1 text-[11px] text-primary">
+                      <div className="flex items-center gap-1 text-[11px] text-primary flex-shrink-0">
                         <MessageCircle className="w-3 h-3" />
                         <span>{group.connection}</span>
                       </div>
