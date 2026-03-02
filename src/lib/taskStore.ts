@@ -9,6 +9,15 @@ export interface Task {
   tags: string[];
   fromMessage?: string;
   fromContact?: string;
+  conversationId?: string;
+  createdAt: string;
+  comments?: TaskComment[];
+}
+
+export interface TaskComment {
+  id: string;
+  text: string;
+  by: string;
   createdAt: string;
 }
 

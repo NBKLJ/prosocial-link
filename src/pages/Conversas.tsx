@@ -251,6 +251,7 @@ const Conversas = () => {
       tags: ["conversa"],
       fromMessage: taskMessage,
       fromContact: selectedConv?.name || "",
+      conversationId: selected,
     });
     window.dispatchEvent(new Event("tasks-updated"));
     setShowTaskDialog(false);

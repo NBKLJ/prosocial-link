@@ -3,12 +3,13 @@ import { ProGate } from "@/components/ui/ProGate";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, CheckCircle2, Clock, AlertCircle, MoreHorizontal, Calendar, User, Filter, MessageCircle } from "lucide-react";
+import { Plus, CheckCircle2, Clock, AlertCircle, Calendar, User, Filter, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { getTaskStore, saveTaskStore, addTask, availableAssignees, type Task } from "@/lib/taskStore";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { TaskDetailPanel } from "@/components/gestao/TaskDetailPanel";
 
 const priorityConfig = {
   high: { label: "Alta", color: "bg-red-500/15 text-red-600 border-red-500/20" },
@@ -32,6 +33,7 @@ export default function GestaoTarefas() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filterUser, setFilterUser] = useState<string>("todos");
   const [showNewTask, setShowNewTask] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newAssignee, setNewAssignee] = useState(availableAssignees[0]);
@@ -51,6 +53,20 @@ export default function GestaoTarefas() {
     const updated = tasks.map((t) => (t.id === id ? { ...t, status: newStatus } : t));
     setTasks(updated);
     saveTaskStore(updated);
+  };
+
+  const handleUpdateTask = (updated: Task) => {
+    const newTasks = tasks.map((t) => (t.id === updated.id ? updated : t));
+    setTasks(newTasks);
+    saveTaskStore(newTasks);
+    setSelectedTask(updated);
+  };
+
+  const handleDeleteTask = (id: string) => {
+    const newTasks = tasks.filter((t) => t.id !== id);
+    setTasks(newTasks);
+    saveTaskStore(newTasks);
+    setSelectedTask(null);
   };
 
   const handleCreateTask = () => {
@@ -114,28 +130,33 @@ export default function GestaoTarefas() {
                   </div>
                   <div className="space-y-2 min-h-[100px]">
                     {colTasks.map((task) => (
-                      <Card key={task.id} className="hover:shadow-md transition-shadow">
+                      <Card
+                        key={task.id}
+                        className="hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => setSelectedTask(task)}
+                      >
                         <CardContent className="p-4 space-y-3">
                           <div className="flex items-start justify-between">
                             <h3 className="text-sm font-semibold text-foreground leading-tight">{task.title}</h3>
-                            <div className="relative group">
-                              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
-                                <MoreHorizontal className="w-3.5 h-3.5" />
-                              </Button>
-                              <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-10 w-40 hidden group-hover:block">
-                                {columns.filter((c) => c.key !== task.status).map((c) => (
-                                  <button
-                                    key={c.key}
-                                    onClick={() => handleStatusChange(task.id, c.key)}
-                                    className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-muted transition-colors first:rounded-t-lg last:rounded-b-lg"
-                                  >
-                                    Mover para {c.label}
-                                  </button>
-                                ))}
+                            <div className="relative group" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex gap-1">
+                                {columns.filter((c) => c.key !== task.status).map((c) => {
+                                  const Icon = statusConfig[c.key].icon;
+                                  return (
+                                    <button
+                                      key={c.key}
+                                      onClick={() => handleStatusChange(task.id, c.key)}
+                                      className="p-1 rounded hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+                                      title={`Mover para ${c.label}`}
+                                    >
+                                      <Icon className={cn("w-3.5 h-3.5", statusConfig[c.key].color)} />
+                                    </button>
+                                  );
+                                })}
                               </div>
                             </div>
                           </div>
-                          <p className="text-xs text-muted-foreground">{task.description}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
                           {task.fromContact && (
                             <div className="flex items-center gap-1 text-xs text-primary">
                               <MessageCircle className="w-3 h-3" />
@@ -168,6 +189,16 @@ export default function GestaoTarefas() {
             })}
           </div>
         </div>
+
+        {/* Task Detail Panel */}
+        {selectedTask && (
+          <TaskDetailPanel
+            task={selectedTask}
+            onClose={() => setSelectedTask(null)}
+            onUpdate={handleUpdateTask}
+            onDelete={handleDeleteTask}
+          />
+        )}
 
         {/* New Task Dialog */}
         <Dialog open={showNewTask} onOpenChange={setShowNewTask}>
