@@ -32,8 +32,8 @@ export default function Grupos() {
   );
 
   return (
-    <AppLayout>
-      <div className="flex h-[calc(100vh-2rem)] gap-0 overflow-hidden rounded-2xl border border-border bg-card">
+    <AppLayout fullHeight>
+      <div className="flex h-screen gap-0 overflow-hidden bg-card">
         {/* Lista de grupos */}
         <div className="w-[340px] flex flex-col border-r border-border">
           <div className="p-4 space-y-3">
