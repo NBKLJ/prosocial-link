@@ -5,11 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, CheckCircle2, Clock, AlertCircle, Calendar, User, Filter, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getTaskStore, saveTaskStore, addTask, availableAssignees, type Task } from "@/lib/taskStore";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { TaskDetailPanel } from "@/components/gestao/TaskDetailPanel";
 
 const priorityConfig = {
   high: { label: "Alta", color: "bg-red-500/15 text-red-600 border-red-500/20" },
@@ -30,10 +30,10 @@ const columns: { key: Task["status"]; label: string }[] = [
 ];
 
 export default function GestaoTarefas() {
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filterUser, setFilterUser] = useState<string>("todos");
   const [showNewTask, setShowNewTask] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newAssignee, setNewAssignee] = useState(availableAssignees[0]);
@@ -53,20 +53,6 @@ export default function GestaoTarefas() {
     const updated = tasks.map((t) => (t.id === id ? { ...t, status: newStatus } : t));
     setTasks(updated);
     saveTaskStore(updated);
-  };
-
-  const handleUpdateTask = (updated: Task) => {
-    const newTasks = tasks.map((t) => (t.id === updated.id ? updated : t));
-    setTasks(newTasks);
-    saveTaskStore(newTasks);
-    setSelectedTask(updated);
-  };
-
-  const handleDeleteTask = (id: string) => {
-    const newTasks = tasks.filter((t) => t.id !== id);
-    setTasks(newTasks);
-    saveTaskStore(newTasks);
-    setSelectedTask(null);
   };
 
   const handleCreateTask = () => {
@@ -133,7 +119,7 @@ export default function GestaoTarefas() {
                       <Card
                         key={task.id}
                         className="hover:shadow-md transition-shadow cursor-pointer"
-                        onClick={() => setSelectedTask(task)}
+                        onClick={() => navigate(`/gestao/tarefas/${task.id}`)}
                       >
                         <CardContent className="p-4 space-y-3">
                           <div className="flex items-start justify-between">
@@ -189,16 +175,6 @@ export default function GestaoTarefas() {
             })}
           </div>
         </div>
-
-        {/* Task Detail Panel */}
-        {selectedTask && (
-          <TaskDetailPanel
-            task={selectedTask}
-            onClose={() => setSelectedTask(null)}
-            onUpdate={handleUpdateTask}
-            onDelete={handleDeleteTask}
-          />
-        )}
 
         {/* New Task Dialog */}
         <Dialog open={showNewTask} onOpenChange={setShowNewTask}>

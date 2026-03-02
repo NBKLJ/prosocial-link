@@ -22,6 +22,7 @@ import Landing from "./pages/Landing";
 import Contratos from "./pages/Contratos";
 import Grupos from "./pages/Grupos";
 import GestaoTarefas from "./pages/GestaoTarefas";
+import TarefaDetalhe from "./pages/TarefaDetalhe";
 import GestaoCalendarios from "./pages/GestaoCalendarios";
 import GestaoUsuarios from "./pages/GestaoUsuarios";
 import GestaoProdutividade from "./pages/GestaoProdutividade";
@@ -60,6 +61,7 @@ const App = () => (
           <Route path="/contratos" element={<ProtectedRoute><Contratos /></ProtectedRoute>} />
           <Route path="/grupos" element={<ProtectedRoute><Grupos /></ProtectedRoute>} />
           <Route path="/gestao/tarefas" element={<ProtectedRoute><GestaoTarefas /></ProtectedRoute>} />
+          <Route path="/gestao/tarefas/:id" element={<ProtectedRoute><TarefaDetalhe /></ProtectedRoute>} />
           <Route path="/gestao/calendarios" element={<ProtectedRoute><GestaoCalendarios /></ProtectedRoute>} />
           <Route path="/gestao/usuarios" element={<ProtectedRoute><GestaoUsuarios /></ProtectedRoute>} />
           <Route path="/gestao/produtividade" element={<ProtectedRoute><GestaoProdutividade /></ProtectedRoute>} />
