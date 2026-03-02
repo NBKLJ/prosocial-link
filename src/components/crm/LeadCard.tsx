@@ -1,6 +1,6 @@
 import { DragEvent } from "react";
 import { cn } from "@/lib/utils";
-import { Phone, Mail, Clock, Building2, GripVertical, MoreHorizontal } from "lucide-react";
+import { Phone, Mail, Clock, Building2, GripVertical, MessageSquare, Globe, Megaphone, Users2 } from "lucide-react";
 import { Lead } from "./types";
 import { tagColors } from "./data";
 
@@ -9,6 +9,7 @@ interface LeadCardProps {
   columnId: string;
   onDragStart: (e: DragEvent, lead: Lead, columnId: string) => void;
   onDragEnd: (e: DragEvent) => void;
+  onClick?: (lead: Lead) => void;
 }
 
 const formatCurrency = (value: number) =>
@@ -23,10 +24,28 @@ const assigneeColors: Record<string, string> = {
   MR: "bg-amber-500",
 };
 
-export function LeadCard({ lead, columnId, onDragStart, onDragEnd }: LeadCardProps) {
+const originIcons: Record<string, { icon: typeof MessageSquare; label: string }> = {
+  whatsapp: { icon: MessageSquare, label: "WhatsApp" },
+  site: { icon: Globe, label: "Site" },
+  indicacao: { icon: Users2, label: "Indicação" },
+  anuncio: { icon: Megaphone, label: "Anúncio" },
+};
+
+function getTemperature(score?: number): { label: string; color: string; emoji: string } {
+  if (!score || score < 40) return { label: "Frio", color: "bg-blue-500/10 text-blue-500 ring-1 ring-blue-500/20", emoji: "❄️" };
+  if (score < 70) return { label: "Morno", color: "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20", emoji: "🌤" };
+  return { label: "Quente", color: "bg-red-500/10 text-red-500 ring-1 ring-red-500/20", emoji: "🔥" };
+}
+
+export function LeadCard({ lead, columnId, onDragStart, onDragEnd, onClick }: LeadCardProps) {
+  const temp = getTemperature(lead.score);
+  const originInfo = lead.origin ? originIcons[lead.origin] : null;
+  const OriginIcon = originInfo?.icon;
+
   return (
     <div
       draggable
+      onClick={() => onClick?.(lead)}
       onDragStart={(e) => {
         onDragStart(e, lead, columnId);
         requestAnimationFrame(() => {
@@ -54,7 +73,7 @@ export function LeadCard({ lead, columnId, onDragStart, onDragEnd }: LeadCardPro
       )}
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-2.5">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/10">
             <span className="text-[11px] font-bold text-primary">{getInitials(lead.name)}</span>
@@ -70,15 +89,18 @@ export function LeadCard({ lead, columnId, onDragStart, onDragEnd }: LeadCardPro
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {/* Score badge */}
+          {lead.score !== undefined && (
+            <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-semibold", temp.color)}>
+              {temp.emoji} {lead.score}
+            </span>
+          )}
           <GripVertical className="w-3.5 h-3.5 text-muted-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <button className="p-1 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity">
-            <MoreHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
-          </button>
         </div>
       </div>
 
       {/* Contact info */}
-      <div className="space-y-1 mb-3">
+      <div className="space-y-1 mb-2.5">
         <div className="flex items-center gap-1.5">
           <Phone className="w-3 h-3 text-muted-foreground/50" />
           <span className="text-[11px] text-muted-foreground">{lead.phone}</span>
@@ -92,7 +114,7 @@ export function LeadCard({ lead, columnId, onDragStart, onDragEnd }: LeadCardPro
       </div>
 
       {/* Value + probability bar */}
-      <div className="mb-3">
+      <div className="mb-2.5">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-sm font-bold text-foreground">{formatCurrency(lead.value)}</span>
           {lead.probability !== undefined && (
@@ -117,14 +139,16 @@ export function LeadCard({ lead, columnId, onDragStart, onDragEnd }: LeadCardPro
       {/* Footer */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          {lead.origin && (
-            <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-medium", {
-              "bg-blue-500/10 text-blue-600 dark:text-blue-400": lead.origin === "whatsapp",
+          {/* Origin icon */}
+          {OriginIcon && (
+            <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-medium inline-flex items-center gap-1", {
+              "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400": lead.origin === "whatsapp",
               "bg-purple-500/10 text-purple-600 dark:text-purple-400": lead.origin === "site",
-              "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400": lead.origin === "indicacao",
+              "bg-blue-500/10 text-blue-600 dark:text-blue-400": lead.origin === "indicacao",
               "bg-amber-500/10 text-amber-600 dark:text-amber-400": lead.origin === "anuncio",
             })}>
-              {lead.origin === "whatsapp" ? "WhatsApp" : lead.origin === "site" ? "Site" : lead.origin === "indicacao" ? "Indicação" : "Anúncio"}
+              <OriginIcon className="w-3 h-3" />
+              {originInfo.label}
             </span>
           )}
           {lead.tag && (
