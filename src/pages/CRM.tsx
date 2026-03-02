@@ -1,9 +1,10 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState, useRef, useCallback, DragEvent } from "react";
-import { Plus, Search, SlidersHorizontal, Users as UsersIcon, BarChart3, Zap, Shield } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, Users as UsersIcon, BarChart3, Zap, Shield, Lock } from "lucide-react";
 import { Pipeline, Lead } from "@/components/crm/types";
 import { getPipelineStore, setPipelineStore } from "@/lib/crmStore";
 import { PipelineColumn } from "@/components/crm/PipelineColumn";
+import { LeadDetailPanel } from "@/components/crm/LeadDetailPanel";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -17,8 +18,9 @@ import { ProBadge } from "@/components/ui/ProBadge";
 import { ExecutiveDashboard } from "@/components/crm/ExecutiveDashboard";
 import { AttendanceEngine } from "@/components/crm/AttendanceEngine";
 import { BehavioralAutomation } from "@/components/crm/BehavioralAutomation";
+import { CompliancePanel } from "@/components/crm/CompliancePanel";
 
-type CRMTab = "pipeline" | "dashboard" | "atendimento" | "automacao";
+type CRMTab = "pipeline" | "dashboard" | "atendimento" | "automacao" | "compliance";
 
 const CRM = () => {
   const [activeTab, setActiveTab] = useState<CRMTab>("pipeline");
@@ -43,11 +45,17 @@ const CRM = () => {
   const [filterPhone, setFilterPhone] = useState("");
   const [filterValueMin, setFilterValueMin] = useState("");
   const [filterValueMax, setFilterValueMax] = useState("");
+  const [filterAssignee, setFilterAssignee] = useState("");
+  const [filterOrigin, setFilterOrigin] = useState("");
+
+  // Lead detail panel
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedLeadStage, setSelectedLeadStage] = useState<string | null>(null);
+  const [showLeadDetail, setShowLeadDetail] = useState(false);
 
   // Distribution modal
   const [showDistModal, setShowDistModal] = useState(false);
   const [distActive, setDistActive] = useState(false);
-  // Distribution method: round-robin (fixed)
   const sellers = ["VS", "AL", "MR", "JP"];
 
   const pro = isPro();
@@ -70,7 +78,9 @@ const CRM = () => {
       const matchPhone = !filterPhone || lead.phone?.includes(filterPhone);
       const matchValueMin = !filterValueMin || (lead.value || 0) >= parseFloat(filterValueMin);
       const matchValueMax = !filterValueMax || (lead.value || 0) <= parseFloat(filterValueMax);
-      return matchSearch && matchEmail && matchPhone && matchValueMin && matchValueMax;
+      const matchAssignee = !filterAssignee || lead.assignee === filterAssignee;
+      const matchOrigin = !filterOrigin || lead.origin === filterOrigin;
+      return matchSearch && matchEmail && matchPhone && matchValueMin && matchValueMax && matchAssignee && matchOrigin;
     }),
   }));
 
@@ -115,6 +125,44 @@ const CRM = () => {
     setShowLeadModal(true);
   };
 
+  const handleLeadClick = (lead: Lead, stageId: string) => {
+    if (premium) {
+      setSelectedLead(lead);
+      setSelectedLeadStage(stageId);
+      setShowLeadDetail(true);
+    }
+  };
+
+  const handleMoveStage = (leadId: string, toStageId: string) => {
+    updatePipelines((prev) => {
+      const fromStage = prev.find(p => p.leads.some(l => l.id === leadId));
+      if (!fromStage || fromStage.id === toStageId) return prev;
+      const lead = fromStage.leads.find(l => l.id === leadId)!;
+      return prev.map(p => {
+        if (p.id === fromStage.id) return { ...p, leads: p.leads.filter(l => l.id !== leadId) };
+        if (p.id === toStageId) return { ...p, leads: [...p.leads, lead] };
+        return p;
+      });
+    });
+    setSelectedLeadStage(toStageId);
+  };
+
+  const handleAddNote = (leadId: string, note: string) => {
+    updatePipelines(prev => prev.map(p => ({
+      ...p,
+      leads: p.leads.map(l => l.id === leadId ? { ...l, notes: [...(l.notes || []), note] } : l),
+    })));
+    setSelectedLead(prev => prev && prev.id === leadId ? { ...prev, notes: [...(prev.notes || []), note] } : prev);
+  };
+
+  const handleUpdateLead = (updatedLead: Lead) => {
+    updatePipelines(prev => prev.map(p => ({
+      ...p,
+      leads: p.leads.map(l => l.id === updatedLead.id ? updatedLead : l),
+    })));
+    setSelectedLead(updatedLead);
+  };
+
   const handleCreateLead = () => {
     if (!leadForm.name.trim() || !leadTargetStage) return;
     let assignee: string | undefined;
@@ -128,6 +176,7 @@ const CRM = () => {
       email: leadForm.email || undefined, probability: parseInt(leadForm.probability) || 0,
       tag: leadForm.tag || undefined, lastContact: "Agora",
       origin: (leadForm.origin as Lead["origin"]) || "whatsapp", assignee,
+      score: Math.floor(Math.random() * 100), createdAt: new Date().toISOString().split("T")[0],
     };
     updatePipelines((prev) => prev.map((p) => (p.id === leadTargetStage ? { ...p, leads: [...p.leads, newLead] } : p)));
     setShowLeadModal(false);
@@ -146,11 +195,12 @@ const CRM = () => {
   const handleClearColumn = (columnId: string) => { updatePipelines((prev) => prev.map((p) => (p.id === columnId ? { ...p, leads: [] } : p))); toast.success("Leads removidos do estágio"); };
   const handleDeleteColumn = (columnId: string) => { updatePipelines((prev) => prev.filter((p) => p.id !== columnId)); toast.success("Estágio removido"); };
 
-  // Metrics
   const totalLeads = pipelines.reduce((s, p) => s + p.leads.length, 0);
   const totalValue = pipelines.reduce((s, p) => s + p.leads.reduce((a, l) => a + l.value, 0), 0);
   const closedLeads = pipelines.find(p => p.id === "closed")?.leads.length || 0;
   const conversionRate = totalLeads > 0 ? ((closedLeads / totalLeads) * 100).toFixed(1) : "0";
+
+  const allAssignees = [...new Set(pipelines.flatMap(p => p.leads.map(l => l.assignee)).filter(Boolean))] as string[];
 
   return (
     <AppLayout>
@@ -191,6 +241,7 @@ const CRM = () => {
               { id: "dashboard" as CRMTab, label: "Dashboard Executivo", icon: BarChart3 },
               { id: "atendimento" as CRMTab, label: "Motor de Atendimento", icon: Shield },
               { id: "automacao" as CRMTab, label: "Automação Comportamental", icon: Zap },
+              { id: "compliance" as CRMTab, label: "Segurança & Compliance", icon: Lock },
             ]).map((tab) => (
               <button
                 key={tab.id}
@@ -212,7 +263,6 @@ const CRM = () => {
         {/* Tab Content */}
         {activeTab === "pipeline" && (
           <>
-            {/* Pro metrics row */}
             {pro && (
               <div className="flex gap-3 flex-shrink-0">
                 <div className="flex items-center gap-2 bg-card border border-border/50 rounded-lg px-4 py-2">
@@ -229,24 +279,45 @@ const CRM = () => {
 
             {/* Advanced Filters */}
             {showFilters && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 flex-shrink-0">
-                <div className="flex-1">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 flex-shrink-0 flex-wrap">
+                <div className="flex-1 min-w-[140px]">
                   <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">E-mail</label>
                   <input value={filterEmail} onChange={(e) => setFilterEmail(e.target.value)} placeholder="Filtrar por email" className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1" />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-[140px]">
                   <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Telefone</label>
                   <input value={filterPhone} onChange={(e) => setFilterPhone(e.target.value)} placeholder="Filtrar por telefone" className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1" />
                 </div>
-                <div className="w-32">
+                <div className="w-28">
                   <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Valor mín.</label>
                   <input type="number" value={filterValueMin} onChange={(e) => setFilterValueMin(e.target.value)} placeholder="0" className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1" />
                 </div>
-                <div className="w-32">
+                <div className="w-28">
                   <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Valor máx.</label>
                   <input type="number" value={filterValueMax} onChange={(e) => setFilterValueMax(e.target.value)} placeholder="∞" className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1" />
                 </div>
-                <button onClick={() => { setFilterEmail(""); setFilterPhone(""); setFilterValueMin(""); setFilterValueMax(""); }} className="mt-4 text-xs text-muted-foreground hover:text-foreground transition-colors">Limpar</button>
+                {premium && (
+                  <>
+                    <div className="w-28">
+                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Responsável</label>
+                      <select value={filterAssignee} onChange={(e) => setFilterAssignee(e.target.value)} className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1">
+                        <option value="">Todos</option>
+                        {allAssignees.map(a => <option key={a} value={a}>{a}</option>)}
+                      </select>
+                    </div>
+                    <div className="w-28">
+                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Origem</label>
+                      <select value={filterOrigin} onChange={(e) => setFilterOrigin(e.target.value)} className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/30 mt-1">
+                        <option value="">Todas</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="site">Site</option>
+                        <option value="indicacao">Indicação</option>
+                        <option value="anuncio">Anúncio</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+                <button onClick={() => { setFilterEmail(""); setFilterPhone(""); setFilterValueMin(""); setFilterValueMax(""); setFilterAssignee(""); setFilterOrigin(""); }} className="mt-4 text-xs text-muted-foreground hover:text-foreground transition-colors">Limpar</button>
               </div>
             )}
 
@@ -258,6 +329,7 @@ const CRM = () => {
                   isDraggingColumn={draggedColumnId === pipeline.id} isColumnDropTarget={dragOverColumnId === pipeline.id && draggedColumnId !== pipeline.id}
                   onColumnDragStart={handleColumnDragStart} onColumnDragOver={handleColumnDragOver} onColumnDrop={handleColumnDrop} onColumnDragEnd={handleColumnDragEnd}
                   onAddLead={() => openNewLeadModal(pipeline.id)} onRenameColumn={() => handleRenameColumn(pipeline.id)} onClearColumn={() => handleClearColumn(pipeline.id)} onDeleteColumn={() => handleDeleteColumn(pipeline.id)}
+                  onLeadClick={(lead) => handleLeadClick(lead, pipeline.id)}
                 />
               ))}
               <button onClick={() => { setStageName(""); setShowStageModal(true); }} className="flex-shrink-0 w-[310px] rounded-xl border-2 border-dashed border-border/40 hover:border-primary/30 hover:bg-primary/5 flex items-center justify-center gap-2 text-sm text-muted-foreground/50 hover:text-primary/60 transition-all h-[120px] self-start">
@@ -284,7 +356,25 @@ const CRM = () => {
             <BehavioralAutomation />
           </div>
         )}
+
+        {activeTab === "compliance" && premium && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <CompliancePanel />
+          </div>
+        )}
       </div>
+
+      {/* Lead Detail Panel */}
+      <LeadDetailPanel
+        lead={selectedLead}
+        open={showLeadDetail}
+        onOpenChange={setShowLeadDetail}
+        pipelines={pipelines}
+        currentStageId={selectedLeadStage}
+        onMoveStage={handleMoveStage}
+        onAddNote={handleAddNote}
+        onUpdateLead={handleUpdateLead}
+      />
 
       {/* New Lead Modal */}
       <Dialog open={showLeadModal} onOpenChange={setShowLeadModal}>

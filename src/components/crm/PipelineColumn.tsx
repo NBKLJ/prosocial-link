@@ -25,6 +25,7 @@ interface PipelineColumnProps {
   onRenameColumn?: () => void;
   onClearColumn?: () => void;
   onDeleteColumn?: () => void;
+  onLeadClick?: (lead: Lead) => void;
 }
 
 const formatCurrency = (value: number) =>
@@ -35,7 +36,7 @@ export function PipelineColumn({
   onDragStart, onDragEnd, onDragEnter, onDragLeave, onDragOver, onDrop,
   isDraggingColumn, isColumnDropTarget,
   onColumnDragStart, onColumnDragOver, onColumnDrop, onColumnDragEnd,
-  onAddLead, onRenameColumn, onClearColumn, onDeleteColumn,
+  onAddLead, onRenameColumn, onClearColumn, onDeleteColumn, onLeadClick,
 }: PipelineColumnProps) {
   const colors = stageColors[pipeline.id] || stageColors.qualified;
   const totalValue = pipeline.leads.reduce((sum, l) => sum + l.value, 0);
@@ -104,7 +105,7 @@ export function PipelineColumn({
 
       <div className="flex-1 overflow-y-auto space-y-2 px-2 pb-3 min-h-[80px] transition-all duration-300">
         {pipeline.leads.map((lead) => (
-          <LeadCard key={lead.id} lead={lead} columnId={pipeline.id} onDragStart={onDragStart} onDragEnd={onDragEnd} />
+          <LeadCard key={lead.id} lead={lead} columnId={pipeline.id} onDragStart={onDragStart} onDragEnd={onDragEnd} onClick={onLeadClick} />
         ))}
         {pipeline.leads.length === 0 && (
           <div className="flex flex-col items-center justify-center py-10 text-muted-foreground/40">
