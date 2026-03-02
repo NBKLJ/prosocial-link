@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   MessageCircle, BarChart3, Megaphone, Users, Settings, Search, ChevronDown,
   Send, MessageSquarePlus, Mic, Clock, Bot, Brain, CalendarDays, LayoutDashboard, MessageSquare,
-  FileText,
+  FileText, Briefcase, ListTodo, CalendarRange, UsersRound, Activity,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -35,6 +35,15 @@ const menuItems: MenuItem[] = [
   { title: "Agendamentos", url: "/agendamentos", icon: CalendarDays },
   { title: "IAs Setoriais", url: "/ias-setoriais", icon: Brain, proBadge: true },
   { title: "Contratos", url: "/contratos", icon: FileText, proBadge: true },
+  {
+    title: "Gestão", url: "/gestao/tarefas", icon: Briefcase, expandable: true, proBadge: true,
+    subItems: [
+      { title: "Tarefas", url: "/gestao/tarefas", icon: ListTodo },
+      { title: "Calendários", url: "/gestao/calendarios", icon: CalendarRange },
+      { title: "Usuários", url: "/gestao/usuarios", icon: UsersRound },
+      { title: "Produtividade", url: "/gestao/produtividade", icon: Activity },
+    ],
+  },
 ];
 
 export function AppSidebar() {
