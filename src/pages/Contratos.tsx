@@ -554,7 +554,6 @@ function TemplatesPanel() {
 
 // ── SIGNATURE PANEL ───────────────────────────────────────
 function SignaturePanel() {
-  const pendingSignatures = MOCK_CONTRACTS.filter(c => c.status === "sent");
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [selectedConv, setSelectedConv] = useState<string | null>(null);
@@ -611,40 +610,6 @@ function SignaturePanel() {
 
   return (
     <div className="space-y-4">
-      {/* Pending signatures */}
-      <div className="bg-card border border-border/50 rounded-xl p-6">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center">
-            <PenTool className="w-5 h-5 text-blue-400" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-foreground">Documentos Aguardando Assinatura</h3>
-            <p className="text-xs text-muted-foreground">Acompanhe assinaturas em tempo real</p>
-          </div>
-        </div>
-        {pendingSignatures.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">Nenhum documento aguardando assinatura</p>
-        ) : (
-          <div className="space-y-3">
-            {pendingSignatures.map(c => (
-              <div key={c.id} className="flex items-center justify-between border border-border/30 rounded-lg p-4 hover:bg-muted/20 transition-colors">
-                <div className="flex items-center gap-3">
-                  <FileSignature className="w-5 h-5 text-blue-400" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{c.title}</p>
-                    <p className="text-xs text-muted-foreground">{c.client} • Expira em {c.expiresAt}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 transition-colors">Reenviar</button>
-                  <button className="px-3 py-1.5 text-xs font-medium rounded-lg bg-muted/50 text-foreground hover:bg-muted transition-colors">Detalhes</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* New signature flow */}
       <div className="bg-card border border-border/50 rounded-xl p-6">
         <div className="flex items-center justify-between mb-5">
