@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState, useRef, useCallback, DragEvent } from "react";
-import { Plus, Search, SlidersHorizontal, Users as UsersIcon, BarChart3, Zap, Shield, Lock } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, Users as UsersIcon, BarChart3, Zap, Shield, Lock, MapPin } from "lucide-react";
 import { Pipeline, Lead } from "@/components/crm/types";
 import { getPipelineStore, setPipelineStore } from "@/lib/crmStore";
 import { PipelineColumn } from "@/components/crm/PipelineColumn";
@@ -16,11 +16,12 @@ import { cn } from "@/lib/utils";
 import { isPro, isPremium } from "@/lib/planAccess";
 import { ProBadge } from "@/components/ui/ProBadge";
 import { ExecutiveDashboard } from "@/components/crm/ExecutiveDashboard";
+import { LeadOriginsPanel } from "@/components/crm/LeadOriginsPanel";
 import { AttendanceEngine } from "@/components/crm/AttendanceEngine";
 import { BehavioralAutomation } from "@/components/crm/BehavioralAutomation";
 import { CompliancePanel } from "@/components/crm/CompliancePanel";
 
-type CRMTab = "pipeline" | "dashboard" | "atendimento" | "automacao" | "compliance";
+type CRMTab = "pipeline" | "origens" | "dashboard" | "atendimento" | "automacao" | "compliance";
 
 const CRM = () => {
   const [activeTab, setActiveTab] = useState<CRMTab>("pipeline");
@@ -238,6 +239,7 @@ const CRM = () => {
           <div className="flex items-center gap-1 bg-muted/30 rounded-xl p-1 flex-shrink-0 w-fit">
             {([
               { id: "pipeline" as CRMTab, label: "Pipeline", icon: BarChart3 },
+              { id: "origens" as CRMTab, label: "Origem de Leads", icon: MapPin },
               { id: "dashboard" as CRMTab, label: "Dashboard Executivo", icon: BarChart3 },
               { id: "atendimento" as CRMTab, label: "Motor de Atendimento", icon: Shield },
               { id: "automacao" as CRMTab, label: "Automação Comportamental", icon: Zap },
@@ -337,6 +339,12 @@ const CRM = () => {
               </button>
             </div>
           </>
+        )}
+
+        {activeTab === "origens" && premium && (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <LeadOriginsPanel pipelines={pipelines} />
+          </div>
         )}
 
         {activeTab === "dashboard" && premium && (
