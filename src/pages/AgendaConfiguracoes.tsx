@@ -199,13 +199,13 @@ const AgendaConfiguracoes = () => {
                     <button
                       onClick={() => toggleDay(day.key)}
                       className={cn(
-                        "w-10 h-[22px] rounded-full transition-colors relative flex-shrink-0",
+                        "w-8 h-[18px] rounded-full transition-colors relative flex-shrink-0",
                         ds.enabled ? "bg-primary" : "bg-muted-foreground/20"
                       )}
                     >
                       <span className={cn(
-                        "absolute top-[3px] w-4 h-4 rounded-full bg-white shadow-sm transition-transform",
-                        ds.enabled ? "translate-x-[22px]" : "translate-x-[3px]"
+                        "absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm transition-transform",
+                        ds.enabled ? "translate-x-[16px]" : "translate-x-[2px]"
                       )} />
                     </button>
                     <span className={cn(
