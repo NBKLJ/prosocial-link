@@ -3,19 +3,16 @@ import { AppLayout } from "@/components/AppLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { AddProcessoDialog } from "@/components/processos/AddProcessoDialog";
 import { motion } from "framer-motion";
 import {
-  Search, Filter, ArrowUpDown, Plus, RefreshCcw, ChevronLeft, ChevronRight,
+  Filter, ArrowUpDown, Plus, RefreshCcw, ChevronLeft, ChevronRight,
   ChevronsLeft, ChevronsRight, Copy, Tag, Users, Hash, Clock, UserCheck, CircleDot,
-  FileText, MoreHorizontal, Eye, Pencil, Trash2, AlertTriangle
+  FileText, Eye, Pencil, Trash2
 } from "lucide-react";
 import { ProGate } from "@/components/ui/ProGate";
 
@@ -86,11 +83,8 @@ export default function ProcessosAcompanhamento() {
   const [tab, setTab] = useState("normal");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingProcesso, setEditingProcesso] = useState<Processo | null>(null);
   const [detailProcesso, setDetailProcesso] = useState<Processo | null>(null);
   const [perPage, setPerPage] = useState("30");
-
-  const [form, setForm] = useState({ numero: "", partes: "", etiquetas: "", responsaveis: "", status: "em_andamento", descricao: "", tipo: "" });
 
   const filtered = processos.filter((p) => {
     const matchSearch = p.numero.includes(search) || p.partes.some(pt => pt.toLowerCase().includes(search.toLowerCase()));
@@ -107,40 +101,23 @@ export default function ProcessosAcompanhamento() {
   };
 
   const openCreate = () => {
-    setEditingProcesso(null);
-    setForm({ numero: "", partes: "", etiquetas: "", responsaveis: "", status: "em_andamento", descricao: "", tipo: "" });
     setDialogOpen(true);
   };
 
-  const openEdit = (p: Processo) => {
-    setEditingProcesso(p);
-    setForm({
-      numero: p.numero, partes: p.partes.join(", "), etiquetas: p.etiquetas.join(", "),
-      responsaveis: p.responsaveis.join(", "), status: p.status, descricao: p.descricao || "", tipo: p.tipo || ""
-    });
-    setDialogOpen(true);
-  };
-
-  const handleSave = () => {
-    if (!form.numero.trim()) return;
+  const handleSaveFromDialog = (formData: any) => {
     const data: Processo = {
-      id: editingProcesso?.id || `p-${Date.now()}`,
-      numero: form.numero,
-      partes: form.partes.split(",").map(s => s.trim()).filter(Boolean),
-      etiquetas: form.etiquetas.split(",").map(s => s.trim()).filter(Boolean),
-      responsaveis: form.responsaveis.split(",").map(s => s.trim()).filter(Boolean),
-      status: form.status as Processo["status"],
-      descricao: form.descricao,
-      tipo: form.tipo,
+      id: `p-${Date.now()}`,
+      numero: formData.numeroProcesso || "Sem número",
+      partes: [formData.cliente, formData.parteAdversa, formData.autor, formData.reu].filter(Boolean),
+      etiquetas: formData.etiquetas ? [formData.etiquetas] : [],
+      responsaveis: formData.responsaveis ? formData.responsaveis.split(",").map((s: string) => s.trim()).filter(Boolean) : [],
+      status: (formData.status as Processo["status"]) || "em_andamento",
+      descricao: formData.anotacoes || "",
+      tipo: formData.tipoAcao || "",
       ultimaMovimentacao: new Date().toLocaleDateString("pt-BR"),
-      createdAt: editingProcesso?.createdAt || new Date().toLocaleDateString("pt-BR"),
+      createdAt: new Date().toLocaleDateString("pt-BR"),
     };
-    if (editingProcesso) {
-      setProcessos(prev => prev.map(p => p.id === editingProcesso.id ? data : p));
-    } else {
-      setProcessos(prev => [...prev, data]);
-    }
-    setDialogOpen(false);
+    setProcessos(prev => [...prev, data]);
   };
 
   const handleDelete = (id: string) => {
@@ -267,7 +244,7 @@ export default function ProcessosAcompanhamento() {
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDetailProcesso(p)}>
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(p)}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDetailProcesso(p)}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(p.id)}>
@@ -418,8 +395,8 @@ export default function ProcessosAcompanhamento() {
               </div>
 
               <div className="flex gap-2">
-                <Button size="sm" className="flex-1 gap-1.5" onClick={() => { openEdit(detailProcesso); setDetailProcesso(null); }}>
-                  <Pencil className="w-3.5 h-3.5" /> Editar
+                <Button size="sm" className="flex-1 gap-1.5" onClick={() => setDetailProcesso(null)}>
+                  <Pencil className="w-3.5 h-3.5" /> Fechar
                 </Button>
                 <Button size="sm" variant="destructive" className="gap-1.5" onClick={() => { handleDelete(detailProcesso.id); setDetailProcesso(null); }}>
                   <Trash2 className="w-3.5 h-3.5" /> Excluir
@@ -430,69 +407,11 @@ export default function ProcessosAcompanhamento() {
         </div>
       )}
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editingProcesso ? "Editar Processo" : "Adicionar Processo"}</DialogTitle>
-            <DialogDescription>Preencha os dados do processo.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Número do Processo</Label>
-              <Input value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} placeholder="0000000-00.0000.0.00.0000" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Tipo</Label>
-                <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Cível">Cível</SelectItem>
-                    <SelectItem value="Trabalhista">Trabalhista</SelectItem>
-                    <SelectItem value="Família">Família</SelectItem>
-                    <SelectItem value="Tributário">Tributário</SelectItem>
-                    <SelectItem value="Criminal">Criminal</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Status</Label>
-                <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="em_andamento">Em andamento</SelectItem>
-                    <SelectItem value="urgente">Urgente</SelectItem>
-                    <SelectItem value="aguardando">Aguardando</SelectItem>
-                    <SelectItem value="concluido">Concluído</SelectItem>
-                    <SelectItem value="arquivado">Arquivado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Partes (separadas por vírgula)</Label>
-              <Input value={form.partes} onChange={e => setForm(f => ({ ...f, partes: e.target.value }))} placeholder="João Silva, Empresa ABC" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Etiquetas (separadas por vírgula)</Label>
-              <Input value={form.etiquetas} onChange={e => setForm(f => ({ ...f, etiquetas: e.target.value }))} placeholder="Cível, Prioritário" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Responsáveis (separados por vírgula)</Label>
-              <Input value={form.responsaveis} onChange={e => setForm(f => ({ ...f, responsaveis: e.target.value }))} placeholder="Dr. Carlos, Ana Paula" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Descrição</Label>
-              <Textarea value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} placeholder="Detalhes do processo..." className="resize-none min-h-[60px]" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={!form.numero.trim()}>{editingProcesso ? "Salvar" : "Adicionar"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddProcessoDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSave={handleSaveFromDialog}
+      />
     </AppLayout>
   );
 }
