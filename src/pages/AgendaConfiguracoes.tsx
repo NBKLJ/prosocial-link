@@ -1,10 +1,8 @@
 import { AppLayout } from "@/components/AppLayout";
-import { Settings, Clock, CalendarDays, Users, Bell, Save, Copy, Plus } from "lucide-react";
+import { Settings, Clock, CalendarDays, Users, Bell, Save, Copy, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
-// Generate hour options from 06:00 to 22:00
 
 // Generate hour options from 06:00 to 22:00
 const hourOptions: string[] = [];
@@ -69,6 +67,15 @@ const AgendaConfiguracoes = () => {
     });
   };
 
+  const removeSlot = (dayKey: string, slotIdx: number) => {
+    setSchedule(prev => {
+      const day = { ...prev[dayKey] };
+      if (day.slots.length <= 1) return prev;
+      const slots = day.slots.filter((_, i) => i !== slotIdx);
+      return { ...prev, [dayKey]: { ...day, slots } };
+    });
+  };
+
   const replicateAll = () => {
     const ref = schedule.seg;
     const updated = { ...schedule };
@@ -86,7 +93,7 @@ const AgendaConfiguracoes = () => {
     toast.success("Configurações de agendamento salvas!");
   };
 
-  const selectClass = "w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all appearance-none cursor-pointer";
+  const selectClass = "w-full bg-background border border-border rounded-lg px-2.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all appearance-none cursor-pointer";
 
   return (
     <AppLayout>
@@ -109,7 +116,6 @@ const AgendaConfiguracoes = () => {
 
         {/* === ROW 1: Agenda Padrão / Duração / Limite === */}
         <div className="grid grid-cols-3 gap-4">
-          {/* Agenda Padrão */}
           <div className="glass-card rounded-2xl p-5 space-y-3 border border-border/60">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <CalendarDays className="w-4 h-4 text-primary" /> Agenda Padrão
@@ -120,7 +126,6 @@ const AgendaConfiguracoes = () => {
             </select>
           </div>
 
-          {/* Duração */}
           <div className="glass-card rounded-2xl p-5 space-y-3 border border-border/60">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <Clock className="w-4 h-4 text-amber-500" /> Duração
@@ -133,7 +138,6 @@ const AgendaConfiguracoes = () => {
             </select>
           </div>
 
-          {/* Limite/horário */}
           <div className="glass-card rounded-2xl p-5 space-y-3 border border-border/60">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <Users className="w-4 h-4 text-violet-500" /> Limite / horário
@@ -165,48 +169,54 @@ const AgendaConfiguracoes = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-4 gap-3">
+          {/* 7-column compact grid */}
+          <div className="grid grid-cols-7 gap-2">
             {WEEKDAYS.map((day) => {
               const ds = schedule[day.key];
               return (
                 <div
                   key={day.key}
                   className={cn(
-                    "rounded-2xl p-4 border-2 transition-all duration-200",
+                    "rounded-xl p-3 border transition-all duration-200 flex flex-col",
                     ds.enabled
                       ? "border-primary/30 bg-primary/[0.03]"
-                      : "border-border/60 bg-muted/20 opacity-60"
+                      : "border-border/60 bg-muted/30 opacity-60"
                   )}
                 >
-                  {/* Day header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-bold text-foreground">{day.label}</span>
-                    </div>
+                  {/* Day header + toggle */}
+                  <div className="flex flex-col items-center gap-2 mb-3">
+                    <span className="text-xs font-bold text-foreground tracking-wide">{day.label}</span>
                     <button
                       onClick={() => toggleDay(day.key)}
                       className={cn(
-                        "w-11 h-6 rounded-full transition-colors relative flex-shrink-0",
+                        "w-9 h-5 rounded-full transition-colors relative flex-shrink-0",
                         ds.enabled ? "bg-primary" : "bg-muted-foreground/20"
                       )}
                     >
                       <span className={cn(
-                        "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform",
-                        ds.enabled ? "translate-x-[22px]" : "translate-x-0.5"
+                        "absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform",
+                        ds.enabled ? "translate-x-[18px]" : "translate-x-0.5"
                       )} />
                     </button>
                   </div>
 
                   {/* Time slots */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 flex-1">
                     {ds.slots.map((slot, idx) => (
-                      <div key={idx} className="space-y-1.5">
+                      <div key={idx} className="space-y-1 relative">
+                        {ds.slots.length > 1 && ds.enabled && (
+                          <button
+                            onClick={() => removeSlot(day.key, idx)}
+                            className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive/80 text-destructive-foreground flex items-center justify-center hover:bg-destructive transition-colors z-10"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        )}
                         <select
                           value={slot.start}
                           onChange={e => updateSlot(day.key, idx, "start", e.target.value)}
                           disabled={!ds.enabled}
-                          className={cn(selectClass, "text-xs py-2", !ds.enabled && "opacity-50")}
+                          className={cn(selectClass, "text-[11px] py-1.5 px-2", !ds.enabled && "opacity-50")}
                         >
                           {hourOptions.map(h => <option key={h} value={h}>{h}</option>)}
                         </select>
@@ -214,7 +224,7 @@ const AgendaConfiguracoes = () => {
                           value={slot.end}
                           onChange={e => updateSlot(day.key, idx, "end", e.target.value)}
                           disabled={!ds.enabled}
-                          className={cn(selectClass, "text-xs py-2", !ds.enabled && "opacity-50")}
+                          className={cn(selectClass, "text-[11px] py-1.5 px-2", !ds.enabled && "opacity-50")}
                         >
                           {hourOptions.map(h => <option key={h} value={h}>{h}</option>)}
                         </select>
@@ -226,7 +236,7 @@ const AgendaConfiguracoes = () => {
                   {ds.enabled && (
                     <button
                       onClick={() => addSlot(day.key)}
-                      className="w-full mt-3 flex items-center justify-center gap-1 py-1.5 rounded-lg border border-dashed border-primary/30 text-xs text-primary font-medium hover:bg-primary/5 transition-colors"
+                      className="w-full mt-2 flex items-center justify-center gap-1 py-1 rounded-lg border border-dashed border-primary/30 text-[10px] text-primary font-medium hover:bg-primary/5 transition-colors"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
@@ -269,7 +279,7 @@ const AgendaConfiguracoes = () => {
           </div>
 
           {lembretesAtivo && (
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-5 gap-3">
               {([
                 { key: "matinal", label: "Lembrete Matinal", desc: "Envia às 8h no dia" },
                 { key: "duasHoras", label: "2 horas antes", desc: "Envio antecipado" },
@@ -290,7 +300,7 @@ const AgendaConfiguracoes = () => {
                     )}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className={cn("text-sm font-bold", active ? "text-primary" : "text-foreground")}>{item.label}</span>
+                      <span className={cn("text-xs font-bold", active ? "text-primary" : "text-foreground")}>{item.label}</span>
                       <div className={cn(
                         "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors",
                         active ? "border-primary bg-primary" : "border-muted-foreground/30"
@@ -298,19 +308,12 @@ const AgendaConfiguracoes = () => {
                         {active && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                       </div>
                     </div>
-                    <p className="text-[11px] text-muted-foreground">{item.desc}</p>
+                    <p className="text-[10px] text-muted-foreground">{item.desc}</p>
                   </button>
                 );
               })}
             </div>
           )}
-        </div>
-
-        {/* Save bottom */}
-        <div className="flex justify-end pb-4">
-          <button onClick={handleSave} className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-all shadow-sm">
-            <Save className="w-4 h-4" /> Salvar configurações
-          </button>
         </div>
       </div>
     </AppLayout>
