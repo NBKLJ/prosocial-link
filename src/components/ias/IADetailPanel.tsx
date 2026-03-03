@@ -190,14 +190,17 @@ Você gostaria que eu faça uma análise gratuita do seu caso para verificar se 
     setCursorPos(pos);
 
     // Check if user just typed "="
-    if (val[pos - 1] === "=" && (pos === 1 || val[pos - 2] === "\n" || val[pos - 2] === " ")) {
+    if (val[pos - 1] === "=") {
       const ta = e.target;
       const rect = ta.getBoundingClientRect();
-      // Approximate position based on cursor
-      const lines = val.substring(0, pos).split("\n");
+      // Calculate approximate position using a hidden measurement
+      const textBefore = val.substring(0, pos);
+      const lines = textBefore.split("\n");
+      const lineIndex = lines.length - 1;
       const lineHeight = 22;
-      const top = Math.min(lines.length * lineHeight, ta.scrollHeight - ta.scrollTop);
-      setMenuPos({ top: rect.top + top - ta.scrollTop + 8, left: rect.left + 24 });
+      const topOffset = (lineIndex + 1) * lineHeight - ta.scrollTop;
+      const clampedTop = Math.max(40, Math.min(topOffset, rect.height - 40));
+      setMenuPos({ top: rect.top + clampedTop + 8, left: rect.left + 40 });
       setShowMenu(true);
       setSelectedAction(null);
     }
