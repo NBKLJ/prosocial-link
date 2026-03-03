@@ -1,58 +1,25 @@
 
 
-## Plano: Redesign Completo da Página IAs Setoriais
+## Plan: Fix and Improve Configurações de Agendamento
 
-Baseado na imagem de referência, a página será completamente reestruturada para seguir o mesmo padrão visual e funcional de um gerenciador de agentes de IA profissional.
+### Problems Identified
 
----
+1. **Layout issue**: 7 weekday cards in a `grid-cols-4` grid creates an uneven last row (4 + 3)
+2. **Duplicate comment** on lines 7-9
+3. **No remove slot button** - users can add slots but never remove them
+4. **Overall visual quality** needs polish per user feedback
 
-### Nova Estrutura da Página
+### Changes (single file: `src/pages/AgendaConfiguracoes.tsx`)
 
-**1. Bloco Topo — "Criador de IAs Setoriais"**
-- Card com ícone + título "Criador de IAs Setoriais" + subtítulo "Crie sua IA setorial personalizada"
-- Duas opções lado a lado:
-  - **Assistente de Criação** (com badge "Recomendado" verde) — "Responda perguntas simples e criaremos a IA perfeita para você"
-  - **Criação Avançada** — "Configure manualmente prompt, tom de voz e regras"
-- Ambas abrem modais de criação (simulado por enquanto)
+1. **Top settings row** - Keep the 3-column grid (Agenda Padrao, Duracao, Limite) but improve card styling with icons and better spacing
 
-**2. Barra de Busca e Ações**
-- Input "Buscar IAs setoriais..."
-- Botão "Modelos" com ícone
-- Botão escuro "+ Criar do zero"
+2. **Weekly schedule grid** - Change from `grid-cols-4` to a cleaner `grid-cols-7` single-row layout with compact day columns. Each column shows the day abbreviation, a toggle, and the time range selects vertically. This avoids the broken 4+3 layout
 
-**3. Banner de Alerta** (condicional)
-- Alerta amarelo/laranja: "Nenhuma IA vinculada a uma conexão — Para que uma IA faça o primeiro atendimento, vincule-a a uma conexão do WhatsApp."
-- Aparece se alguma IA ativa não tem conexão vinculada
+3. **Add slot removal** - Add an X button next to each extra time slot so users can remove them
 
-**4. Seção "IAs ATIVAS" (collapsible)**
-- Header: "IAS ATIVAS (N)" com chevron para expandir/recolher
-- Grid de cards (até 3 por linha), cada card contém:
-  - Ícone do setor + Nome em bold + botão power (toggle ativo/inativo)
-  - Indicadores de status: Gatilhos, Regras, Etapas, FAQ — cada um "CONFIGURADO" (verde) ou "NÃO CONFIG." (vermelho)
-  - Seção "VINCULAR CONEXÃO" com dropdown Select para escolher uma conexão WhatsApp
+4. **Reminders section** - Keep the current toggle + 5-option grid, but clean up spacing and ensure consistent card sizing
 
-**5. Seção "IAs INATIVAS" (collapsible)**
-- Mesmo padrão, mostra IAs com `active: false`
-- Recolhida por padrão
+5. **General polish** - Remove duplicate comment, ensure consistent border-radius and padding, use the project's `glass-card` utility consistently
 
----
-
-### Modelo de Dados Expandido
-
-Adicionar campos ao `SectorIA`:
-- `triggers: boolean` — gatilhos configurados
-- `rules: boolean` — regras configuradas
-- `steps: boolean` — etapas configuradas
-- `faq: boolean` — FAQ configurado
-- `connectionId: string | null` — conexão vinculada
-
----
-
-### Detalhes Técnicos
-
-**Arquivo principal**: `src/pages/IAsSetoriais.tsx` — reescrita completa
-
-**Componentes utilizados**: `Select` (radix), `Collapsible` (radix), `Input`, `Button`, `Badge`, `ProGate`, `ProBadge`
-
-**Padrão visual**: bordas `border-border`, fundo `bg-card`, sombras suaves, sem glassmorphism pesado. Cards com `rounded-xl border border-border bg-card`. Badges de status com cores verde/vermelho e texto uppercase `text-[11px] font-bold tracking-wide`.
+6. **Single save button** - Remove the duplicate save button (currently at top AND bottom), keep only the top one in the header
 
