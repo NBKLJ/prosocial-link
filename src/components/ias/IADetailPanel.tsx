@@ -597,55 +597,82 @@ const BaseConhecimentoTab = () => {
 /* ─── Tab: Informações do Escritório ─── */
 const InfoEscritorioTab = () => {
   const [info, setInfo] = useState({
-    nome: "Escritório Central",
-    endereco: "Av. Paulista, 1000 — São Paulo, SP",
-    telefone: "+55 11 3000-0000",
-    email: "contato@empresa.com.br",
-    horario: "Segunda a Sexta, 08:00 às 18:00",
-    site: "https://www.empresa.com.br",
-    descricao: "Somos um escritório especializado em soluções empresariais com mais de 10 anos de experiência no mercado.",
+    nomeEscritorio: "",
+    nomeAgente: "",
+    cnpj: "",
+    areaAtuacao: "",
+    endereco: "",
+    advogadoResponsavel: "",
+    oab: "",
+    honorarios: "",
+    multaDesistencia: "",
+    salarioMinimo: "",
+    linkContrato: "",
+    telefone: "",
+    email: "",
+    site: "",
+    horario: "",
+    redesSociais: "",
+    descricao: "",
   });
+
+  const u = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setInfo(p => ({ ...p, [field]: e.target.value }));
+
+  const Field = ({ label, field, placeholder, colSpan }: { label: string; field: string; placeholder: string; colSpan?: boolean }) => (
+    <div className={cn("space-y-1.5", colSpan && "md:col-span-2")}>
+      <label className="text-xs font-semibold text-foreground">{label}</label>
+      <Input
+        value={(info as any)[field]}
+        onChange={u(field)}
+        placeholder={placeholder}
+        className="text-sm border-amber-300/60 focus:border-primary bg-background"
+      />
+    </div>
+  );
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-        <div>
-          <h3 className="text-sm font-bold text-foreground">Dados do Escritório</h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Informações que a IA usará quando o cliente perguntar sobre o escritório</p>
+      <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-foreground">Informações do Escritório</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">A IA usará essas informações para responder perguntas dos clientes sobre o escritório</p>
+          </div>
+          <Button size="sm" className="gap-1.5 text-xs" onClick={() => toast.success("Informações salvas!")}>
+            <FileText className="w-3.5 h-3.5" /> Salvar Informações
+          </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Nome do Escritório</label>
-            <Input value={info.nome} onChange={(e) => setInfo(p => ({ ...p, nome: e.target.value }))} className="text-sm bg-muted/20 border-border" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Telefone</label>
-            <Input value={info.telefone} onChange={(e) => setInfo(p => ({ ...p, telefone: e.target.value }))} className="text-sm bg-muted/20 border-border" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">E-mail</label>
-            <Input value={info.email} onChange={(e) => setInfo(p => ({ ...p, email: e.target.value }))} className="text-sm bg-muted/20 border-border" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Website</label>
-            <Input value={info.site} onChange={(e) => setInfo(p => ({ ...p, site: e.target.value }))} className="text-sm bg-muted/20 border-border" />
-          </div>
-          <div className="space-y-1.5 md:col-span-2">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Endereço</label>
-            <Input value={info.endereco} onChange={(e) => setInfo(p => ({ ...p, endereco: e.target.value }))} className="text-sm bg-muted/20 border-border" />
-          </div>
-          <div className="space-y-1.5 md:col-span-2">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Horário de Funcionamento</label>
-            <Input value={info.horario} onChange={(e) => setInfo(p => ({ ...p, horario: e.target.value }))} className="text-sm bg-muted/20 border-border" />
-          </div>
-          <div className="space-y-1.5 md:col-span-2">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Descrição da Empresa</label>
-            <Textarea value={info.descricao} onChange={(e) => setInfo(p => ({ ...p, descricao: e.target.value }))} className="text-sm bg-muted/20 border-border min-h-[80px] resize-none" />
-          </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="Nome do Escritório" field="nomeEscritorio" placeholder="Ex: Silva & Associados Advocacia" />
+          <Field label="Nome do Agente" field="nomeAgente" placeholder="Ex: Ana, Carlos, etc." />
+          <Field label="CNPJ" field="cnpj" placeholder="00.000.000/0000-00" />
+          <Field label="OAB" field="oab" placeholder="Ex: OAB/SP 123456" />
+          <Field label="Área de Atuação" field="areaAtuacao" placeholder="Ex: Direito Civil e Família" colSpan />
+          <Field label="Endereço" field="endereco" placeholder="Ex: Rua das Flores, 123, Centro, São Paulo-SP" colSpan />
+          <Field label="Advogado Responsável" field="advogadoResponsavel" placeholder="Ex: Dr. João Silva" />
+          <Field label="Telefone" field="telefone" placeholder="Ex: (11) 3000-0000" />
+          <Field label="Honorários" field="honorarios" placeholder="Ex: 20% do êxito + 4 parcelas de um salário mínimo" />
+          <Field label="Multa de Desistência" field="multaDesistencia" placeholder="R$ 0.000,00" />
+          <Field label="Salário Mínimo Vigente" field="salarioMinimo" placeholder="R$ 0.000,00" />
+          <Field label="Link do Contrato" field="linkContrato" placeholder="Ex: https://app.zapsign.com.br/..." />
+          <Field label="E-mail" field="email" placeholder="Ex: contato@escritorio.com.br" />
+          <Field label="Website" field="site" placeholder="Ex: https://www.escritorio.com.br" />
+          <Field label="Redes Sociais" field="redesSociais" placeholder="Ex: @escritorio no Instagram" colSpan />
+          <Field label="Horário de Funcionamento" field="horario" placeholder="Ex: Segunda a Sexta, 08:00 às 18:00" colSpan />
         </div>
-        <Button size="sm" className="text-xs gap-1.5" onClick={() => toast.success("Informações salvas!")}>
-          Salvar informações
-        </Button>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-foreground">Descrição do Escritório</label>
+          <Textarea
+            value={info.descricao}
+            onChange={u("descricao")}
+            placeholder="Descreva o escritório, especialidades, diferenciais e tempo de atuação..."
+            className="text-sm border-amber-300/60 focus:border-primary bg-background min-h-[100px] resize-none"
+          />
+          <p className="text-[10px] text-muted-foreground">A IA usará essa descrição quando o cliente perguntar sobre o escritório</p>
+        </div>
       </div>
     </div>
   );
