@@ -17,6 +17,8 @@ import Configuracoes from "./pages/Configuracoes";
 import Login from "./pages/Login";
 import Automacoes from "./pages/Automacoes";
 import Agendamentos from "./pages/Agendamentos";
+import Agenda from "./pages/Agenda";
+import AgendaConfiguracoes from "./pages/AgendaConfiguracoes";
 import IAsSetoriais from "./pages/IAsSetoriais";
 import Landing from "./pages/Landing";
 import Contratos from "./pages/Contratos";
@@ -56,6 +58,8 @@ const App = () => (
           <Route path="/disparos/mensagem" element={<ProtectedRoute><DisparoMensagem /></ProtectedRoute>} />
           <Route path="/automacoes" element={<ProtectedRoute><Automacoes /></ProtectedRoute>} />
           <Route path="/agendamentos" element={<ProtectedRoute><Agendamentos /></ProtectedRoute>} />
+          <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
+          <Route path="/agenda/configuracoes" element={<ProtectedRoute><AgendaConfiguracoes /></ProtectedRoute>} />
           <Route path="/ias-setoriais" element={<ProtectedRoute><IAsSetoriais /></ProtectedRoute>} />
           <Route path="/contatos" element={<ProtectedRoute><Contatos /></ProtectedRoute>} />
           <Route path="/contratos" element={<ProtectedRoute><Contratos /></ProtectedRoute>} />
