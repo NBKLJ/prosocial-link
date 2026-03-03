@@ -5,6 +5,7 @@ import {
   FileText, Plus, Search, Eye, Send, Download, PenTool, Sparkles,
   Clock, CheckCircle2, XCircle, AlertCircle, Filter, MoreVertical,
   FileSignature, Scale, Bot, Briefcase, ChevronRight, Copy,
+  User, Building2, MessageCircle, Users, ArrowRight, Cpu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -41,13 +42,84 @@ const MOCK_CONTRACTS: Contract[] = [
   { id: "CTR-008", title: "NDA Confidencialidade", client: "StartUp XYZ", type: "contrato", status: "cancelled", createdAt: "2026-02-01", sentBy: "Ana Paula" },
 ];
 
-const TEMPLATES = [
-  { id: "tpl-1", name: "Contrato de Prestação de Serviços", icon: Briefcase, desc: "Modelo padrão para serviços recorrentes ou pontuais" },
-  { id: "tpl-2", name: "Procuração Ad Judicia", icon: Scale, desc: "Procuração para representação judicial" },
-  { id: "tpl-3", name: "Procuração Administrativa", icon: FileSignature, desc: "Procuração para atos administrativos" },
-  { id: "tpl-4", name: "Distrato Contratual", icon: XCircle, desc: "Encerramento formal de contrato vigente" },
-  { id: "tpl-5", name: "Aditivo Contratual", icon: Plus, desc: "Alteração de cláusulas em contrato vigente" },
-  { id: "tpl-6", name: "Contrato de Confidencialidade (NDA)", icon: FileText, desc: "Acordo de não divulgação entre partes" },
+interface ContractTemplate {
+  id: string;
+  name: string;
+  icon: typeof Briefcase;
+  desc: string;
+  type: "contrato" | "procuracao" | "distrato" | "aditivo";
+  lawyerFields: { label: string; value: string }[];
+  clientFields: string[];
+}
+
+const TEMPLATES: ContractTemplate[] = [
+  {
+    id: "tpl-1", name: "Contrato de Prestação de Serviços", icon: Briefcase, type: "contrato",
+    desc: "Modelo padrão para serviços recorrentes ou pontuais",
+    lawyerFields: [
+      { label: "Advogado", value: "Dr. Ricardo Mendes" },
+      { label: "OAB", value: "OAB/SP 123.456" },
+      { label: "Escritório", value: "Mendes & Associados Advocacia" },
+      { label: "CNPJ", value: "12.345.678/0001-90" },
+      { label: "Endereço", value: "Rua Augusta, 1500 - São Paulo/SP" },
+    ],
+    clientFields: ["Nome Completo", "CPF/CNPJ", "Endereço", "E-mail", "Telefone"],
+  },
+  {
+    id: "tpl-2", name: "Procuração Ad Judicia", icon: Scale, type: "procuracao",
+    desc: "Procuração para representação judicial",
+    lawyerFields: [
+      { label: "Advogado", value: "Dr. Ricardo Mendes" },
+      { label: "OAB", value: "OAB/SP 123.456" },
+      { label: "Escritório", value: "Mendes & Associados Advocacia" },
+    ],
+    clientFields: ["Nome Completo", "CPF", "RG", "Nacionalidade", "Estado Civil", "Endereço", "Profissão"],
+  },
+  {
+    id: "tpl-3", name: "Procuração Administrativa", icon: FileSignature, type: "procuracao",
+    desc: "Procuração para atos administrativos",
+    lawyerFields: [
+      { label: "Advogado", value: "Dr. Ricardo Mendes" },
+      { label: "OAB", value: "OAB/SP 123.456" },
+    ],
+    clientFields: ["Nome Completo", "CPF", "RG", "Endereço"],
+  },
+  {
+    id: "tpl-4", name: "Distrato Contratual", icon: XCircle, type: "distrato",
+    desc: "Encerramento formal de contrato vigente",
+    lawyerFields: [
+      { label: "Advogado", value: "Dr. Ricardo Mendes" },
+      { label: "Escritório", value: "Mendes & Associados Advocacia" },
+      { label: "CNPJ", value: "12.345.678/0001-90" },
+    ],
+    clientFields: ["Nome Completo", "CPF/CNPJ", "Endereço"],
+  },
+  {
+    id: "tpl-5", name: "Aditivo Contratual", icon: Plus, type: "aditivo",
+    desc: "Alteração de cláusulas em contrato vigente",
+    lawyerFields: [
+      { label: "Advogado", value: "Dr. Ricardo Mendes" },
+      { label: "OAB", value: "OAB/SP 123.456" },
+    ],
+    clientFields: ["Nome Completo", "CPF/CNPJ"],
+  },
+  {
+    id: "tpl-6", name: "Contrato de Confidencialidade (NDA)", icon: FileText, type: "contrato",
+    desc: "Acordo de não divulgação entre partes",
+    lawyerFields: [
+      { label: "Advogado", value: "Dr. Ricardo Mendes" },
+      { label: "Escritório", value: "Mendes & Associados Advocacia" },
+    ],
+    clientFields: ["Nome Completo", "CPF/CNPJ", "Empresa", "Cargo"],
+  },
+];
+
+const MOCK_CONVERSATIONS = [
+  { id: "conv-1", name: "Maria Silva", phone: "+55 11 99876-5432", type: "individual" as const, connection: "Comercial" },
+  { id: "conv-2", name: "João Santos", phone: "+55 21 98765-1234", type: "individual" as const, connection: "Comercial" },
+  { id: "conv-3", name: "Ana Oliveira", phone: "+55 31 97654-3210", type: "individual" as const, connection: "Suporte" },
+  { id: "grp-1", name: "Caso BPC - Maria Silva", phone: "", type: "group" as const, connection: "Comercial" },
+  { id: "grp-2", name: "Processo João Santos", phone: "", type: "group" as const, connection: "Comercial" },
 ];
 
 // ── HELPERS ───────────────────────────────────────────────
@@ -293,36 +365,187 @@ function AIGeneratorPanel() {
 
 // ── TEMPLATES PANEL ───────────────────────────────────────
 function TemplatesPanel() {
+  const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null);
+  const [clientData, setClientData] = useState<Record<string, string>>({});
+  const [aiFilledFields, setAiFilledFields] = useState<string[]>([]);
+  const [showSendFlow, setShowSendFlow] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+
+  const handleUseTemplate = (tpl: ContractTemplate) => {
+    setSelectedTemplate(tpl);
+    setClientData({});
+    setAiFilledFields([]);
+    setShowSendFlow(false);
+    setSelectedConversation(null);
+  };
+
+  const handleAIAutoFill = () => {
+    if (!selectedTemplate) return;
+    const mockAiData: Record<string, string> = {
+      "Nome Completo": "Maria da Silva Santos", "CPF": "123.456.789-00", "CPF/CNPJ": "123.456.789-00",
+      "RG": "12.345.678-9 SSP/SP", "Endereço": "Rua das Flores, 123 - Centro, São Paulo/SP",
+      "E-mail": "maria.silva@email.com", "Telefone": "+55 11 99876-5432", "Nacionalidade": "Brasileira",
+      "Estado Civil": "Solteira", "Profissão": "Autônoma", "Empresa": "Silva Comércio Ltda", "Cargo": "Proprietária",
+    };
+    const filled: Record<string, string> = {};
+    const filledKeys: string[] = [];
+    selectedTemplate.clientFields.forEach(field => {
+      if (mockAiData[field]) { filled[field] = mockAiData[field]; filledKeys.push(field); }
+    });
+    setClientData(prev => ({ ...prev, ...filled }));
+    setAiFilledFields(filledKeys);
+  };
+
+  const handleSendToSign = () => {
+    setSending(true);
+    setTimeout(() => { setSending(false); setShowSendFlow(false); setSelectedTemplate(null); setClientData({}); }, 2000);
+  };
+
+  if (selectedTemplate) {
+    return (
+      <div className="space-y-6">
+        <button onClick={() => setSelectedTemplate(null)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ChevronRight className="w-4 h-4 rotate-180" /> Voltar para templates
+        </button>
+        <div className="bg-card border border-border/50 rounded-xl p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <selectedTemplate.icon className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-bold text-foreground text-lg">{selectedTemplate.name}</h3>
+              <p className="text-sm text-muted-foreground">{selectedTemplate.desc}</p>
+            </div>
+          </div>
+          {/* Lawyer data */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Building2 className="w-4 h-4 text-primary" />
+              <h4 className="text-sm font-bold text-foreground">Dados do Advogado / Escritório</h4>
+              <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 text-[10px] px-1.5 py-0 font-bold hover:bg-emerald-500/15">Pré-preenchido</Badge>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {selectedTemplate.lawyerFields.map(f => (
+                <div key={f.label} className="px-4 py-3 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{f.label}</p>
+                  <p className="text-sm font-medium text-foreground">{f.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Client data */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-muted-foreground" />
+                <h4 className="text-sm font-bold text-foreground">Dados do Cliente</h4>
+                {aiFilledFields.length > 0 && (
+                  <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/20 text-[10px] px-1.5 py-0 font-bold hover:bg-amber-500/15">
+                    <Cpu className="w-3 h-3 mr-1" /> {aiFilledFields.length} campos preenchidos pela IA
+                  </Badge>
+                )}
+              </div>
+              <button onClick={handleAIAutoFill} className="flex items-center gap-1.5 text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/20">
+                <Bot className="w-3.5 h-3.5" /> Preencher com IA
+              </button>
+            </div>
+            <p className="text-[11px] text-muted-foreground mb-4">A IA analisa a conversa do cliente e preenche os dados automaticamente. Você pode editar antes de enviar.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {selectedTemplate.clientFields.map(field => (
+                <div key={field}>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">{field}</label>
+                  <div className="relative">
+                    <input type="text" value={clientData[field] || ""} onChange={e => setClientData(prev => ({ ...prev, [field]: e.target.value }))} placeholder={`Informe ${field.toLowerCase()}...`}
+                      className={cn("w-full bg-muted/50 border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20", aiFilledFields.includes(field) ? "border-amber-500/30 bg-amber-500/5" : "border-border/50")} />
+                    {aiFilledFields.includes(field) && <span className="absolute right-3 top-1/2 -translate-y-1/2"><Bot className="w-3.5 h-3.5 text-amber-400" /></span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Send to signature */}
+        {!showSendFlow ? (
+          <div className="flex gap-3">
+            <button onClick={() => setShowSendFlow(true)} className="flex-1 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+              <Send className="w-4 h-4" /> Enviar para Assinatura Digital
+            </button>
+            <button className="py-3 px-6 rounded-xl text-sm font-semibold bg-muted/50 text-foreground hover:bg-muted transition-all flex items-center justify-center gap-2 border border-border/50">
+              <Download className="w-4 h-4" /> Salvar Rascunho
+            </button>
+          </div>
+        ) : (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-blue-500/20 rounded-xl p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center"><MessageCircle className="w-5 h-5 text-blue-400" /></div>
+              <div>
+                <h4 className="font-bold text-foreground">Enviar para Conversa ou Grupo</h4>
+                <p className="text-xs text-muted-foreground">Selecione onde enviar o link de assinatura via ZapSign</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {MOCK_CONVERSATIONS.map(conv => (
+                <button key={conv.id} onClick={() => setSelectedConversation(conv.id)}
+                  className={cn("w-full flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all", selectedConversation === conv.id ? "border-blue-500/40 bg-blue-500/10" : "border-border/50 hover:border-primary/20 hover:bg-muted/30")}>
+                  <div className={cn("w-9 h-9 rounded-full flex items-center justify-center", conv.type === "group" ? "bg-emerald-500/15" : "bg-primary/10")}>
+                    {conv.type === "group" ? <Users className="w-4 h-4 text-emerald-400" /> : <User className="w-4 h-4 text-primary" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{conv.name}</p>
+                    <p className="text-[11px] text-muted-foreground">{conv.type === "group" ? "Grupo" : conv.phone} • {conv.connection}</p>
+                  </div>
+                  {selectedConversation === conv.id && <CheckCircle2 className="w-5 h-5 text-blue-400 flex-shrink-0" />}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => { setShowSendFlow(false); setSelectedConversation(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-muted/50 text-foreground hover:bg-muted transition-all">Cancelar</button>
+              <button onClick={handleSendToSign} disabled={!selectedConversation || sending}
+                className={cn("flex-1 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20", !selectedConversation || sending ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600")}>
+                {sending ? (<><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Enviando via ZapSign...</>) : (<><ArrowRight className="w-4 h-4" /> Enviar Link de Assinatura</>)}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {TEMPLATES.map((tpl, i) => (
-        <motion.div
-          key={tpl.id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.05 }}
-          className="bg-card border border-border/50 rounded-xl p-5 hover:border-primary/30 transition-all cursor-pointer group"
-        >
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-              <tpl.icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+    <div className="space-y-4">
+      <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+        <Bot className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-semibold text-foreground">Preenchimento Inteligente por IA</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Ao usar um template, a IA analisa automaticamente a conversa do cliente e preenche nome, CPF, endereço e telefone. Os dados do advogado já vêm prontos.</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {TEMPLATES.map((tpl, i) => (
+          <motion.div key={tpl.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+            className="bg-card border border-border/50 rounded-xl p-5 hover:border-primary/30 transition-all cursor-pointer group" onClick={() => handleUseTemplate(tpl)}>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                <tpl.icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-foreground text-sm">{tpl.name}</h4>
+                <p className="text-xs text-muted-foreground mt-1">{tpl.desc}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
             </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-foreground text-sm">{tpl.name}</h4>
-              <p className="text-xs text-muted-foreground mt-1">{tpl.desc}</p>
+            <div className="mt-4 flex items-center gap-4 text-[10px]">
+              <span className="flex items-center gap-1 text-emerald-400"><Building2 className="w-3 h-3" /> {tpl.lawyerFields.length} campos do advogado</span>
+              <span className="flex items-center gap-1 text-muted-foreground"><User className="w-3 h-3" /> {tpl.clientFields.length} campos do cliente</span>
             </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
-          </div>
-          <div className="flex items-center gap-2 mt-4">
-            <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-muted/50">
-              <Copy className="w-3 h-3" /> Usar template
-            </button>
-            <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-muted/50">
-              <Sparkles className="w-3 h-3" /> Gerar com IA
-            </button>
-          </div>
-        </motion.div>
-      ))}
+            <div className="flex items-center gap-2 mt-3">
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground px-2.5 py-1.5 rounded-lg"><Copy className="w-3 h-3" /> Usar template</span>
+              <span className="flex items-center gap-1.5 text-xs text-amber-400 px-2.5 py-1.5 rounded-lg"><Bot className="w-3 h-3" /> IA preenche dados</span>
+            </div>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -330,6 +553,15 @@ function TemplatesPanel() {
 // ── SIGNATURE PANEL ───────────────────────────────────────
 function SignaturePanel() {
   const pendingSignatures = MOCK_CONTRACTS.filter(c => c.status === "sent");
+  const [selectedConv, setSelectedConv] = useState<string | null>(null);
+  const [signerName, setSignerName] = useState("");
+  const [signerEmail, setSignerEmail] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleSend = () => {
+    setSending(true);
+    setTimeout(() => { setSending(false); setSelectedConv(null); setSignerName(""); setSignerEmail(""); }, 2000);
+  };
 
   return (
     <div className="space-y-4">
@@ -343,7 +575,6 @@ function SignaturePanel() {
             <p className="text-xs text-muted-foreground">Envie documentos e acompanhe assinaturas em tempo real</p>
           </div>
         </div>
-
         {pendingSignatures.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Nenhum documento aguardando assinatura</p>
         ) : (
@@ -358,12 +589,8 @@ function SignaturePanel() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 transition-colors">
-                    Reenviar
-                  </button>
-                  <button className="px-3 py-1.5 text-xs font-medium rounded-lg bg-muted/50 text-foreground hover:bg-muted transition-colors">
-                    Detalhes
-                  </button>
+                  <button className="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 transition-colors">Reenviar</button>
+                  <button className="px-3 py-1.5 text-xs font-medium rounded-lg bg-muted/50 text-foreground hover:bg-muted transition-colors">Detalhes</button>
                 </div>
               </div>
             ))}
@@ -373,19 +600,41 @@ function SignaturePanel() {
 
       <div className="bg-card border border-border/50 rounded-xl p-6">
         <h3 className="font-semibold text-foreground text-sm mb-4">Enviar para Assinatura</h3>
-        <div className="space-y-3">
-          <input
-            type="text"
-            placeholder="E-mail do signatário"
-            className="w-full bg-muted/50 border border-border/50 rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-          <input
-            type="text"
-            placeholder="Nome completo do signatário"
-            className="w-full bg-muted/50 border border-border/50 rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-          <button className="w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
-            <Send className="w-4 h-4" /> Enviar Documento
+        <div className="space-y-4">
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block">Enviar para (Conversa ou Grupo)</label>
+            <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto">
+              {MOCK_CONVERSATIONS.map(conv => (
+                <button key={conv.id} onClick={() => { setSelectedConv(conv.id); if (conv.type === "individual") setSignerName(conv.name); }}
+                  className={cn("flex items-center gap-3 p-3 rounded-lg border text-left transition-all", selectedConv === conv.id ? "border-blue-500/40 bg-blue-500/10" : "border-border/50 hover:border-primary/20 hover:bg-muted/20")}>
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", conv.type === "group" ? "bg-emerald-500/15" : "bg-primary/10")}>
+                    {conv.type === "group" ? <Users className="w-3.5 h-3.5 text-emerald-400" /> : <User className="w-3.5 h-3.5 text-primary" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-foreground">{conv.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{conv.type === "group" ? "Grupo" : conv.phone}</p>
+                  </div>
+                  {selectedConv === conv.id && <CheckCircle2 className="w-4 h-4 text-blue-400" />}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Nome do signatário</label>
+              <input type="text" value={signerName} onChange={e => setSignerName(e.target.value)} placeholder="Nome completo"
+                className="w-full bg-muted/50 border border-border/50 rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20" />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">E-mail do signatário</label>
+              <input type="email" value={signerEmail} onChange={e => setSignerEmail(e.target.value)} placeholder="E-mail do signatário"
+                className="w-full bg-muted/50 border border-border/50 rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20" />
+            </div>
+          </div>
+          <button onClick={handleSend} disabled={!selectedConv || !signerName || sending}
+            className={cn("w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all",
+              !selectedConv || !signerName || sending ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600 shadow-lg shadow-blue-500/20")}>
+            {sending ? (<><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Enviando via ZapSign...</>) : (<><Send className="w-4 h-4" /> Enviar Documento</>)}
           </button>
         </div>
       </div>
