@@ -217,13 +217,17 @@ function NewModelDialog({ open, onOpenChange, onSave }: {
                 Use {"{{VARIAVEL}}"} para campos dinâmicos
               </span>
             </div>
-            <textarea
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              placeholder={`Cole ou escreva o texto do seu documento aqui...\n\nExemplo:\nCONTRATO DE PRESTAÇÃO DE SERVIÇOS\n\nCONTRATANTE: {{NOME_CLIENTE}}, CPF {{CPF_CLIENTE}}...`}
-              rows={16}
-              className="w-full bg-muted/50 border border-border/50 rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 resize-none font-mono leading-relaxed"
-            />
+            <div className="border border-border/50 rounded-xl overflow-hidden bg-muted/20 p-4 flex justify-center">
+              <div className="bg-white shadow-xl rounded-sm w-full min-h-[400px] relative">
+                <textarea
+                  value={content}
+                  onChange={e => setContent(e.target.value)}
+                  placeholder={`Cole ou escreva o texto do seu documento aqui...\n\nExemplo:\nCONTRATO DE PRESTAÇÃO DE SERVIÇOS\n\nCONTRATANTE: {{NOME_CLIENTE}}, CPF {{CPF_CLIENTE}}...`}
+                  className="w-full h-full min-h-[400px] bg-transparent px-10 py-12 text-sm text-gray-800 leading-relaxed focus:outline-none resize-y placeholder:text-gray-400"
+                  style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="bg-primary/5 border border-primary/15 rounded-lg p-3">
@@ -434,16 +438,24 @@ export function MeusModelosPanel({ openNewDialog: externalOpen }: { openNewDialo
                           </div>
 
                           {isEditing ? (
-                            <textarea
-                              value={editContent}
-                              onChange={e => setEditContent(e.target.value)}
-                              rows={20}
-                              className="w-full bg-muted/30 border border-border/50 rounded-lg px-4 py-3 text-sm text-foreground font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 resize-y"
-                            />
+                            <div className="border border-border/50 rounded-xl overflow-hidden bg-muted/20 p-6 flex justify-center">
+                              <div className="bg-white shadow-xl rounded-sm w-full max-w-[700px] min-h-[600px] relative">
+                                <textarea
+                                  value={editContent}
+                                  onChange={e => setEditContent(e.target.value)}
+                                  className="w-full h-full min-h-[600px] bg-transparent px-12 py-14 text-sm text-gray-800 leading-relaxed focus:outline-none resize-y"
+                                  style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                                />
+                              </div>
+                            </div>
                           ) : (
-                            <pre className="bg-muted/20 border border-border/30 rounded-lg p-4 text-sm text-foreground/90 font-mono whitespace-pre-wrap leading-relaxed max-h-[500px] overflow-y-auto">
-                              {model.content}
-                            </pre>
+                            <div className="border border-border/50 rounded-xl overflow-hidden bg-muted/20 p-6 flex justify-center">
+                              <div className="bg-white shadow-xl rounded-sm w-full max-w-[700px] min-h-[400px] px-12 py-14 relative">
+                                <pre className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed max-h-[600px] overflow-y-auto" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
+                                  {model.content}
+                                </pre>
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>
