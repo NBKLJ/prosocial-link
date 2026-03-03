@@ -8,6 +8,7 @@ import {
   User, Building2, MessageCircle, Users, ArrowRight, Cpu, FolderOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "framer-motion";
@@ -554,26 +555,71 @@ function TemplatesPanel() {
 // ── SIGNATURE PANEL ───────────────────────────────────────
 function SignaturePanel() {
   const pendingSignatures = MOCK_CONTRACTS.filter(c => c.status === "sent");
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [selectedConv, setSelectedConv] = useState<string | null>(null);
-  const [signerName, setSignerName] = useState("");
-  const [signerEmail, setSignerEmail] = useState("");
+  const [filledContent, setFilledContent] = useState("");
   const [sending, setSending] = useState(false);
+  const [models] = useState<{ id: string; name: string; type: string; content: string }[]>([
+    { id: "mod-1", name: "Procuração Ad Judicia Padrão", type: "procuracao", content: `PROCURAÇÃO AD JUDICIA\n\nOUTORGANTE: {{NOME_CLIENTE}}, {{NACIONALIDADE_CLIENTE}}, {{ESTADO_CIVIL_CLIENTE}}, {{PROFISSAO_CLIENTE}}, portador(a) do RG nº {{RG_CLIENTE}} e inscrito(a) no CPF sob o nº {{CPF_CLIENTE}}, residente e domiciliado(a) à {{ENDERECO_CLIENTE}}.\n\nOUTORGADO: Dr. Ricardo Mendes, inscrito na OAB/SP sob o nº 123.456, com escritório profissional à Rua Augusta, 1500 - São Paulo/SP.\n\nPODERES: Por este instrumento particular de procuração, o(a) OUTORGANTE nomeia e constitui o(a) OUTORGADO(A) como seu(sua) bastante procurador(a), a quem confere amplos e gerais poderes para o foro em geral, com a cláusula "AD JUDICIA ET EXTRA".\n\nSão Paulo, ${new Date().toLocaleDateString("pt-BR")}.\n\n_______________________________\n{{NOME_CLIENTE}}\nCPF: {{CPF_CLIENTE}}` },
+    { id: "mod-2", name: "Contrato de Prestação de Serviços Advocatícios", type: "contrato", content: `CONTRATO DE PRESTAÇÃO DE SERVIÇOS ADVOCATÍCIOS\n\nCONTRATANTE: {{NOME_CLIENTE}}, inscrito(a) no CPF/CNPJ sob o nº {{CPF_CNPJ_CLIENTE}}, residente/estabelecido(a) à {{ENDERECO_CLIENTE}}, telefone {{TELEFONE_CLIENTE}}, e-mail {{EMAIL_CLIENTE}}.\n\nCONTRATADO: Dr. Ricardo Mendes, Mendes & Associados Advocacia, inscrito na OAB/SP sob o nº 123.456, CNPJ 12.345.678/0001-90.\n\nCLÁUSULA 1ª – DO OBJETO\nO(A) CONTRATADO(A) prestará serviços advocatícios ao(à) CONTRATANTE.\n\nSão Paulo, ${new Date().toLocaleDateString("pt-BR")}.\n\n_______________________________          _______________________________\n{{NOME_CLIENTE}}                         Dr. Ricardo Mendes\nCPF: {{CPF_CLIENTE}}                     OAB: 123.456` },
+    { id: "mod-3", name: "Contrato de Compra e Venda", type: "contrato", content: `CONTRATO PARTICULAR DE COMPRA E VENDA\n\nCOMPRADOR(A): {{NOME_CLIENTE}}, {{NACIONALIDADE_CLIENTE}}, portador(a) do RG nº {{RG_CLIENTE}} e inscrito(a) no CPF sob o nº {{CPF_CLIENTE}}, residente e domiciliado(a) à {{ENDERECO_CLIENTE}}.\n\nSão Paulo, ${new Date().toLocaleDateString("pt-BR")}.\n\n_______________________________\n{{NOME_CLIENTE}}` },
+  ]);
+
+  const MOCK_AI_CLIENT_DATA: Record<string, Record<string, string>> = {
+    "conv-1": { "NOME_CLIENTE": "Maria Silva", "CPF_CLIENTE": "123.456.789-00", "CPF_CNPJ_CLIENTE": "123.456.789-00", "RG_CLIENTE": "12.345.678-9 SSP/SP", "ENDERECO_CLIENTE": "Rua das Flores, 123 - Centro, São Paulo/SP", "TELEFONE_CLIENTE": "+55 11 99876-5432", "EMAIL_CLIENTE": "maria.silva@email.com", "NACIONALIDADE_CLIENTE": "Brasileira", "ESTADO_CIVIL_CLIENTE": "Solteira", "PROFISSAO_CLIENTE": "Autônoma" },
+    "conv-2": { "NOME_CLIENTE": "João Santos", "CPF_CLIENTE": "987.654.321-00", "CPF_CNPJ_CLIENTE": "987.654.321-00", "RG_CLIENTE": "98.765.432-1 SSP/RJ", "ENDERECO_CLIENTE": "Av. Copacabana, 456 - Rio de Janeiro/RJ", "TELEFONE_CLIENTE": "+55 21 98765-1234", "EMAIL_CLIENTE": "joao.santos@email.com", "NACIONALIDADE_CLIENTE": "Brasileiro", "ESTADO_CIVIL_CLIENTE": "Casado", "PROFISSAO_CLIENTE": "Empresário" },
+    "conv-3": { "NOME_CLIENTE": "Ana Oliveira", "CPF_CLIENTE": "456.789.123-00", "CPF_CNPJ_CLIENTE": "456.789.123-00", "ENDERECO_CLIENTE": "Rua Bahia, 789 - Belo Horizonte/MG", "TELEFONE_CLIENTE": "+55 31 97654-3210", "EMAIL_CLIENTE": "ana.oliveira@email.com", "NACIONALIDADE_CLIENTE": "Brasileira", "ESTADO_CIVIL_CLIENTE": "Divorciada", "PROFISSAO_CLIENTE": "Professora" },
+    "grp-1": { "NOME_CLIENTE": "Maria Silva", "CPF_CLIENTE": "123.456.789-00", "CPF_CNPJ_CLIENTE": "123.456.789-00", "ENDERECO_CLIENTE": "Rua das Flores, 123 - Centro, São Paulo/SP", "TELEFONE_CLIENTE": "+55 11 99876-5432", "EMAIL_CLIENTE": "maria.silva@email.com", "NACIONALIDADE_CLIENTE": "Brasileira", "ESTADO_CIVIL_CLIENTE": "Solteira", "PROFISSAO_CLIENTE": "Autônoma" },
+    "grp-2": { "NOME_CLIENTE": "João Santos", "CPF_CLIENTE": "987.654.321-00", "CPF_CNPJ_CLIENTE": "987.654.321-00", "ENDERECO_CLIENTE": "Av. Copacabana, 456 - Rio de Janeiro/RJ", "TELEFONE_CLIENTE": "+55 21 98765-1234", "EMAIL_CLIENTE": "joao.santos@email.com", "NACIONALIDADE_CLIENTE": "Brasileiro", "ESTADO_CIVIL_CLIENTE": "Casado", "PROFISSAO_CLIENTE": "Empresário" },
+  };
+
+  const selectedModel = models.find(m => m.id === selectedModelId);
+
+  const handleSelectConversation = (convId: string) => {
+    setSelectedConv(convId);
+    if (selectedModel) {
+      const clientData = MOCK_AI_CLIENT_DATA[convId] || {};
+      let content = selectedModel.content;
+      Object.entries(clientData).forEach(([key, val]) => {
+        content = content.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), val);
+      });
+      // Leave unfilled vars highlighted
+      content = content.replace(/\{\{([^}]+)\}\}/g, "[⚠ $1]");
+      setFilledContent(content);
+    }
+  };
 
   const handleSend = () => {
     setSending(true);
-    setTimeout(() => { setSending(false); setSelectedConv(null); setSignerName(""); setSignerEmail(""); }, 2000);
+    setTimeout(() => {
+      setSending(false);
+      setStep(1);
+      setSelectedModelId(null);
+      setSelectedConv(null);
+      setFilledContent("");
+      toast.success("Contrato enviado para assinatura via ZapSign!");
+    }, 2000);
+  };
+
+  const resetFlow = () => {
+    setStep(1);
+    setSelectedModelId(null);
+    setSelectedConv(null);
+    setFilledContent("");
   };
 
   return (
     <div className="space-y-4">
+      {/* Pending signatures */}
       <div className="bg-card border border-border/50 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-5">
           <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center">
             <PenTool className="w-5 h-5 text-blue-400" />
           </div>
           <div>
-            <h3 className="font-semibold text-foreground">Assinatura Digital</h3>
-            <p className="text-xs text-muted-foreground">Envie documentos e acompanhe assinaturas em tempo real</p>
+            <h3 className="font-semibold text-foreground">Documentos Aguardando Assinatura</h3>
+            <p className="text-xs text-muted-foreground">Acompanhe assinaturas em tempo real</p>
           </div>
         </div>
         {pendingSignatures.length === 0 ? (
@@ -599,45 +645,145 @@ function SignaturePanel() {
         )}
       </div>
 
+      {/* New signature flow */}
       <div className="bg-card border border-border/50 rounded-xl p-6">
-        <h3 className="font-semibold text-foreground text-sm mb-4">Enviar para Assinatura</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block">Enviar para (Conversa ou Grupo)</label>
-            <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto">
-              {MOCK_CONVERSATIONS.map(conv => (
-                <button key={conv.id} onClick={() => { setSelectedConv(conv.id); if (conv.type === "individual") setSignerName(conv.name); }}
-                  className={cn("flex items-center gap-3 p-3 rounded-lg border text-left transition-all", selectedConv === conv.id ? "border-blue-500/40 bg-blue-500/10" : "border-border/50 hover:border-primary/20 hover:bg-muted/20")}>
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", conv.type === "group" ? "bg-emerald-500/15" : "bg-primary/10")}>
-                    {conv.type === "group" ? <Users className="w-3.5 h-3.5 text-emerald-400" /> : <User className="w-3.5 h-3.5 text-primary" />}
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-semibold text-foreground text-sm">Enviar Novo Documento para Assinatura</h3>
+          {step > 1 && (
+            <button onClick={resetFlow} className="text-xs text-muted-foreground hover:text-foreground transition-colors">Recomeçar</button>
+          )}
+        </div>
+
+        {/* Progress steps */}
+        <div className="flex items-center gap-2 mb-6">
+          {[
+            { n: 1, label: "Contrato" },
+            { n: 2, label: "Atendimento" },
+            { n: 3, label: "Revisão" },
+          ].map((s, i) => (
+            <div key={s.n} className="flex items-center gap-2 flex-1">
+              <div className="flex items-center gap-2">
+                <div className={cn(
+                  "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all",
+                  step >= s.n ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                )}>
+                  {step > s.n ? <CheckCircle2 className="w-4 h-4" /> : s.n}
+                </div>
+                <span className={cn("text-xs font-medium", step >= s.n ? "text-foreground" : "text-muted-foreground")}>{s.label}</span>
+              </div>
+              {i < 2 && <div className={cn("flex-1 h-0.5 rounded-full ml-2", step > s.n ? "bg-primary" : "bg-muted")} />}
+            </div>
+          ))}
+        </div>
+
+        {/* Step 1: Select contract model */}
+        {step === 1 && (
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground mb-2">Selecione um contrato dos seus modelos cadastrados:</p>
+            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+              {models.map(model => (
+                <button
+                  key={model.id}
+                  onClick={() => setSelectedModelId(model.id)}
+                  className={cn(
+                    "w-full flex items-center gap-3 p-4 rounded-xl border text-left transition-all",
+                    selectedModelId === model.id ? "border-primary/40 bg-primary/5" : "border-border/50 hover:border-primary/20 hover:bg-muted/20"
+                  )}
+                >
+                  <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-4 h-4 text-muted-foreground" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-foreground">{conv.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{conv.type === "group" ? "Grupo" : conv.phone}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{model.name}</p>
+                    <p className="text-[10px] text-muted-foreground capitalize">{model.type}</p>
                   </div>
-                  {selectedConv === conv.id && <CheckCircle2 className="w-4 h-4 text-blue-400" />}
+                  {selectedModelId === model.id && <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />}
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => { if (selectedModelId) setStep(2); }}
+              disabled={!selectedModelId}
+              className={cn(
+                "w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all mt-4",
+                selectedModelId ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"
+              )}
+            >
+              Próximo <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Nome do signatário</label>
-              <input type="text" value={signerName} onChange={e => setSignerName(e.target.value)} placeholder="Nome completo"
-                className="w-full bg-muted/50 border border-border/50 rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20" />
+        )}
+
+        {/* Step 2: Select conversation/group */}
+        {step === 2 && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Bot className="w-4 h-4 text-amber-400" />
+              <p className="text-xs text-muted-foreground">
+                Selecione o atendimento. A IA irá extrair automaticamente os dados do cliente da conversa para preencher o contrato.
+              </p>
             </div>
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">E-mail do signatário</label>
-              <input type="email" value={signerEmail} onChange={e => setSignerEmail(e.target.value)} placeholder="E-mail do signatário"
-                className="w-full bg-muted/50 border border-border/50 rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20" />
+            <div className="space-y-2 max-h-[250px] overflow-y-auto">
+              {MOCK_CONVERSATIONS.map(conv => (
+                <button key={conv.id} onClick={() => handleSelectConversation(conv.id)}
+                  className={cn("w-full flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all", selectedConv === conv.id ? "border-primary/40 bg-primary/5" : "border-border/50 hover:border-primary/20 hover:bg-muted/20")}>
+                  <div className={cn("w-9 h-9 rounded-full flex items-center justify-center", conv.type === "group" ? "bg-emerald-500/15" : "bg-primary/10")}>
+                    {conv.type === "group" ? <Users className="w-4 h-4 text-emerald-400" /> : <User className="w-4 h-4 text-primary" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{conv.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{conv.type === "group" ? "Grupo" : conv.phone} • {conv.connection}</p>
+                  </div>
+                  {selectedConv === conv.id && <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-3 mt-4">
+              <button onClick={() => { setStep(1); setSelectedConv(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-muted/50 text-foreground hover:bg-muted transition-all">Voltar</button>
+              <button
+                onClick={() => { if (selectedConv) setStep(3); }}
+                disabled={!selectedConv}
+                className={cn(
+                  "flex-1 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all",
+                  selectedConv ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"
+                )}
+              >
+                Próximo <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
-          <button onClick={handleSend} disabled={!selectedConv || !signerName || sending}
-            className={cn("w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all",
-              !selectedConv || !signerName || sending ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600 shadow-lg shadow-blue-500/20")}>
-            {sending ? (<><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Enviando via ZapSign...</>) : (<><Send className="w-4 h-4" /> Enviar Documento</>)}
-          </button>
-        </div>
+        )}
+
+        {/* Step 3: Preview and send */}
+        {step === 3 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Eye className="w-4 h-4 text-primary" />
+              <p className="text-sm font-semibold text-foreground">Pré-visualização do Documento</p>
+            </div>
+            <p className="text-xs text-muted-foreground -mt-2">
+              Revise o documento com os dados do cliente preenchidos antes de enviar para assinatura.
+            </p>
+
+            {/* Document preview - Word style */}
+            <div className="border border-border/50 rounded-xl overflow-hidden bg-muted/20 p-6 flex justify-center">
+              <div className="bg-white shadow-xl rounded-sm w-full max-w-[600px] min-h-[500px] p-12 relative">
+                <pre className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed font-serif" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
+                  {filledContent}
+                </pre>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setStep(2)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-muted/50 text-foreground hover:bg-muted transition-all">Voltar</button>
+              <button onClick={handleSend} disabled={sending}
+                className={cn("flex-1 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20",
+                  sending ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600")}>
+                {sending ? (<><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Enviando via ZapSign...</>) : (<><Send className="w-4 h-4" /> Enviar para Assinatura</>)}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
