@@ -4,7 +4,7 @@ import {
   ArrowLeft, Shield, ListOrdered, HelpCircle, Database,
   Building2, Settings, Upload, Plus, Trash2, GripVertical,
   FileText, MessageSquare, Tag, Users, FolderOpen, Bell,
-  Package, Volume2, CalendarDays, Power
+  Package, Volume2, CalendarDays, Power, ChevronUp, ChevronDown, Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -338,84 +338,154 @@ Você gostaria que eu faça uma análise gratuita do seu caso para verificar se 
   );
 };
 
+/* ─── Rich Text Toolbar ─── */
+const RichTextToolbar = () => (
+  <div className="flex items-center gap-0.5 px-3 py-2 border-b border-border">
+    <Select defaultValue="normal">
+      <SelectTrigger className="h-7 w-24 text-xs border-0 bg-transparent shadow-none px-2">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="normal" className="text-xs">Normal</SelectItem>
+        <SelectItem value="h1" className="text-xs">Título 1</SelectItem>
+        <SelectItem value="h2" className="text-xs">Título 2</SelectItem>
+        <SelectItem value="h3" className="text-xs">Título 3</SelectItem>
+      </SelectContent>
+    </Select>
+    <div className="w-px h-4 bg-border mx-1" />
+    {[
+      { label: "B", style: "font-bold" },
+      { label: "I", style: "italic" },
+      { label: "U", style: "underline" },
+    ].map((btn) => (
+      <button
+        key={btn.label}
+        className={cn("w-7 h-7 rounded flex items-center justify-center text-sm hover:bg-muted transition-colors text-foreground", btn.style)}
+      >
+        {btn.label}
+      </button>
+    ))}
+    <div className="w-px h-4 bg-border mx-1" />
+    <button className="w-7 h-7 rounded flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground">
+      <ListOrdered className="w-3.5 h-3.5" />
+    </button>
+    <button className="w-7 h-7 rounded flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground">
+      <ListOrdered className="w-3.5 h-3.5" />
+    </button>
+    <div className="w-px h-4 bg-border mx-1" />
+    <button className="w-7 h-7 rounded flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground text-xs font-mono">
+      T<sub className="text-[8px]">x</sub>
+    </button>
+  </div>
+);
+
+/* ─── FAQ Item Component ─── */
+const FAQItem = ({
+  faq,
+  index,
+  onUpdate,
+  onDelete,
+}: {
+  faq: { id: string; question: string; answer: string };
+  index: number;
+  onUpdate: (id: string, updates: Partial<{ question: string; answer: string }>) => void;
+  onDelete: (id: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="border border-border rounded-xl bg-card overflow-hidden">
+      {/* Collapsed header */}
+      <div
+        className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors"
+        onClick={() => setOpen(!open)}
+      >
+        <div className="w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center text-xs font-bold shrink-0">
+          {index + 1}
+        </div>
+        <button className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+          {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+        <MessageSquare className="w-4 h-4 text-muted-foreground shrink-0" />
+        <span className="text-sm text-foreground flex-1 truncate">{faq.question || "Nova pergunta..."}</span>
+        <div className="flex items-center gap-1 shrink-0">
+          <button className="w-7 h-7 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+            <GripVertical className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(faq.id); }}
+            className="w-7 h-7 rounded flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Expanded content */}
+      {open && (
+        <div className="px-5 pb-5 pt-2 space-y-4 border-t border-border animate-fade-in">
+          {/* Pergunta */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Pergunta</label>
+            <Input
+              value={faq.question}
+              onChange={(e) => onUpdate(faq.id, { question: e.target.value })}
+              className="text-sm bg-muted/20 border-border"
+              placeholder="Ex: O escritório é especializado em BPC/Loas?"
+            />
+          </div>
+
+          {/* Resposta */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-muted-foreground">Resposta</label>
+              <Button size="sm" variant="outline" className="h-7 gap-1.5 text-[11px]" onClick={() => toast.info("Upload de mídia em breve!")}>
+                <Upload className="w-3 h-3" /> Adicionar Mídia
+              </Button>
+            </div>
+            <div className="rounded-lg border border-border overflow-hidden">
+              <RichTextToolbar />
+              <textarea
+                value={faq.answer}
+                onChange={(e) => onUpdate(faq.id, { answer: e.target.value })}
+                className="w-full min-h-[140px] p-4 text-sm text-foreground bg-transparent resize-none focus:outline-none leading-relaxed"
+                placeholder="Escreva a resposta que a IA deve enviar automaticamente..."
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 /* ─── Tab: Perguntas Frequentes ─── */
 const FAQTab = () => {
   const [faqs, setFaqs] = useState([
     {
       id: "1",
-      active: true,
-      question: "Qual o horário de funcionamento?",
-      keywords: ["horário", "funcionamento", "aberto", "abre", "fecha"],
-      answer: "Nosso horário de atendimento é de segunda a sexta, das 8h às 18h. Aos sábados atendemos das 9h às 13h. Domingos e feriados estamos fechados.",
+      question: "O escritório realmente é especializado em BPC/Loas?",
+      answer: "Sim. O escritório é especializado em demandas previdenciárias, com foco específico no benefício assistencial BPC/Loas, tanto para pessoas com deficiência quanto para idosos. Atendemos centenas de casos todos os meses em todo o Brasil.",
     },
     {
       id: "2",
-      active: true,
-      question: "Quais formas de pagamento vocês aceitam?",
-      keywords: ["pagamento", "pagar", "pix", "cartão", "boleto", "parcelar"],
-      answer: "Aceitamos PIX, cartão de crédito (até 12x), débito e boleto bancário. Para valores acima de R$ 500, oferecemos condições especiais de parcelamento.",
+      question: "Quem vai cuidar do meu caso? Vou falar com o advogado mesmo?",
+      answer: "Sim! Seu caso será acompanhado diretamente por um advogado especialista. Você terá contato direto com ele durante todo o processo.",
     },
     {
       id: "3",
-      active: true,
-      question: "Qual o prazo de entrega?",
-      keywords: ["prazo", "entrega", "demora", "chegar", "envio"],
-      answer: "O prazo padrão é de 3 a 5 dias úteis após a confirmação do pagamento. Para capitais, o prazo pode ser reduzido para 1-2 dias úteis.",
+      question: "Qual o horário de funcionamento?",
+      answer: "Nosso horário de atendimento é de segunda a sexta, das 8h às 18h. Aos sábados atendemos das 9h às 13h.",
     },
     {
       id: "4",
-      active: false,
-      question: "Vocês fazem atendimento presencial?",
-      keywords: ["presencial", "escritório", "ir aí", "pessoalmente", "visita"],
-      answer: "Sim! Atendemos presencialmente com hora marcada. Agende pelo WhatsApp ou telefone para garantir disponibilidade.",
+      question: "Quais formas de pagamento vocês aceitam?",
+      answer: "Aceitamos PIX, cartão de crédito (até 12x), débito e boleto bancário.",
     },
   ]);
 
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formQ, setFormQ] = useState("");
-  const [formA, setFormA] = useState("");
-  const [formKeywords, setFormKeywords] = useState("");
-
-  const startEdit = (faq: typeof faqs[0]) => {
-    setEditingId(faq.id);
-    setFormQ(faq.question);
-    setFormA(faq.answer);
-    setFormKeywords(faq.keywords.join(", "));
-    setShowForm(true);
-  };
-
-  const startNew = () => {
-    setEditingId(null);
-    setFormQ("");
-    setFormA("");
-    setFormKeywords("");
-    setShowForm(true);
-  };
-
-  const saveForm = () => {
-    if (!formQ.trim() || !formA.trim()) return;
-    const keywords = formKeywords.split(",").map(k => k.trim()).filter(Boolean);
-
-    if (editingId) {
-      setFaqs(prev => prev.map(f => f.id === editingId ? { ...f, question: formQ.trim(), answer: formA.trim(), keywords } : f));
-      toast.success("Pergunta atualizada");
-    } else {
-      setFaqs(prev => [...prev, {
-        id: Date.now().toString(),
-        active: true,
-        question: formQ.trim(),
-        answer: formA.trim(),
-        keywords,
-      }]);
-      toast.success("Pergunta adicionada");
-    }
-    setShowForm(false);
-    setEditingId(null);
-  };
-
-  const toggleActive = (id: string) => {
-    setFaqs(prev => prev.map(f => f.id === id ? { ...f, active: !f.active } : f));
+  const updateFaq = (id: string, updates: Partial<{ question: string; answer: string }>) => {
+    setFaqs(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
   };
 
   const deleteFaq = (id: string) => {
@@ -423,150 +493,49 @@ const FAQTab = () => {
     toast.success("Pergunta removida");
   };
 
-  const activeFaqs = faqs.filter(f => f.active);
-  const inactiveFaqs = faqs.filter(f => !f.active);
+  const addFaq = () => {
+    const newFaq = { id: Date.now().toString(), question: "", answer: "" };
+    setFaqs(prev => [...prev, newFaq]);
+  };
 
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="rounded-xl border border-border bg-card p-5">
-        <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between">
+        <div>
           <div className="flex items-center gap-2">
             <HelpCircle className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-bold text-foreground">Respostas Automáticas</h3>
+            <h3 className="text-sm font-bold text-foreground">Perguntas Frequentes</h3>
           </div>
-          <Button size="sm" className="gap-1.5 text-xs" onClick={startNew}>
-            <Plus className="w-3.5 h-3.5" /> Nova pergunta
-          </Button>
-        </div>
-        <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
-          Quando a IA identificar que o cliente fez uma dessas perguntas, ela enviará automaticamente a resposta programada — sem precisar interpretar ou gerar texto.
-        </p>
-      </div>
-
-      {/* FAQ List */}
-      <div className="space-y-3">
-        {activeFaqs.length > 0 && (
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">
-            Ativas ({activeFaqs.length})
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Quando a IA identificar uma dessas perguntas durante o atendimento, enviará automaticamente a resposta programada.
           </p>
-        )}
-        {activeFaqs.map((faq) => (
-          <div key={faq.id} className="rounded-xl border border-border bg-card overflow-hidden group">
-            <div className="p-4 space-y-3">
-              {/* Question row */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <MessageSquare className="w-3.5 h-3.5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground">{faq.question}</p>
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {faq.keywords.map((kw, i) => (
-                        <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                          {kw}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Switch checked={faq.active} onCheckedChange={() => toggleActive(faq.id)} className="scale-75" />
-                </div>
-              </div>
-
-              {/* Answer */}
-              <div className="ml-9.5 pl-0 rounded-lg bg-muted/30 border border-border/40 p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Resposta automática</p>
-                <p className="text-xs text-foreground leading-relaxed">{faq.answer}</p>
-              </div>
-
-              {/* Actions */}
-              <div className="ml-9.5 flex gap-2">
-                <Button size="sm" variant="ghost" className="text-[11px] h-7 px-2 text-muted-foreground hover:text-foreground" onClick={() => startEdit(faq)}>
-                  Editar
-                </Button>
-                <Button size="sm" variant="ghost" className="text-[11px] h-7 px-2 text-muted-foreground hover:text-destructive" onClick={() => deleteFaq(faq.id)}>
-                  Excluir
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {inactiveFaqs.length > 0 && (
-          <>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1 pt-2">
-              Inativas ({inactiveFaqs.length})
-            </p>
-            {inactiveFaqs.map((faq) => (
-              <div key={faq.id} className="rounded-xl border border-border bg-card/50 opacity-60 p-4 group">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                      <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
-                    </div>
-                    <p className="text-sm text-muted-foreground">{faq.question}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Switch checked={faq.active} onCheckedChange={() => toggleActive(faq.id)} className="scale-75" />
-                    <button onClick={() => deleteFaq(faq.id)} className="text-muted-foreground hover:text-destructive">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </>
-        )}
+        </div>
+        <Button size="sm" className="gap-1.5 text-xs" onClick={addFaq}>
+          <Plus className="w-3.5 h-3.5" /> Nova pergunta
+        </Button>
       </div>
 
-      {/* Add/Edit Form Modal-like */}
-      {showForm && (
-        <div className="rounded-xl border-2 border-primary/20 bg-card p-5 space-y-4 animate-fade-in">
-          <h4 className="text-sm font-bold text-foreground">{editingId ? "Editar Pergunta" : "Nova Pergunta Frequente"}</h4>
+      {/* FAQ Items */}
+      <div className="space-y-3">
+        {faqs.map((faq, i) => (
+          <FAQItem
+            key={faq.id}
+            faq={faq}
+            index={i}
+            onUpdate={updateFaq}
+            onDelete={deleteFaq}
+          />
+        ))}
+      </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pergunta do cliente</label>
-            <Input
-              value={formQ}
-              onChange={(e) => setFormQ(e.target.value)}
-              placeholder='Ex: "Qual o horário de funcionamento?"'
-              className="text-sm bg-muted/20 border-border"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Palavras-chave de identificação</label>
-            <Input
-              value={formKeywords}
-              onChange={(e) => setFormKeywords(e.target.value)}
-              placeholder="horário, funcionamento, aberto, fecha (separadas por vírgula)"
-              className="text-sm bg-muted/20 border-border"
-            />
-            <p className="text-[10px] text-muted-foreground">A IA usa essas palavras para identificar quando o cliente está fazendo essa pergunta</p>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Resposta automática</label>
-            <Textarea
-              value={formA}
-              onChange={(e) => setFormA(e.target.value)}
-              placeholder="Escreva a resposta exata que a IA deve enviar..."
-              className="text-sm bg-muted/20 border-border min-h-[100px] resize-none"
-            />
-            <p className="text-[10px] text-muted-foreground">Essa resposta será enviada exatamente como escrita, sem interpretação da IA</p>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-1">
-            <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setShowForm(false); setEditingId(null); }}>
-              Cancelar
-            </Button>
-            <Button size="sm" className="text-xs gap-1.5" onClick={saveForm} disabled={!formQ.trim() || !formA.trim()}>
-              {editingId ? "Salvar alterações" : "Adicionar pergunta"}
-            </Button>
-          </div>
+      {faqs.length === 0 && (
+        <div className="text-center py-10">
+          <MessageSquare className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">Nenhuma pergunta frequente cadastrada</p>
+          <Button size="sm" className="gap-1.5 text-xs mt-3" onClick={addFaq}>
+            <Plus className="w-3.5 h-3.5" /> Adicionar primeira pergunta
+          </Button>
         </div>
       )}
     </div>
