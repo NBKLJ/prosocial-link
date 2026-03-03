@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
-  ArrowLeft, Shield, ListOrdered, HelpCircle, Database, Zap,
+  ArrowLeft, Shield, ListOrdered, HelpCircle, Database,
   Building2, Settings, Upload, Plus, Trash2, GripVertical,
-  FileText, MessageSquare
+  FileText, MessageSquare, Tag, Users, FolderOpen, Bell,
+  Package, Volume2, CalendarDays, Power
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -131,6 +132,21 @@ const RegrasGeraisTab = ({ sector, onUpdate }: { sector: SectorIA; onUpdate: (u:
   );
 };
 
+/* ─── Actions Menu Items ─── */
+const ACTION_ITEMS = [
+  { id: "etiqueta", label: "Adicionar Etiqueta", icon: Tag, color: "text-primary" },
+  { id: "transferir-agente", label: "Transferir para Agente", icon: ArrowLeft, color: "text-blue-500" },
+  { id: "transferir-usuario", label: "Transferir para Usuário", icon: Users, color: "text-emerald-500" },
+  { id: "atribuir-origem", label: "Atribuir Origem", icon: FolderOpen, color: "text-amber-500" },
+  { id: "mudar-etapa", label: "Mudar Etapa no CRM", icon: ListOrdered, color: "text-purple-500" },
+  { id: "notificar-equipe", label: "Notificar Equipe", icon: Bell, color: "text-orange-500" },
+  { id: "atribuir-produto", label: "Atribuir Produto", icon: Package, color: "text-pink-500" },
+  { id: "atribuir-departamento", label: "Atribuir Departamento", icon: Building2, color: "text-teal-500" },
+  { id: "enviar-audio", label: "Enviar em Áudio", icon: Volume2, color: "text-indigo-500" },
+  { id: "consultar-agenda", label: "Consultar Agenda", icon: CalendarDays, color: "text-cyan-500" },
+  { id: "desativar-agente", label: "Desativar Agente", icon: Power, color: "text-red-500" },
+];
+
 /* ─── Tab: Roteiro de Atendimento ─── */
 const RoteiroTab = () => {
   const [content, setContent] = useState(
@@ -159,36 +175,162 @@ Você gostaria que eu faça uma análise gratuita do seu caso para verificar se 
 👉 Após essa mensagem, avançar para **Etapa 2 – Qualificação**, onde será tratada a resposta (aceita / dúvida / recusa).`
   );
 
+  const [showMenu, setShowMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [cursorPos, setCursorPos] = useState(0);
+  const [selectedAction, setSelectedAction] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    const pos = e.target.selectionStart;
+    setContent(val);
+    setCursorPos(pos);
+
+    // Check if user just typed "="
+    if (val[pos - 1] === "=" && (pos === 1 || val[pos - 2] === "\n" || val[pos - 2] === " ")) {
+      const ta = e.target;
+      const rect = ta.getBoundingClientRect();
+      // Approximate position based on cursor
+      const lines = val.substring(0, pos).split("\n");
+      const lineHeight = 22;
+      const top = Math.min(lines.length * lineHeight, ta.scrollHeight - ta.scrollTop);
+      setMenuPos({ top: rect.top + top - ta.scrollTop + 8, left: rect.left + 24 });
+      setShowMenu(true);
+      setSelectedAction(null);
+    }
+  };
+
+  const insertAction = (actionLabel: string) => {
+    const before = content.substring(0, cursorPos);
+    const after = content.substring(cursorPos);
+    // Replace the "=" with the action tag
+    const newContent = before.slice(0, -1) + `[AÇÃO: ${actionLabel}]` + after;
+    setContent(newContent);
+    setShowMenu(false);
+    setSelectedAction(null);
+    setSelectedTag("");
+    textareaRef.current?.focus();
+    toast.success(`Ação "${actionLabel}" inserida`);
+  };
+
+  const insertActionWithTag = (actionLabel: string, tag: string) => {
+    const before = content.substring(0, cursorPos);
+    const after = content.substring(cursorPos);
+    const newContent = before.slice(0, -1) + `[AÇÃO: ${actionLabel} → ${tag}]` + after;
+    setContent(newContent);
+    setShowMenu(false);
+    setSelectedAction(null);
+    setSelectedTag("");
+    textareaRef.current?.focus();
+    toast.success(`Ação "${actionLabel}" inserida`);
+  };
+
+  // Close menu on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+        setSelectedAction(null);
+      }
+    };
+    if (showMenu) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showMenu]);
+
   return (
     <div className="space-y-4">
-      {/* Action bar */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <Button size="sm" className="gap-1.5 text-xs bg-primary hover:bg-primary/90">
-          <MessageSquare className="w-3.5 h-3.5" /> Situação/Mensagem
-        </Button>
-        <Button size="sm" className="gap-1.5 text-xs bg-primary hover:bg-primary/90">
-          <Upload className="w-3.5 h-3.5" /> Adicionar Mídia
-        </Button>
-        <Button size="sm" className="gap-1.5 text-xs bg-primary hover:bg-primary/90">
-          <Zap className="w-3.5 h-3.5" /> Decisão Inteligente
-        </Button>
-        <span className="text-xs text-muted-foreground ml-2">
-          Digite <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">=</kbd> no editor para abrir o menu de ações
+      {/* Hint bar */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">
+          Digite <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">=</kbd> no editor para inserir uma ação inteligente
         </span>
-        <Button size="sm" variant="outline" className="gap-1.5 text-xs ml-auto">
+        <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => toast.success("Roteiro salvo!")}>
           <FileText className="w-3.5 h-3.5" /> Salvar
         </Button>
       </div>
 
       {/* Editor area */}
-      <div className="rounded-xl border border-border bg-card">
+      <div className="relative rounded-xl border border-border bg-card">
         <textarea
+          ref={textareaRef}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={handleChange}
           className="w-full min-h-[500px] p-6 text-sm text-foreground bg-transparent resize-none focus:outline-none leading-relaxed font-mono"
           placeholder="Escreva o roteiro de atendimento da IA aqui..."
         />
       </div>
+
+      {/* Actions popup menu */}
+      {showMenu && (
+        <div
+          ref={menuRef}
+          className="fixed z-50 w-[420px] max-h-[460px] overflow-y-auto rounded-xl border border-border bg-card shadow-xl p-4 space-y-3 animate-fade-in"
+          style={{ top: menuPos.top, left: menuPos.left }}
+        >
+          {!selectedAction ? (
+            <>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Tipo de Decisão</p>
+              <div className="grid grid-cols-2 gap-2">
+                {ACTION_ITEMS.map((action) => (
+                  <button
+                    key={action.id}
+                    onClick={() => {
+                      if (action.id === "etiqueta") {
+                        setSelectedAction(action.id);
+                      } else {
+                        insertAction(action.label);
+                      }
+                    }}
+                    className="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-background text-left hover:border-primary/30 hover:bg-primary/5 transition-all group"
+                  >
+                    <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center bg-muted/50", action.color)}>
+                      <action.icon className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-semibold text-foreground">{action.label}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button size="sm" variant="ghost" className="text-xs" onClick={() => setShowMenu(false)}>
+                  Cancelar
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Selecione a Etiqueta</p>
+              <Select value={selectedTag} onValueChange={setSelectedTag}>
+                <SelectTrigger className="h-10 text-sm bg-muted/20 border-border">
+                  <SelectValue placeholder="Selecione uma opção..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="lead-quente">🔥 Lead Quente</SelectItem>
+                  <SelectItem value="qualificado">✅ Qualificado</SelectItem>
+                  <SelectItem value="aguardando">⏳ Aguardando Retorno</SelectItem>
+                  <SelectItem value="sem-interesse">❌ Sem Interesse</SelectItem>
+                  <SelectItem value="vip">⭐ VIP</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setSelectedAction(null); }}>
+                  Cancelar
+                </Button>
+                <Button
+                  size="sm"
+                  className="text-xs"
+                  disabled={!selectedTag}
+                  onClick={() => insertActionWithTag("Adicionar Etiqueta", selectedTag)}
+                >
+                  Inserir
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };
