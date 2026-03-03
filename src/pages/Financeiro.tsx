@@ -2,26 +2,33 @@ import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { ProGate } from "@/components/ui/ProGate";
 import {
-  DollarSign, TrendingUp, TrendingDown, Clock, AlertTriangle,
+  DollarSign, TrendingUp, Clock, AlertTriangle,
   CheckCircle2, XCircle, ArrowUpRight, ArrowDownRight, Filter,
   Search, Eye, Download, MoreVertical, CreditCard, Banknote,
-  CalendarDays, BarChart3, PieChart, RefreshCw, Building2,
-  ChevronRight, Receipt, Wallet, CircleDollarSign,
+  CalendarDays, BarChart3, RefreshCw, Building2,
+  ChevronRight, Receipt, Wallet, CircleDollarSign, ChevronLeft,
+  Users, FileText, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+} from "recharts";
 
 // ── TYPES ─────────────────────────────────────────────────
 type PaymentStatus = "received" | "pending" | "overdue" | "refunded" | "cancelled";
 type BoletoStatus = "paid" | "pending" | "overdue" | "cancelled";
+type CobrancaCategory = "recebidas" | "confirmadas" | "aguardando" | "vencidas";
 
 interface Transaction {
   id: string;
   description: string;
   client: string;
   value: number;
+  netValue: number;
   dueDate: string;
   paymentDate?: string;
   status: PaymentStatus;
@@ -42,18 +49,18 @@ interface Boleto {
 
 // ── MOCK DATA ─────────────────────────────────────────────
 const MOCK_TRANSACTIONS: Transaction[] = [
-  { id: "TXN-001", description: "Honorários - Caso Trabalhista", client: "Maria Silva", value: 5000, dueDate: "2026-03-05", paymentDate: "2026-03-03", status: "received", type: "pix" },
-  { id: "TXN-002", description: "Contrato de Consultoria", client: "TechCorp Ltda", value: 8500, dueDate: "2026-03-10", status: "pending", type: "boleto" },
-  { id: "TXN-003", description: "Honorários - Processo Civil", client: "João Santos", value: 3200, dueDate: "2026-02-25", status: "overdue", type: "boleto" },
-  { id: "TXN-004", description: "Parcela 2/6 - Acordo Judicial", client: "AutoFlow S.A.", value: 2500, dueDate: "2026-03-15", status: "pending", type: "boleto", installment: "2/6" },
-  { id: "TXN-005", description: "Consultoria Jurídica Mensal", client: "DataSync Ltda", value: 4800, dueDate: "2026-03-01", paymentDate: "2026-03-01", status: "received", type: "credit_card" },
-  { id: "TXN-006", description: "Honorários Iniciais", client: "CloudNex Ltda", value: 15000, dueDate: "2026-02-20", paymentDate: "2026-02-20", status: "received", type: "transfer" },
-  { id: "TXN-007", description: "Parecer Jurídico", client: "SmartOps Inc", value: 6000, dueDate: "2026-03-20", status: "pending", type: "pix" },
-  { id: "TXN-008", description: "Parcela 1/3 - Causa Previdenciária", client: "Ana Oliveira", value: 1800, dueDate: "2026-02-15", status: "overdue", type: "boleto", installment: "1/3" },
-  { id: "TXN-009", description: "Contrato de Prestação de Serviços", client: "Nova Digital", value: 12000, dueDate: "2026-04-01", status: "pending", type: "boleto" },
-  { id: "TXN-010", description: "Devolução - Causa Cancelada", client: "StartUp XYZ", value: 3500, dueDate: "2026-02-28", paymentDate: "2026-02-28", status: "refunded", type: "pix" },
-  { id: "TXN-011", description: "Parcela 3/6 - Acordo Judicial", client: "AutoFlow S.A.", value: 2500, dueDate: "2026-04-15", status: "pending", type: "boleto", installment: "3/6" },
-  { id: "TXN-012", description: "Honorários - Caso Família", client: "Carlos Mendes", value: 7500, dueDate: "2026-03-08", paymentDate: "2026-03-03", status: "received", type: "pix" },
+  { id: "TXN-001", description: "Honorários - Caso Trabalhista", client: "Maria Silva", value: 5000, netValue: 4940, dueDate: "2026-03-05", paymentDate: "2026-03-03", status: "received", type: "pix" },
+  { id: "TXN-002", description: "Contrato de Consultoria", client: "TechCorp Ltda", value: 8500, netValue: 8415, dueDate: "2026-03-10", status: "pending", type: "boleto" },
+  { id: "TXN-003", description: "Honorários - Processo Civil", client: "João Santos", value: 3200, netValue: 3168, dueDate: "2026-02-25", status: "overdue", type: "boleto" },
+  { id: "TXN-004", description: "Parcela 2/6 - Acordo Judicial", client: "AutoFlow S.A.", value: 2500, netValue: 2475, dueDate: "2026-03-15", status: "pending", type: "boleto", installment: "2/6" },
+  { id: "TXN-005", description: "Consultoria Jurídica Mensal", client: "DataSync Ltda", value: 4800, netValue: 4752, dueDate: "2026-03-01", paymentDate: "2026-03-01", status: "received", type: "credit_card" },
+  { id: "TXN-006", description: "Honorários Iniciais", client: "CloudNex Ltda", value: 15000, netValue: 14850, dueDate: "2026-02-20", paymentDate: "2026-02-20", status: "received", type: "transfer" },
+  { id: "TXN-007", description: "Parecer Jurídico", client: "SmartOps Inc", value: 6000, netValue: 5940, dueDate: "2026-03-20", status: "pending", type: "pix" },
+  { id: "TXN-008", description: "Parcela 1/3 - Causa Previdenciária", client: "Ana Oliveira", value: 1800, netValue: 1782, dueDate: "2026-02-15", status: "overdue", type: "boleto", installment: "1/3" },
+  { id: "TXN-009", description: "Contrato de Prestação de Serviços", client: "Nova Digital", value: 12000, netValue: 11880, dueDate: "2026-04-01", status: "pending", type: "boleto" },
+  { id: "TXN-010", description: "Devolução - Causa Cancelada", client: "StartUp XYZ", value: 3500, netValue: 3465, dueDate: "2026-02-28", paymentDate: "2026-02-28", status: "refunded", type: "pix" },
+  { id: "TXN-011", description: "Parcela 3/6 - Acordo Judicial", client: "AutoFlow S.A.", value: 2500, netValue: 2475, dueDate: "2026-04-15", status: "pending", type: "boleto", installment: "3/6" },
+  { id: "TXN-012", description: "Honorários - Caso Família", client: "Carlos Mendes", value: 7500, netValue: 7425, dueDate: "2026-03-08", paymentDate: "2026-03-03", status: "received", type: "pix" },
 ];
 
 const MOCK_BOLETOS: Boleto[] = [
@@ -66,9 +73,28 @@ const MOCK_BOLETOS: Boleto[] = [
   { id: "BOL-007", description: "Parcela 3/6 - Acordo Judicial", client: "AutoFlow S.A.", value: 2500, dueDate: "2026-04-15", status: "pending", installment: "3/6" },
 ];
 
+// Chart data
+const MONTHLY_REVENUE_DATA = [
+  { month: "Out", receita: 18500, despesas: 4200 },
+  { month: "Nov", receita: 22000, despesas: 5100 },
+  { month: "Dez", receita: 31000, despesas: 6800 },
+  { month: "Jan", receita: 19500, despesas: 3900 },
+  { month: "Fev", receita: 27300, despesas: 5500 },
+  { month: "Mar", receita: 32300, despesas: 4800 },
+];
+
+const PAYMENT_TYPE_DATA = [
+  { name: "PIX", value: 42, color: "hsl(160, 84%, 39%)" },
+  { name: "Boleto", value: 35, color: "hsl(205, 85%, 52%)" },
+  { name: "Cartão", value: 15, color: "hsl(262, 83%, 58%)" },
+  { name: "Transferência", value: 8, color: "hsl(38, 92%, 50%)" },
+];
+
 // ── HELPERS ───────────────────────────────────────────────
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+
+const MONTHS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
 const statusConfig: Record<PaymentStatus, { label: string; color: string; icon: typeof CheckCircle2 }> = {
   received: { label: "Recebido", color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20", icon: CheckCircle2 },
@@ -133,6 +159,201 @@ function FinanceMetrics({ transactions }: { transactions: Transaction[] }) {
           </div>
         </motion.div>
       ))}
+    </div>
+  );
+}
+
+// ── SITUAÇÃO DAS COBRANÇAS (like the image) ───────────────
+function SituacaoCobrancas({ transactions }: { transactions: Transaction[] }) {
+  const [selectedCategory, setSelectedCategory] = useState<CobrancaCategory | null>(null);
+  const [monthOffset, setMonthOffset] = useState(0);
+
+  const now = new Date();
+  const viewMonth = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+  const monthLabel = `${MONTHS[viewMonth.getMonth()]} ${viewMonth.getFullYear()}`;
+
+  const received = transactions.filter(t => t.status === "received");
+  const confirmed = transactions.filter(t => t.status === "received" && t.paymentDate);
+  const pending = transactions.filter(t => t.status === "pending");
+  const overdue = transactions.filter(t => t.status === "overdue");
+
+  const categories: { key: CobrancaCategory; label: string; items: Transaction[]; barColor: string; textColor: string }[] = [
+    { key: "recebidas", label: "Recebidas", items: received, barColor: "bg-emerald-500", textColor: "text-emerald-500" },
+    { key: "confirmadas", label: "Confirmadas", items: confirmed, barColor: "bg-blue-500", textColor: "text-blue-500" },
+    { key: "aguardando", label: "Aguardando pagame...", items: pending, barColor: "bg-orange-500", textColor: "text-orange-500" },
+    { key: "vencidas", label: "Vencidas", items: overdue, barColor: "bg-red-500", textColor: "text-red-500" },
+  ];
+
+  const maxValue = Math.max(...categories.map(c => c.items.reduce((s, t) => s + t.value, 0)), 1);
+
+  return (
+    <div className="space-y-4">
+      {/* Month filter */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-semibold text-foreground">Situação das Cobranças</h3>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setMonthOffset(o => o - 1)} className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="text-sm font-medium text-foreground min-w-[140px] text-center">{monthLabel}</span>
+          <button onClick={() => setMonthOffset(o => o + 1)} className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Status cards grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {categories.map((cat) => {
+          const total = cat.items.reduce((s, t) => s + t.value, 0);
+          const netTotal = cat.items.reduce((s, t) => s + t.netValue, 0);
+          const clientCount = new Set(cat.items.map(t => t.client)).size;
+          const cobrancaCount = cat.items.length;
+          const barWidth = Math.max((total / maxValue) * 100, 5);
+
+          return (
+            <motion.div
+              key={cat.key}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              onClick={() => setSelectedCategory(selectedCategory === cat.key ? null : cat.key)}
+              className={cn(
+                "bg-card border rounded-xl p-5 cursor-pointer transition-all hover:shadow-md",
+                selectedCategory === cat.key ? "border-primary/50 ring-2 ring-primary/20" : "border-border/50"
+              )}
+            >
+              <p className="text-xs text-muted-foreground mb-2">{cat.label}</p>
+              <p className={cn("text-2xl font-bold", cat.textColor)}>{formatCurrency(total)}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{formatCurrency(netTotal)} líquido</p>
+              
+              {/* Progress bar */}
+              <div className="w-full h-1.5 bg-muted/30 rounded-full mt-3 mb-3">
+                <div className={cn("h-full rounded-full transition-all", cat.barColor)} style={{ width: `${barWidth}%` }} />
+              </div>
+
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  <span>{clientCount} clientes</span>
+                </div>
+                <ChevronRight className="w-3 h-3" />
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1">
+                <FileText className="w-3 h-3" />
+                <span>{cobrancaCount} cobranças</span>
+                <ChevronRight className="w-3 h-3 ml-auto" />
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Detail panel when a card is clicked */}
+      <AnimatePresence>
+        {selectedCategory && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="bg-card border border-border/50 rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-border/50">
+                <h4 className="text-sm font-semibold text-foreground">
+                  Detalhes — {categories.find(c => c.key === selectedCategory)?.label}
+                </h4>
+                <button onClick={() => setSelectedCategory(null)} className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/30">
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cliente</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Descrição</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tipo</th>
+                    <th className="text-right px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Valor</th>
+                    <th className="text-right px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Líquido</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Vencimento</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categories.find(c => c.key === selectedCategory)?.items.map((t, i) => {
+                    const st = statusConfig[t.status];
+                    const StIcon = st.icon;
+                    const TIcon = typeIcons[t.type];
+                    return (
+                      <motion.tr
+                        key={t.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.03 }}
+                        className="border-b border-border/20 hover:bg-muted/20 transition-colors"
+                      >
+                        <td className="px-5 py-3 font-medium text-foreground">{t.client}</td>
+                        <td className="px-5 py-3 text-muted-foreground">{t.description}</td>
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <TIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="text-xs">{typeLabels[t.type]}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3 text-right font-medium text-foreground">{formatCurrency(t.value)}</td>
+                        <td className="px-5 py-3 text-right text-muted-foreground text-xs">{formatCurrency(t.netValue)}</td>
+                        <td className="px-5 py-3 text-muted-foreground text-xs">{t.dueDate}</td>
+                        <td className="px-5 py-3">
+                          <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-lg border", st.color)}>
+                            <StIcon className="w-3 h-3" />{st.label}
+                          </span>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── CHARTS ────────────────────────────────────────────────
+function RevenueChart() {
+  return (
+    <div className="bg-card border border-border/50 rounded-xl p-5">
+      <h3 className="text-sm font-semibold text-foreground mb-4">Receita vs Despesas (6 meses)</h3>
+      <ResponsiveContainer width="100%" height={240}>
+        <AreaChart data={MONTHLY_REVENUE_DATA}>
+          <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+          <XAxis dataKey="month" tick={{ fontSize: 11 }} className="text-muted-foreground" />
+          <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" tickFormatter={(v) => `${v / 1000}k`} />
+          <Tooltip formatter={(value: number) => [formatCurrency(value), ""]} />
+          <Area type="monotone" dataKey="receita" stroke="hsl(160, 84%, 39%)" fill="hsl(160, 84%, 39%)" fillOpacity={0.15} name="Receita" />
+          <Area type="monotone" dataKey="despesas" stroke="hsl(0, 84%, 60%)" fill="hsl(0, 84%, 60%)" fillOpacity={0.1} name="Despesas" />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function PaymentTypePieChart() {
+  return (
+    <div className="bg-card border border-border/50 rounded-xl p-5">
+      <h3 className="text-sm font-semibold text-foreground mb-4">Recebimentos por Método</h3>
+      <ResponsiveContainer width="100%" height={240}>
+        <PieChart>
+          <Pie data={PAYMENT_TYPE_DATA} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value">
+            {PAYMENT_TYPE_DATA.map((entry, i) => (
+              <Cell key={i} fill={entry.color} />
+            ))}
+          </Pie>
+          <Tooltip formatter={(value: number) => [`${value}%`, ""]} />
+          <Legend iconType="circle" iconSize={8} />
+        </PieChart>
+      </ResponsiveContainer>
     </div>
   );
 }
@@ -499,6 +720,9 @@ export default function Financeiro() {
           <TabsTrigger value="visao-geral" className="rounded-lg text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <BarChart3 className="w-3 h-3 mr-1" /> Visão Geral
           </TabsTrigger>
+          <TabsTrigger value="cobrancas" className="rounded-lg text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
+            <DollarSign className="w-3 h-3 mr-1" /> Cobranças
+          </TabsTrigger>
           <TabsTrigger value="boletos" className="rounded-lg text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <Receipt className="w-3 h-3 mr-1" /> Boletos
           </TabsTrigger>
@@ -512,9 +736,17 @@ export default function Financeiro() {
 
         <TabsContent value="visao-geral" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <RevenueChart />
+            <PaymentTypePieChart />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <RecentActivity transactions={MOCK_TRANSACTIONS} />
             <UpcomingPayments transactions={MOCK_TRANSACTIONS} />
           </div>
+        </TabsContent>
+
+        <TabsContent value="cobrancas">
+          <SituacaoCobrancas transactions={MOCK_TRANSACTIONS} />
         </TabsContent>
 
         <TabsContent value="boletos">
