@@ -3,6 +3,7 @@ import {
   MessageCircle, BarChart3, Megaphone, Users, Settings, Search, ChevronDown,
   Send, MessageSquarePlus, Mic, Clock, Bot, Brain, CalendarDays, MessageSquare,
   FileText, Briefcase, ListTodo, CalendarRange, UsersRound, Activity, DollarSign, PieChart,
+  Scale, Layers, ClipboardList,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -41,6 +42,13 @@ const menuItems: MenuItem[] = [
     ],
   },
   { title: "IAs Setoriais", url: "/ias-setoriais", icon: Brain, proBadge: true },
+  {
+    title: "Processos", url: "/processos/painel", icon: Scale, expandable: true, proBadge: true,
+    subItems: [
+      { title: "Painel de Gestão", url: "/processos/painel", icon: Layers },
+      { title: "Acompanhamento", url: "/processos/acompanhamento", icon: ClipboardList },
+    ],
+  },
   { title: "Contratos", url: "/contratos", icon: FileText, proBadge: true },
   { title: "Financeiro", url: "/financeiro", icon: DollarSign, proBadge: true },
   {
