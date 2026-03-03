@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import {
-  ArrowLeft, Search, ChevronRight, Plus, Users, User,
+  ArrowLeft, Search, ChevronRight, Users, User,
   FileText, HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -215,14 +215,9 @@ const ModelosPage = ({ onClose, onSelectModel }: ModelosPageProps) => {
                     <span className="font-semibold">{modelo.faqs}</span> FAQs
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => onSelectModel(modelo)}>
-                    <Plus className="w-3.5 h-3.5" /> Criar
-                  </Button>
-                  <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
-                    <ChevronRight className="w-3.5 h-3.5" /> Detalhes
-                  </button>
-                </div>
+                <Button size="sm" className="w-full gap-1.5 text-xs" onClick={() => onSelectModel(modelo)}>
+                  Atribuir
+                </Button>
               </div>
             </div>
           ))}
