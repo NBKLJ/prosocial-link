@@ -1,8 +1,8 @@
 import { useState } from "react";
 import {
   MessageCircle, BarChart3, Megaphone, Users, Settings, Search, ChevronDown,
-  Send, MessageSquarePlus, Mic, Clock, Bot, Brain, CalendarDays, LayoutDashboard, MessageSquare,
-  FileText, Briefcase, ListTodo, CalendarRange, UsersRound, Activity, DollarSign,
+  Send, MessageSquarePlus, Mic, Clock, Bot, Brain, CalendarDays, MessageSquare,
+  FileText, Briefcase, ListTodo, CalendarRange, UsersRound, Activity, DollarSign, PieChart,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -16,7 +16,7 @@ interface SubItem { title: string; url: string; icon: typeof Send; }
 interface MenuItem { title: string; url: string; icon: typeof MessageCircle; count?: number; expandable?: boolean; subItems?: SubItem[]; proBadge?: boolean; }
 
 const menuItems: MenuItem[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Relatórios", url: "/relatorios", icon: PieChart, proBadge: true },
   { title: "Conversas", url: "/conversas", icon: MessageCircle, count: 6 },
   { title: "Grupos", url: "/grupos", icon: Users },
   { title: "CRM", url: "/crm", icon: BarChart3 },
