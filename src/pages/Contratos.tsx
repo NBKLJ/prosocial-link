@@ -5,12 +5,13 @@ import {
   FileText, Plus, Search, Eye, Send, Download, PenTool, Sparkles,
   Clock, CheckCircle2, XCircle, AlertCircle, Filter, MoreVertical,
   FileSignature, Scale, Bot, Briefcase, ChevronRight, Copy,
-  User, Building2, MessageCircle, Users, ArrowRight, Cpu,
+  User, Building2, MessageCircle, Users, ArrowRight, Cpu, FolderOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "framer-motion";
+import { MeusModelosPanel } from "@/components/contratos/MeusModelosPanel";
 
 // ── TYPES ─────────────────────────────────────────────────
 type ContractStatus = "draft" | "sent" | "viewed" | "signed" | "declined" | "expired" | "cancelled";
@@ -702,6 +703,8 @@ export default function Contratos() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ContractStatus | "all">("all");
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [activeTab, setActiveTab] = useState("todos");
+  const [triggerNewDoc, setTriggerNewDoc] = useState(false);
 
   const filtered = MOCK_CONTRACTS
     .filter(c => statusFilter === "all" || c.status === statusFilter)
@@ -715,16 +718,22 @@ export default function Contratos() {
           <h1 className="text-2xl font-bold text-foreground">Contratos & Documentos</h1>
           <p className="text-sm text-muted-foreground mt-1">Geração automática, assinatura digital e gestão completa</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/20">
+        <button
+          onClick={() => { setActiveTab("modelos"); setTriggerNewDoc(prev => !prev); }}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/20"
+        >
           <Plus className="w-4 h-4" /> Novo Documento
         </button>
       </div>
 
       <MetricCards contracts={MOCK_CONTRACTS} />
 
-      <Tabs defaultValue="todos" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-muted/30 border border-border/50 p-1 rounded-xl">
           <TabsTrigger value="todos" className="rounded-lg text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">Todos</TabsTrigger>
+          <TabsTrigger value="modelos" className="rounded-lg text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
+            <FolderOpen className="w-3 h-3 mr-1" /> Meus Modelos
+          </TabsTrigger>
           <TabsTrigger value="gerar" className="rounded-lg text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <Sparkles className="w-3 h-3 mr-1" /> Gerar com IA
           </TabsTrigger>
@@ -767,6 +776,10 @@ export default function Contratos() {
           </div>
 
           <ContractTable contracts={filtered} onView={setSelectedContract} />
+        </TabsContent>
+
+        <TabsContent value="modelos">
+          <MeusModelosPanel openNewDialog={triggerNewDoc} />
         </TabsContent>
 
         <TabsContent value="gerar">
