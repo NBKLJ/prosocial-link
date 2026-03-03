@@ -1,0 +1,66 @@
+import { AutomationFlow } from "./types";
+
+export const initialFlows: AutomationFlow[] = [
+  {
+    id: "flow-1",
+    name: "Follow-up Comercial",
+    description: "Recontata leads que pararam de responder após proposta enviada",
+    category: "follow-up",
+    active: true,
+    steps: [
+      { id: "s1", type: "trigger", config: { type: "sem_resposta", days: 2 } },
+      { id: "s2", type: "wait", config: { hours: 0, minutes: 0 } },
+      { id: "s3", type: "message", config: { text: "Olá {nome}! Tudo bem? Vi que conversamos há {dias_sem_resposta} dias sobre {ultimo_assunto} e queria saber se surgiu alguma dúvida. Estou à disposição! 😊" } },
+      { id: "s4", type: "condition", config: { check: "respondeu", yesAction: "parar", noAction: "continuar" } },
+      { id: "s5", type: "wait", config: { hours: 48, minutes: 0 } },
+      { id: "s6", type: "message", config: { text: "{nome}, passando aqui rapidinho! Se precisar de algo sobre {ultimo_assunto}, é só me chamar. Abs, {atendente} 👋" } },
+    ],
+    stats: { sent: 342, replied: 156, recovered: 89 },
+    createdAt: "2025-02-15",
+    lastTriggered: "Hoje • 14:32",
+  },
+  {
+    id: "flow-2",
+    name: "Pós-venda 7 dias",
+    description: "Acompanhamento automático após fechamento de negócio",
+    category: "pos-venda",
+    active: true,
+    steps: [
+      { id: "s1", type: "trigger", config: { type: "sem_resposta", days: 7 } },
+      { id: "s2", type: "message", config: { text: "Olá {nome}! Já faz uma semana desde nossa última conversa. Como está tudo por aí? Precisando de algo, é só chamar! 🙌" } },
+    ],
+    stats: { sent: 128, replied: 74, recovered: 45 },
+    createdAt: "2025-02-20",
+    lastTriggered: "Ontem • 09:15",
+  },
+  {
+    id: "flow-3",
+    name: "Reengajamento 15 dias",
+    description: "Última tentativa de contato para leads inativos há mais de 15 dias",
+    category: "reengajamento",
+    active: false,
+    steps: [
+      { id: "s1", type: "trigger", config: { type: "sem_resposta", days: 15 } },
+      { id: "s2", type: "message", config: { text: "Oi {nome}, tudo bem? Faz um tempinho que não nos falamos. Se ainda tiver interesse em {ultimo_assunto}, vamos conversar? Tenho novidades que podem te interessar! ✨" } },
+      { id: "s3", type: "condition", config: { check: "respondeu", yesAction: "parar", noAction: "continuar" } },
+      { id: "s4", type: "wait", config: { hours: 72, minutes: 0 } },
+      { id: "s5", type: "message", config: { text: "{nome}, essa é minha última mensagem automática. Se quiser retomar, é só responder aqui que eu te atendo na hora. Até mais! 👋" } },
+    ],
+    stats: { sent: 67, replied: 18, recovered: 12 },
+    createdAt: "2025-03-01",
+  },
+  {
+    id: "flow-4",
+    name: "Retorno Rápido 24h",
+    description: "Lembrete suave quando cliente não responde em 24 horas",
+    category: "follow-up",
+    active: true,
+    steps: [
+      { id: "s1", type: "trigger", config: { type: "sem_resposta", days: 1 } },
+      { id: "s2", type: "message", config: { text: "Oi {nome}! Só passando pra ver se viu minha última mensagem. Qualquer coisa estou por aqui! 😉" } },
+    ],
+    stats: { sent: 521, replied: 289, recovered: 178 },
+    createdAt: "2025-01-10",
+    lastTriggered: "Hoje • 11:45",
+  },
+];
