@@ -6,6 +6,7 @@ import {
   DollarSign, Headphones
 } from "lucide-react";
 import CreationWizard from "@/components/ias/CreationWizard";
+import AdvancedCreator from "@/components/ias/AdvancedCreator";
 import IADetailPanel from "@/components/ias/IADetailPanel";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -154,6 +155,7 @@ const IAsSetoriais = () => {
   const [inactiveOpen, setInactiveOpen] = useState(false);
   const [selectedSectorId, setSelectedSectorId] = useState<string | null>(null);
   const [showWizard, setShowWizard] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const selectedSector = sectors.find(s => s.id === selectedSectorId) || null;
 
@@ -171,6 +173,33 @@ const IAsSetoriais = () => {
   const inactiveSectors = filtered.filter(s => !s.active);
 
   const hasUnlinkedActive = sectors.some(s => s.active && !s.connectionId);
+
+  if (showAdvanced) {
+    return (
+      <AppLayout>
+        <ProGate title="IAs Setoriais" description="Configure IAs personalizadas por setor com o Plano Pro.">
+          <AdvancedCreator
+            onClose={() => setShowAdvanced(false)}
+            onFinish={(prompt) => {
+              const newSector: SectorIA = {
+                id: Date.now().toString(),
+                name: "Novo Agente",
+                icon: DollarSign,
+                description: "Agente criado via prompt avançado",
+                prompt,
+                tone: "amigavel",
+                active: true,
+                triggers: false, rules: false, steps: false, faq: false,
+                connectionId: null,
+              };
+              setSectors(prev => [...prev, newSector]);
+              setShowAdvanced(false);
+            }}
+          />
+        </ProGate>
+      </AppLayout>
+    );
+  }
 
   if (selectedSector) {
     return (
@@ -226,7 +255,7 @@ const IAsSetoriais = () => {
               </button>
 
               <button
-                onClick={() => toast.info("Criação avançada em breve!")}
+                onClick={() => setShowAdvanced(true)}
                 className="group rounded-xl border border-border bg-muted/20 p-5 text-left transition-all hover:border-primary/30 hover:bg-primary/5"
               >
                 <div className="flex items-center gap-2 mb-2">
