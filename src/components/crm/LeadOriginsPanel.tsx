@@ -1,4 +1,5 @@
 import { Pipeline } from "./types";
+import brazilMap from "@/assets/brazil-map.png";
 import {
   MessageSquare, Globe, Instagram, Facebook, Twitter, MapPin,
   Users, ArrowUpRight, Mail, Megaphone, UserCheck,
@@ -32,11 +33,11 @@ const PIE_COLORS = [
 
 // Mock geographic data for Brazil regions
 const REGIONS: { id: string; name: string; leads: number; revenue: number; x: number; y: number }[] = [
-  { id: "norte", name: "Norte", leads: 12, revenue: 28000, x: 35, y: 18 },
-  { id: "nordeste", name: "Nordeste", leads: 28, revenue: 64000, x: 72, y: 25 },
-  { id: "centro-oeste", name: "Centro-Oeste", leads: 18, revenue: 42000, x: 45, y: 45 },
-  { id: "sudeste", name: "Sudeste", leads: 52, revenue: 148000, x: 62, y: 60 },
-  { id: "sul", name: "Sul", leads: 22, revenue: 58000, x: 52, y: 78 },
+  { id: "norte", name: "Norte", leads: 12, revenue: 28000, x: 38, y: 22 },
+  { id: "nordeste", name: "Nordeste", leads: 28, revenue: 64000, x: 75, y: 30 },
+  { id: "centro-oeste", name: "Centro-Oeste", leads: 18, revenue: 42000, x: 48, y: 52 },
+  { id: "sudeste", name: "Sudeste", leads: 52, revenue: 148000, x: 68, y: 65 },
+  { id: "sul", name: "Sul", leads: 22, revenue: 58000, x: 55, y: 82 },
 ];
 
 // Mock leads with origin + location for the table
@@ -190,46 +191,34 @@ export function LeadOriginsPanel({ pipelines }: LeadOriginsPanelProps) {
             <MapPin className="w-4 h-4 text-primary" />
             <h3 className="text-sm font-bold text-foreground">Mapa de Leads — Brasil</h3>
           </div>
-          {/* Simplified SVG Brazil map */}
-          <div className="relative w-full aspect-[3/4] rounded-xl bg-muted/20 border border-border/30 overflow-hidden">
-            <svg viewBox="0 0 100 100" className="w-full h-full">
-              {/* Simplified Brazil outline */}
-              <path
-                d="M30,5 L55,3 L75,8 L82,15 L85,25 L80,35 L78,45 L72,55 L65,62 L60,70 L55,75 L50,82 L42,85 L35,80 L30,72 L25,60 L22,50 L20,40 L22,30 L25,20 L28,10 Z"
-                fill="hsl(var(--primary) / 0.08)"
-                stroke="hsl(var(--primary) / 0.3)"
-                strokeWidth="0.5"
-              />
-              {/* Region dividers (simplified) */}
-              <line x1="20" y1="38" x2="85" y2="38" stroke="hsl(var(--border))" strokeWidth="0.3" strokeDasharray="2 2" />
-              <line x1="22" y1="55" x2="78" y2="55" stroke="hsl(var(--border))" strokeWidth="0.3" strokeDasharray="2 2" />
-              <line x1="30" y1="72" x2="65" y2="72" stroke="hsl(var(--border))" strokeWidth="0.3" strokeDasharray="2 2" />
-              <line x1="45" y1="20" x2="45" y2="55" stroke="hsl(var(--border))" strokeWidth="0.3" strokeDasharray="2 2" />
-
-              {/* Region dots with size proportional to leads */}
-              {REGIONS.map(r => {
-                const radius = Math.max(3, (r.leads / totalRegionLeads) * 12);
-                return (
-                  <g key={r.id}>
-                    <circle cx={r.x} cy={r.y} r={radius + 2} fill="hsl(var(--primary) / 0.15)" />
-                    <circle cx={r.x} cy={r.y} r={radius} fill="hsl(var(--primary))" opacity={0.8} />
-                    <text x={r.x} y={r.y + 1} textAnchor="middle" fontSize="3.5" fill="white" fontWeight="bold">
-                      {r.leads}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-            {/* Region labels overlaid */}
-            {REGIONS.map(r => (
-              <div
-                key={r.id}
-                className="absolute text-[9px] font-semibold text-muted-foreground"
-                style={{ left: `${r.x + 8}%`, top: `${r.y - 2}%` }}
-              >
-                {r.name}
-              </div>
-            ))}
+          <div className="relative w-full rounded-xl bg-muted/10 border border-border/30 overflow-hidden p-4">
+            <img src={brazilMap} alt="Mapa do Brasil" className="w-full h-auto opacity-80" />
+            {/* Region dots overlaid on the map */}
+            {REGIONS.map(r => {
+              const size = Math.max(28, (r.leads / totalRegionLeads) * 56);
+              return (
+                <div
+                  key={r.id}
+                  className="absolute flex flex-col items-center gap-0.5"
+                  style={{ left: `${r.x}%`, top: `${r.y}%`, transform: "translate(-50%, -50%)" }}
+                >
+                  <div
+                    className="rounded-full bg-primary/20 flex items-center justify-center"
+                    style={{ width: size + 8, height: size + 8 }}
+                  >
+                    <div
+                      className="rounded-full bg-primary flex items-center justify-center shadow-lg"
+                      style={{ width: size, height: size, opacity: 0.85 }}
+                    >
+                      <span className="text-[10px] font-bold text-primary-foreground">{r.leads}</span>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-semibold text-muted-foreground bg-card/80 px-1.5 py-0.5 rounded-md backdrop-blur-sm">
+                    {r.name}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
