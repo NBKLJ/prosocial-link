@@ -30,6 +30,8 @@ import GestaoCalendarios from "./pages/GestaoCalendarios";
 import GestaoUsuarios from "./pages/GestaoUsuarios";
 import GestaoProdutividade from "./pages/GestaoProdutividade";
 import Financeiro from "./pages/Financeiro";
+import ProcessosPainel from "./pages/ProcessosPainel";
+import ProcessosAcompanhamento from "./pages/ProcessosAcompanhamento";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +69,8 @@ const App = () => (
           <Route path="/contatos" element={<ProtectedRoute><Contatos /></ProtectedRoute>} />
           <Route path="/contratos" element={<ProtectedRoute><Contratos /></ProtectedRoute>} />
           <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
+          <Route path="/processos/painel" element={<ProtectedRoute><ProcessosPainel /></ProtectedRoute>} />
+          <Route path="/processos/acompanhamento" element={<ProtectedRoute><ProcessosAcompanhamento /></ProtectedRoute>} />
           <Route path="/grupos" element={<ProtectedRoute><Grupos /></ProtectedRoute>} />
           <Route path="/gestao/tarefas" element={<ProtectedRoute><GestaoTarefas /></ProtectedRoute>} />
           <Route path="/gestao/tarefas/:id" element={<ProtectedRoute><TarefaDetalhe /></ProtectedRoute>} />
