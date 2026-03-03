@@ -4,7 +4,8 @@ import {
   ArrowLeft, Shield, ListOrdered, HelpCircle, Database,
   Building2, Settings, Upload, Plus, Trash2, GripVertical,
   FileText, MessageSquare, Tag, Users, FolderOpen, Bell,
-  Package, Volume2, CalendarDays, Power, ChevronUp, ChevronDown, Zap
+  Package, Volume2, CalendarDays, Power, ChevronUp, ChevronDown,
+  FileSignature
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -144,7 +145,16 @@ const ACTION_ITEMS = [
   { id: "atribuir-departamento", label: "Atribuir Departamento", icon: Building2, color: "text-teal-500" },
   { id: "enviar-audio", label: "Enviar em Áudio", icon: Volume2, color: "text-indigo-500" },
   { id: "consultar-agenda", label: "Consultar Agenda", icon: CalendarDays, color: "text-cyan-500" },
+  { id: "enviar-contrato", label: "Enviar Contrato / Procuração", icon: FileSignature, color: "text-emerald-600" },
   { id: "desativar-agente", label: "Desativar Agente", icon: Power, color: "text-red-500" },
+];
+
+const CONTRACT_TEMPLATES = [
+  { value: "contrato-servicos", label: "📄 Contrato de Prestação de Serviços" },
+  { value: "procuracao", label: "📋 Procuração" },
+  { value: "contrato-honorarios", label: "💰 Contrato de Honorários" },
+  { value: "termo-acordo", label: "🤝 Termo de Acordo" },
+  { value: "contrato-personalizado", label: "✏️ Modelo Personalizado" },
 ];
 
 /* ─── Tab: Roteiro de Atendimento ─── */
@@ -281,7 +291,7 @@ Você gostaria que eu faça uma análise gratuita do seu caso para verificar se 
                   <button
                     key={action.id}
                     onClick={() => {
-                      if (action.id === "etiqueta") {
+                      if (action.id === "etiqueta" || action.id === "enviar-contrato") {
                         setSelectedAction(action.id);
                       } else {
                         insertAction(action.label);
@@ -302,7 +312,7 @@ Você gostaria que eu faça uma análise gratuita do seu caso para verificar se 
                 </Button>
               </div>
             </>
-          ) : (
+          ) : selectedAction === "etiqueta" ? (
             <>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Selecione a Etiqueta</p>
               <Select value={selectedTag} onValueChange={setSelectedTag}>
@@ -331,7 +341,48 @@ Você gostaria que eu faça uma análise gratuita do seu caso para verificar se 
                 </Button>
               </div>
             </>
-          )}
+          ) : selectedAction === "enviar-contrato" ? (
+            <>
+              <div className="space-y-3">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Enviar Contrato / Procuração via ZapSign</p>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
+                  <FileSignature className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                  <span className="text-[11px] text-muted-foreground">
+                    A IA coletará os dados do cliente e enviará o link de assinatura automaticamente
+                  </span>
+                </div>
+                <Select value={selectedTag} onValueChange={setSelectedTag}>
+                  <SelectTrigger className="h-10 text-sm bg-muted/20 border-border">
+                    <SelectValue placeholder="Selecione o modelo de documento..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONTRACT_TEMPLATES.map((t) => (
+                      <SelectItem key={t.value} value={t.value} className="text-xs">
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setSelectedAction(null); setSelectedTag(""); }}>
+                  Cancelar
+                </Button>
+                <Button
+                  size="sm"
+                  className="text-xs gap-1.5"
+                  disabled={!selectedTag}
+                  onClick={() => {
+                    const template = CONTRACT_TEMPLATES.find(t => t.value === selectedTag);
+                    insertActionWithTag("Enviar Contrato/Procuração via ZapSign", template?.label || selectedTag);
+                  }}
+                >
+                  <FileSignature className="w-3.5 h-3.5" />
+                  Inserir Ação
+                </Button>
+              </div>
+            </>
+          ) : null}
         </div>
       )}
     </div>
