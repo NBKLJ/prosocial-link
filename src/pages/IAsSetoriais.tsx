@@ -1,15 +1,16 @@
 import { useState, useMemo } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import {
-  Brain, Search, Plus, Power, ChevronDown, ChevronRight,
+  Brain, Search, Power, ChevronDown, ChevronRight,
   Wand2, Settings2, LayoutGrid, AlertTriangle, Link2,
   DollarSign, Headphones
 } from "lucide-react";
 import CreationWizard from "@/components/ias/CreationWizard";
 import AdvancedCreator from "@/components/ias/AdvancedCreator";
+import ModelosPage from "@/components/ias/ModelosPage";
 import IADetailPanel from "@/components/ias/IADetailPanel";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+
 import { ProGate } from "@/components/ui/ProGate";
 import { ProBadge } from "@/components/ui/ProBadge";
 import { Input } from "@/components/ui/input";
@@ -156,6 +157,7 @@ const IAsSetoriais = () => {
   const [selectedSectorId, setSelectedSectorId] = useState<string | null>(null);
   const [showWizard, setShowWizard] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showModelos, setShowModelos] = useState(false);
 
   const selectedSector = sectors.find(s => s.id === selectedSectorId) || null;
 
@@ -173,6 +175,33 @@ const IAsSetoriais = () => {
   const inactiveSectors = filtered.filter(s => !s.active);
 
   const hasUnlinkedActive = sectors.some(s => s.active && !s.connectionId);
+
+  if (showModelos) {
+    return (
+      <AppLayout>
+        <ProGate title="IAs Setoriais" description="Configure IAs personalizadas por setor com o Plano Pro.">
+          <ModelosPage
+            onClose={() => setShowModelos(false)}
+            onSelectModel={(modelo) => {
+              const newSector: SectorIA = {
+                id: Date.now().toString(),
+                name: modelo.nome,
+                icon: DollarSign,
+                description: modelo.descricao,
+                prompt: "",
+                tone: "amigavel",
+                active: true,
+                triggers: false, rules: false, steps: true, faq: modelo.faqs > 0,
+                connectionId: null,
+              };
+              setSectors(prev => [...prev, newSector]);
+              setShowModelos(false);
+            }}
+          />
+        </ProGate>
+      </AppLayout>
+    );
+  }
 
   if (showAdvanced) {
     return (
@@ -280,13 +309,9 @@ const IAsSetoriais = () => {
                 className="pl-9 h-10 text-sm bg-card border-border"
               />
             </div>
-            <Button variant="outline" size="default" className="gap-2 text-xs font-semibold">
+            <Button variant="outline" size="default" className="gap-2 text-xs font-semibold" onClick={() => setShowModelos(true)}>
               <LayoutGrid className="w-4 h-4" />
               Modelos
-            </Button>
-            <Button size="default" className="gap-2 text-xs font-semibold">
-              <Plus className="w-4 h-4" />
-              Criar do zero
             </Button>
           </div>
 
