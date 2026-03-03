@@ -5,6 +5,7 @@ import {
   Wand2, Settings2, LayoutGrid, AlertTriangle, Link2,
   DollarSign, Headphones
 } from "lucide-react";
+import IADetailPanel from "@/components/ias/IADetailPanel";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ProGate } from "@/components/ui/ProGate";
@@ -56,12 +57,14 @@ const IACard = ({
   sector,
   onToggle,
   onConnectionChange,
+  onClick,
 }: {
   sector: SectorIA;
   onToggle: () => void;
   onConnectionChange: (value: string) => void;
+  onClick: () => void;
 }) => (
-  <div className="rounded-xl border border-border bg-card p-5 space-y-4 transition-shadow hover:shadow-md">
+  <div className="rounded-xl border border-border bg-card p-5 space-y-4 transition-shadow hover:shadow-md cursor-pointer" onClick={onClick}>
     {/* Header */}
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -148,6 +151,9 @@ const IAsSetoriais = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeOpen, setActiveOpen] = useState(true);
   const [inactiveOpen, setInactiveOpen] = useState(false);
+  const [selectedSectorId, setSelectedSectorId] = useState<string | null>(null);
+
+  const selectedSector = sectors.find(s => s.id === selectedSectorId) || null;
 
   const updateSector = (id: string, updates: Partial<SectorIA>) => {
     setSectors(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
@@ -163,6 +169,20 @@ const IAsSetoriais = () => {
   const inactiveSectors = filtered.filter(s => !s.active);
 
   const hasUnlinkedActive = sectors.some(s => s.active && !s.connectionId);
+
+  if (selectedSector) {
+    return (
+      <AppLayout>
+        <ProGate title="IAs Setoriais" description="Configure IAs personalizadas por setor com o Plano Pro.">
+          <IADetailPanel
+            sector={selectedSector}
+            onBack={() => setSelectedSectorId(null)}
+            onUpdate={(updates) => updateSector(selectedSector.id, updates)}
+          />
+        </ProGate>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -187,7 +207,6 @@ const IAsSetoriais = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Assistente */}
               <button
                 onClick={() => toast.info("Assistente de criação em breve!")}
                 className="group rounded-xl border border-border bg-muted/20 p-5 text-left transition-all hover:border-primary/30 hover:bg-primary/5"
@@ -204,7 +223,6 @@ const IAsSetoriais = () => {
                 </p>
               </button>
 
-              {/* Avançada */}
               <button
                 onClick={() => toast.info("Criação avançada em breve!")}
                 className="group rounded-xl border border-border bg-muted/20 p-5 text-left transition-all hover:border-primary/30 hover:bg-primary/5"
@@ -271,6 +289,7 @@ const IAsSetoriais = () => {
                       sector={s}
                       onToggle={() => updateSector(s.id, { active: false })}
                       onConnectionChange={(v) => updateSector(s.id, { connectionId: v })}
+                      onClick={() => setSelectedSectorId(s.id)}
                     />
                   ))}
                 </div>
@@ -297,6 +316,7 @@ const IAsSetoriais = () => {
                       sector={s}
                       onToggle={() => updateSector(s.id, { active: true })}
                       onConnectionChange={(v) => updateSector(s.id, { connectionId: v })}
+                      onClick={() => setSelectedSectorId(s.id)}
                     />
                   ))}
                 </div>
