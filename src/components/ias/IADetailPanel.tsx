@@ -173,7 +173,7 @@ Você gostaria que eu faça uma análise gratuita do seu caso para verificar se 
           <Zap className="w-3.5 h-3.5" /> Decisão Inteligente
         </Button>
         <span className="text-xs text-muted-foreground ml-2">
-          Digite <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">/</kbd> no editor para abrir o menu de ações
+          Digite <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">=</kbd> no editor para abrir o menu de ações
         </span>
         <Button size="sm" variant="outline" className="gap-1.5 text-xs ml-auto">
           <FileText className="w-3.5 h-3.5" /> Salvar
