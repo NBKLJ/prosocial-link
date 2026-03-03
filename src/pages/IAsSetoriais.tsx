@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/AppLayout";
 import {
   Brain, Search, Power, ChevronDown, ChevronRight,
   Wand2, Settings2, LayoutGrid, AlertTriangle, Link2,
-  DollarSign, Headphones
+  DollarSign, Headphones, ShieldCheck, ArrowRightLeft
 } from "lucide-react";
 import CreationWizard from "@/components/ias/CreationWizard";
 import AdvancedCreator from "@/components/ias/AdvancedCreator";
@@ -34,6 +34,7 @@ interface SectorIA {
   steps: boolean;
   faq: boolean;
   connectionId: string | null;
+  isReception?: boolean;
 }
 
 const CONNECTIONS = [
@@ -67,23 +68,37 @@ const IACard = ({
   onConnectionChange: (value: string) => void;
   onClick: () => void;
 }) => (
-  <div className="rounded-xl border border-border bg-card p-5 space-y-4 transition-shadow hover:shadow-md cursor-pointer" onClick={onClick}>
+  <div className={cn(
+    "rounded-xl border p-5 space-y-4 transition-shadow hover:shadow-md cursor-pointer",
+    sector.isReception
+      ? "border-primary/30 bg-gradient-to-br from-primary/5 to-card"
+      : "border-border bg-card"
+  )} onClick={onClick}>
     {/* Header */}
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
         <div className={cn(
           "w-10 h-10 rounded-lg flex items-center justify-center",
-          sector.active ? "bg-primary/10" : "bg-muted"
+          sector.isReception
+            ? "bg-primary/15"
+            : sector.active ? "bg-primary/10" : "bg-muted"
         )}>
           <sector.icon className={cn("w-5 h-5", sector.active ? "text-primary" : "text-muted-foreground")} />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-foreground">{sector.name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold text-foreground">{sector.name}</h3>
+            {sector.isReception && (
+              <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] px-1.5 py-0 font-bold hover:bg-primary/10">
+                Obrigatória
+              </Badge>
+            )}
+          </div>
           <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{sector.description}</p>
         </div>
       </div>
       <button
-        onClick={onToggle}
+        onClick={(e) => { e.stopPropagation(); onToggle(); }}
         className={cn(
           "w-9 h-9 rounded-lg flex items-center justify-center border transition-all",
           sector.active
@@ -95,6 +110,16 @@ const IACard = ({
         <Power className="w-4 h-4" />
       </button>
     </div>
+
+    {/* Reception-specific info */}
+    {sector.isReception && (
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+        <ArrowRightLeft className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+        <span className="text-[11px] text-muted-foreground">
+          Direciona o cliente para as <span className="font-semibold text-foreground">IAs setoriais</span> ou <span className="font-semibold text-foreground">colaboradores</span>
+        </span>
+      </div>
+    )}
 
     {/* Status Indicators */}
     <div className="grid grid-cols-2 gap-1.5">
@@ -112,9 +137,9 @@ const IACard = ({
       </div>
       <Select
         value={sector.connectionId || ""}
-        onValueChange={onConnectionChange}
+        onValueChange={(v) => { onConnectionChange(v); }}
       >
-        <SelectTrigger className="h-9 text-xs bg-muted/30 border-border">
+        <SelectTrigger className="h-9 text-xs bg-muted/30 border-border" onClick={(e) => e.stopPropagation()}>
           <SelectValue placeholder="Selecione uma conexão..." />
         </SelectTrigger>
         <SelectContent>
@@ -131,6 +156,13 @@ const IACard = ({
 
 const IAsSetoriais = () => {
   const [sectors, setSectors] = useState<SectorIA[]>([
+    {
+      id: "recepcao", name: "IA de Recepção", icon: ShieldCheck,
+      description: "Recepciona o cliente e direciona para a IA setorial adequada ou para um colaborador.",
+      prompt: "", tone: "amigavel", active: true,
+      triggers: true, rules: true, steps: true, faq: false, connectionId: "conn-1",
+      isReception: true,
+    },
     {
       id: "comercial", name: "Comercial", icon: DollarSign,
       description: "IA focada em vendas, qualificação de leads e apresentação de produtos.",
@@ -171,8 +203,11 @@ const IAsSetoriais = () => {
     return sectors.filter(s => s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q));
   }, [sectors, searchQuery]);
 
-  const activeSectors = filtered.filter(s => s.active);
-  const inactiveSectors = filtered.filter(s => !s.active);
+  const sortReceptionFirst = (list: SectorIA[]) =>
+    [...list].sort((a, b) => (a.isReception ? -1 : b.isReception ? 1 : 0));
+
+  const activeSectors = sortReceptionFirst(filtered.filter(s => s.active));
+  const inactiveSectors = sortReceptionFirst(filtered.filter(s => !s.active));
 
   const hasUnlinkedActive = sectors.some(s => s.active && !s.connectionId);
 
