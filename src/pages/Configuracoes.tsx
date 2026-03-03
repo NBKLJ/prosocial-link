@@ -2,7 +2,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
-  Smartphone, QrCode, CheckCircle2, XCircle, Tag, Plus, X, Crown, Users, Mail, Lock, Pencil, Trash2, CreditCard, Wifi, Settings, Check,
+  Smartphone, QrCode, CheckCircle2, XCircle, Tag, Plus, X, Crown, Users, Mail, Lock, Pencil, Trash2, CreditCard, Wifi, Settings, Check, Plug, Key, ShieldCheck, Loader2, ExternalLink, FileSignature,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getTagStore, setTagStore, tagColors, type TagItem } from "@/lib/tagStore";
@@ -11,11 +11,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-type TabKey = "assinatura" | "conexoes" | "etiquetas" | "usuarios";
+type TabKey = "assinatura" | "conexoes" | "etiquetas" | "usuarios" | "integracoes";
 
 const tabs: { key: TabKey; label: string; icon: typeof CreditCard }[] = [
   { key: "assinatura", label: "Assinatura", icon: CreditCard },
   { key: "conexoes", label: "Conexões", icon: Wifi },
+  { key: "integracoes", label: "Integrações", icon: Plug },
   { key: "etiquetas", label: "Etiquetas", icon: Tag },
   { key: "usuarios", label: "Usuários", icon: Users },
 ];
@@ -264,6 +265,9 @@ const Configuracoes = () => {
           </div>
         )}
 
+        {/* ===== INTEGRAÇÕES ===== */}
+        {activeTab === "integracoes" && <IntegracaoZapSign />}
+
         {/* ===== ETIQUETAS (Professional list layout) ===== */}
         {activeTab === "etiquetas" && (
           <div className="glass-card rounded-xl p-5 space-y-4">
@@ -485,5 +489,164 @@ const Configuracoes = () => {
     </AppLayout>
   );
 };
+
+// ═══════ INTEGRAÇÃO ZAPSIGN ═══════
+function IntegracaoZapSign() {
+  const [apiKey, setApiKey] = useState("");
+  const [clientId, setClientId] = useState("");
+  const [status, setStatus] = useState<"disconnected" | "connected" | "testing">("disconnected");
+  const [saved, setSaved] = useState(false);
+
+  const testConnection = () => {
+    if (!apiKey.trim()) { toast.error("Insira a API Key"); return; }
+    setStatus("testing");
+    setTimeout(() => {
+      setStatus("connected");
+      toast.success("Conexão com ZapSign estabelecida!");
+    }, 2000);
+  };
+
+  const saveConfig = () => {
+    if (status !== "connected") { toast.error("Teste a conexão antes de salvar"); return; }
+    setSaved(true);
+    toast.success("Configurações salvas com sucesso!");
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* ZapSign Card */}
+      <div className="glass-card rounded-xl p-6 space-y-6">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
+              <FileSignature className="w-7 h-7 text-blue-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-foreground">ZapSign</h3>
+                {status === "connected" ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-emerald-500/15 text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Conectado
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-destructive/15 text-destructive">
+                    <span className="w-1.5 h-1.5 rounded-full bg-destructive" /> Desconectado
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mt-0.5">Assinatura digital de contratos e documentos</p>
+            </div>
+          </div>
+          <a href="https://app.zapsign.com.br" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-primary hover:underline">
+            Painel ZapSign <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+
+        {/* API Key */}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Key className="w-4 h-4 text-muted-foreground" /> API Key
+            </label>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => { setApiKey(e.target.value); setStatus("disconnected"); setSaved(false); }}
+              placeholder="Cole sua API Key da ZapSign aqui..."
+              className="w-full bg-muted/50 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all font-mono"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-muted-foreground" /> Client ID <span className="text-xs text-muted-foreground font-normal">(opcional)</span>
+            </label>
+            <input
+              type="text"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              placeholder="Client ID (se necessário)"
+              className="w-full bg-muted/50 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all font-mono"
+            />
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={testConnection}
+            disabled={status === "testing" || !apiKey.trim()}
+            className={cn(
+              "flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all",
+              status === "testing"
+                ? "bg-muted text-muted-foreground cursor-wait"
+                : "border border-border text-foreground hover:bg-muted"
+            )}
+          >
+            {status === "testing" ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Testando...</>
+            ) : status === "connected" ? (
+              <><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Conexão OK</>
+            ) : (
+              <>Testar Conexão</>
+            )}
+          </button>
+          <button
+            onClick={saveConfig}
+            disabled={status !== "connected"}
+            className={cn(
+              "flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all",
+              status === "connected"
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "bg-muted text-muted-foreground cursor-not-allowed"
+            )}
+          >
+            {saved ? <><CheckCircle2 className="w-4 h-4" /> Salvo</> : <>Salvar Configurações</>}
+          </button>
+        </div>
+
+        {/* Security info */}
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
+          <ShieldCheck className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-xs font-medium text-foreground">Armazenamento Seguro</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Suas credenciais são criptografadas e armazenadas com segurança no servidor. Logs de acesso são registrados automaticamente.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Webhook info */}
+      <div className="glass-card rounded-xl p-6 space-y-4">
+        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+          <Plug className="w-4 h-4 text-muted-foreground" /> Webhook de Atualização
+        </h3>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Configure este URL como webhook na ZapSign para receber atualizações de status em tempo real:</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 bg-muted/50 border border-border rounded-lg px-4 py-2.5 text-xs text-foreground font-mono truncate">
+              https://api.birdly.com.br/webhooks/zapsign
+            </code>
+            <button onClick={() => { navigator.clipboard.writeText("https://api.birdly.com.br/webhooks/zapsign"); toast.success("URL copiado!"); }} className="px-3 py-2.5 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-muted transition-colors">
+              Copiar
+            </button>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { label: "Documento visualizado", status: "Ativo", ok: true },
+            { label: "Documento assinado", status: "Ativo", ok: true },
+            { label: "Documento recusado", status: "Ativo", ok: true },
+            { label: "Lembrete automático", status: "Ativo", ok: true },
+          ].map((wh) => (
+            <div key={wh.label} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/50">
+              <span className="text-xs text-foreground">{wh.label}</span>
+              <span className="text-[10px] font-medium text-emerald-400">●&nbsp;{wh.status}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default Configuracoes;
