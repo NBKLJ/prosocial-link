@@ -135,21 +135,29 @@ const IACard = ({
         <Link2 className="w-3 h-3 text-muted-foreground" />
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Vincular Conexão</span>
       </div>
-      <Select
-        value={sector.connectionId || ""}
-        onValueChange={(v) => { onConnectionChange(v); }}
-      >
-        <SelectTrigger className="h-9 text-xs bg-muted/30 border-border" onClick={(e) => e.stopPropagation()}>
-          <SelectValue placeholder="Selecione uma conexão..." />
-        </SelectTrigger>
-        <SelectContent>
-          {CONNECTIONS.map((c) => (
-            <SelectItem key={c.id} value={c.id} className="text-xs">
-              {c.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {sector.isReception ? (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+          <ShieldCheck className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+          <span className="text-[11px] text-foreground font-medium">Todas as conexões</span>
+          <span className="text-[10px] text-muted-foreground ml-auto">{CONNECTIONS.length} ativas</span>
+        </div>
+      ) : (
+        <Select
+          value={sector.connectionId || ""}
+          onValueChange={(v) => { onConnectionChange(v); }}
+        >
+          <SelectTrigger className="h-9 text-xs bg-muted/30 border-border" onClick={(e) => e.stopPropagation()}>
+            <SelectValue placeholder="Selecione uma conexão..." />
+          </SelectTrigger>
+          <SelectContent>
+            {CONNECTIONS.map((c) => (
+              <SelectItem key={c.id} value={c.id} className="text-xs">
+                {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   </div>
 );
