@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ── TYPES ─────────────────────────────────────────────────
-type ContractStatus = "draft" | "sent" | "signed" | "expired" | "cancelled";
+type ContractStatus = "draft" | "sent" | "viewed" | "signed" | "declined" | "expired" | "cancelled";
 
 interface Contract {
   id: string;
@@ -24,16 +24,21 @@ interface Contract {
   createdAt: string;
   expiresAt?: string;
   signedAt?: string;
+  viewedAt?: string;
+  zapsignId?: string;
+  sentBy?: string;
 }
 
 // ── MOCK DATA ─────────────────────────────────────────────
 const MOCK_CONTRACTS: Contract[] = [
-  { id: "CTR-001", title: "Contrato de Prestação de Serviços", client: "TechCorp Ltda", type: "contrato", status: "signed", value: "R$ 15.000,00", createdAt: "2026-02-20", signedAt: "2026-02-22" },
-  { id: "CTR-002", title: "Contrato de Consultoria", client: "AutoFlow S.A.", type: "contrato", status: "sent", value: "R$ 8.500,00", createdAt: "2026-02-25", expiresAt: "2026-03-10" },
+  { id: "CTR-001", title: "Contrato de Prestação de Serviços", client: "TechCorp Ltda", type: "contrato", status: "signed", value: "R$ 15.000,00", createdAt: "2026-02-20", signedAt: "2026-02-22", zapsignId: "zs-a1b2c3", sentBy: "Ana Paula" },
+  { id: "CTR-002", title: "Contrato de Consultoria", client: "AutoFlow S.A.", type: "contrato", status: "viewed", value: "R$ 8.500,00", createdAt: "2026-02-25", expiresAt: "2026-03-10", viewedAt: "2026-02-26", zapsignId: "zs-d4e5f6", sentBy: "Carlos Silva" },
   { id: "CTR-003", title: "Procuração Administrativa", client: "Maria Silva", type: "procuracao", status: "draft", createdAt: "2026-02-27" },
-  { id: "CTR-004", title: "Aditivo Contratual #1", client: "DataSync Ltda", type: "aditivo", status: "signed", value: "R$ 3.200,00", createdAt: "2026-02-15", signedAt: "2026-02-18" },
-  { id: "CTR-005", title: "Distrato de Serviço", client: "CloudNex Ltda", type: "distrato", status: "expired", createdAt: "2026-01-10", expiresAt: "2026-02-10" },
-  { id: "CTR-006", title: "Contrato de Licenciamento", client: "SmartOps Inc", type: "contrato", status: "cancelled", value: "R$ 22.000,00", createdAt: "2026-02-01" },
+  { id: "CTR-004", title: "Aditivo Contratual #1", client: "DataSync Ltda", type: "aditivo", status: "signed", value: "R$ 3.200,00", createdAt: "2026-02-15", signedAt: "2026-02-18", zapsignId: "zs-g7h8i9", sentBy: "Ana Paula" },
+  { id: "CTR-005", title: "Distrato de Serviço", client: "CloudNex Ltda", type: "distrato", status: "declined", createdAt: "2026-01-10", expiresAt: "2026-02-10", zapsignId: "zs-j0k1l2", sentBy: "Carlos Silva" },
+  { id: "CTR-006", title: "Contrato de Licenciamento", client: "SmartOps Inc", type: "contrato", status: "sent", value: "R$ 22.000,00", createdAt: "2026-02-28", zapsignId: "zs-m3n4o5", sentBy: "Ana Paula" },
+  { id: "CTR-007", title: "Contrato de Suporte Mensal", client: "Nova Digital", type: "contrato", status: "expired", value: "R$ 4.800,00", createdAt: "2026-01-05", expiresAt: "2026-02-05", sentBy: "Carlos Silva" },
+  { id: "CTR-008", title: "NDA Confidencialidade", client: "StartUp XYZ", type: "contrato", status: "cancelled", createdAt: "2026-02-01", sentBy: "Ana Paula" },
 ];
 
 const TEMPLATES = [
@@ -49,9 +54,11 @@ const TEMPLATES = [
 const statusConfig: Record<ContractStatus, { label: string; color: string; icon: typeof CheckCircle2 }> = {
   draft: { label: "Rascunho", color: "bg-slate-500/15 text-slate-400 border-slate-500/20", icon: Clock },
   sent: { label: "Enviado", color: "bg-blue-500/15 text-blue-400 border-blue-500/20", icon: Send },
+  viewed: { label: "Visualizado", color: "bg-purple-500/15 text-purple-400 border-purple-500/20", icon: Eye },
   signed: { label: "Assinado", color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20", icon: CheckCircle2 },
+  declined: { label: "Recusado", color: "bg-red-500/15 text-red-400 border-red-500/20", icon: XCircle },
   expired: { label: "Expirado", color: "bg-amber-500/15 text-amber-400 border-amber-500/20", icon: AlertCircle },
-  cancelled: { label: "Cancelado", color: "bg-red-500/15 text-red-400 border-red-500/20", icon: XCircle },
+  cancelled: { label: "Cancelado", color: "bg-red-500/15 text-red-300 border-red-500/20", icon: XCircle },
 };
 
 const typeLabels: Record<string, string> = {
@@ -62,14 +69,17 @@ const typeLabels: Record<string, string> = {
 function MetricCards({ contracts }: { contracts: Contract[] }) {
   const total = contracts.length;
   const signed = contracts.filter(c => c.status === "signed").length;
-  const pending = contracts.filter(c => c.status === "sent").length;
-  const drafts = contracts.filter(c => c.status === "draft").length;
+  const pending = contracts.filter(c => c.status === "sent" || c.status === "viewed").length;
+  const declined = contracts.filter(c => c.status === "declined").length;
+  const viewed = contracts.filter(c => c.status === "viewed").length;
+
+  const signRate = total > 0 ? Math.round((signed / total) * 100) : 0;
 
   const metrics = [
     { label: "Total de Documentos", value: total, icon: FileText, accent: "text-[hsl(var(--primary))]" },
-    { label: "Assinados", value: signed, icon: CheckCircle2, accent: "text-emerald-400" },
-    { label: "Aguardando Assinatura", value: pending, icon: Send, accent: "text-blue-400" },
-    { label: "Rascunhos", value: drafts, icon: Clock, accent: "text-slate-400" },
+    { label: "Assinados", value: signed, icon: CheckCircle2, accent: "text-emerald-400", sub: `${signRate}% taxa` },
+    { label: "Aguardando", value: pending, icon: Send, accent: "text-blue-400", sub: `${viewed} visualizados` },
+    { label: "Recusados", value: declined, icon: XCircle, accent: "text-red-400" },
   ];
 
   return (
@@ -88,6 +98,7 @@ function MetricCards({ contracts }: { contracts: Contract[] }) {
           <div>
             <p className="text-2xl font-bold text-foreground">{m.value}</p>
             <p className="text-xs text-muted-foreground">{m.label}</p>
+            {(m as any).sub && <p className="text-[10px] text-muted-foreground/70">{(m as any).sub}</p>}
           </div>
         </motion.div>
       ))}
@@ -491,7 +502,7 @@ export default function Contratos() {
             </div>
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-muted-foreground" />
-              {(["all", "draft", "sent", "signed", "expired", "cancelled"] as const).map(s => (
+              {(["all", "draft", "sent", "viewed", "signed", "declined", "expired", "cancelled"] as const).map(s => (
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}

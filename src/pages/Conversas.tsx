@@ -6,7 +6,7 @@ import {
   Search, Check, CheckCheck, Mic, X, Send as SendIcon,
   Smile, Image, FileText, Sticker, Plus,
   Trash2, Pause, Play, CircleStop, ArrowRightLeft, ChevronDown, CircleX,
-  Phone, Filter, Clock, User, MessageCircle, ListTodo,
+  Phone, Filter, Clock, User, MessageCircle, ListTodo, FileSignature,
 } from "lucide-react";
 import { getAudioStore } from "@/pages/DisparoAudio";
 import { getMensagemStore } from "@/pages/DisparoMensagem";
@@ -17,6 +17,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { SendContractDialog } from "@/components/conversas/SendContractDialog";
 
 type ConversationStatus = "aguardando" | "atendendo" | "finalizado";
 
@@ -112,6 +113,7 @@ const Conversas = () => {
   });
   const [showClientPanel, setShowClientPanel] = useState(false);
   const [removedConvIds, setRemovedConvIds] = useState<string[]>([]);
+  const [showContractDialog, setShowContractDialog] = useState(false);
 
   // Task from message
   const [showTaskDialog, setShowTaskDialog] = useState(false);
@@ -458,7 +460,16 @@ const Conversas = () => {
                   <Phone className="w-4 h-4" />
                 </button>
 
-                {/* Transfer */}
+                {/* Send Contract */}
+                <button
+                  onClick={() => setShowContractDialog(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                  title="Enviar contrato via ZapSign"
+                >
+                  <FileSignature className="w-4 h-4" />
+                  Contrato
+                </button>
+
                 <button
                   onClick={() => {
                     setTransferConnection(connections[0]);
@@ -683,6 +694,7 @@ const Conversas = () => {
                     { icon: Mic, label: "Áudios Programados", color: "text-primary", action: () => { setShowAttach(false); setShowAudioList(true); setShowMensagemList(false); } },
                     { icon: MessageCircle, label: "Mensagens Programadas", color: "text-emerald-500", action: () => { setShowAttach(false); setShowMensagemList(true); setShowAudioList(false); } },
                     { icon: Sticker, label: "Figurinha", color: "text-pink-500" },
+                    { icon: FileSignature, label: "Enviar Contrato", color: "text-cyan-500", action: () => { setShowAttach(false); setShowContractDialog(true); } },
                   ].map((item) => (
                     <button
                       key={item.label}
@@ -883,6 +895,23 @@ const Conversas = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Send Contract Dialog */}
+      <SendContractDialog
+        open={showContractDialog}
+        onOpenChange={setShowContractDialog}
+        contactName={selectedConv?.name}
+        contactPhone={selectedConv?.phone}
+        contactEmail=""
+        onSend={(data) => {
+          const now = new Date();
+          const time = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+          setChatMessages((prev) => [
+            ...prev,
+            { id: `contract-${Date.now()}`, text: `📄 Contrato enviado para assinatura via ZapSign — ${data.signers.map(s => s.name).join(", ")}`, time, sent: true, read: false },
+          ]);
+        }}
+      />
     </AppLayout>
   );
 };
