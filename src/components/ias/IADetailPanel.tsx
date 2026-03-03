@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
-  ArrowLeft, Shield, ListOrdered, HelpCircle, Database,
+  ArrowLeft, Shield, ListOrdered, HelpCircle, Database, Zap,
   Building2, Settings, Upload, Plus, Trash2, GripVertical,
   FileText, MessageSquare
 } from "lucide-react";
@@ -133,42 +133,61 @@ const RegrasGeraisTab = ({ sector, onUpdate }: { sector: SectorIA; onUpdate: (u:
 
 /* ─── Tab: Roteiro de Atendimento ─── */
 const RoteiroTab = () => {
-  const [steps, setSteps] = useState([
-    { id: "1", title: "Saudação", description: "Cumprimentar o cliente e se apresentar", order: 1 },
-    { id: "2", title: "Identificação", description: "Perguntar nome e motivo do contato", order: 2 },
-    { id: "3", title: "Qualificação", description: "Entender a necessidade e perfil do cliente", order: 3 },
-    { id: "4", title: "Apresentação", description: "Mostrar a solução mais adequada", order: 4 },
-    { id: "5", title: "Encerramento", description: "Agendar próximo passo ou encaminhar", order: 5 },
-  ]);
+  const [content, setContent] = useState(
+`**Recepção**
+🚩 Caso o cliente envie qualquer mensagem inicial (pergunta, relato de doença etc.):
+👉 Ignorar o conteúdo e **iniciar sempre com a mensagem institucional abaixo**.
+
+💬 Mensagem inicial:
+"Olá! Seja bem-vindo ao escritório [[NOME_DO_ESCRITORIO]], CNPJ: [[CNPJ_DO_ESCRITORIO]].
+
+Somos especialistas em BPC/LOAS (Benefício de Prestação Continuada) e atendemos clientes em todo o Brasil.
+
+Pra eu te atender melhor, qual é o seu primeiro nome?"
+
+---
+
+🚩 Caso o cliente informe o nome:
+
+💬 Mensagem de apresentação:
+"Oi, [Nome]! Eu sou [[NOME_DO_AGENTE]], analista jurídica da [[NOME_DO_ESCRITORIO]].
+
+O BPC/LOAS é um benefício do governo que paga R$ 1.518,00 por mês (1 salário mínimo) para pessoas com deficiência, doença de longo prazo ou idosos com 65 anos ou mais que tenham baixa renda familiar.
+
+Você gostaria que eu faça uma análise gratuita do seu caso para verificar se pode ter direito?"
+
+👉 Após essa mensagem, avançar para **Etapa 2 – Qualificação**, onde será tratada a resposta (aceita / dúvida / recusa).`
+  );
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-border bg-card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-sm font-bold text-foreground">Etapas do Atendimento</h3>
-            <p className="text-[11px] text-muted-foreground mt-0.5">A IA seguirá esse roteiro durante a conversa</p>
-          </div>
-          <Button size="sm" variant="outline" className="gap-1.5 text-xs">
-            <Plus className="w-3.5 h-3.5" /> Nova etapa
-          </Button>
-        </div>
-        <div className="space-y-2">
-          {steps.map((step, i) => (
-            <div key={step.id} className="flex items-start gap-3 p-4 rounded-lg bg-muted/20 border border-border/50 group">
-              <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0 mt-0.5">
-                {i + 1}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-semibold text-foreground">{step.title}</h4>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{step.description}</p>
-              </div>
-              <button className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive mt-1">
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
-        </div>
+      {/* Action bar */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button size="sm" className="gap-1.5 text-xs bg-primary hover:bg-primary/90">
+          <MessageSquare className="w-3.5 h-3.5" /> Situação/Mensagem
+        </Button>
+        <Button size="sm" className="gap-1.5 text-xs bg-primary hover:bg-primary/90">
+          <Upload className="w-3.5 h-3.5" /> Adicionar Mídia
+        </Button>
+        <Button size="sm" className="gap-1.5 text-xs bg-primary hover:bg-primary/90">
+          <Zap className="w-3.5 h-3.5" /> Decisão Inteligente
+        </Button>
+        <span className="text-xs text-muted-foreground ml-2">
+          Digite <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-mono">/</kbd> no editor para abrir o menu de ações
+        </span>
+        <Button size="sm" variant="outline" className="gap-1.5 text-xs ml-auto">
+          <FileText className="w-3.5 h-3.5" /> Salvar
+        </Button>
+      </div>
+
+      {/* Editor area */}
+      <div className="rounded-xl border border-border bg-card">
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          className="w-full min-h-[500px] p-6 text-sm text-foreground bg-transparent resize-none focus:outline-none leading-relaxed font-mono"
+          placeholder="Escreva o roteiro de atendimento da IA aqui..."
+        />
       </div>
     </div>
   );
