@@ -5,6 +5,7 @@ import {
   Wand2, Settings2, LayoutGrid, AlertTriangle, Link2,
   DollarSign, Headphones
 } from "lucide-react";
+import CreationWizard from "@/components/ias/CreationWizard";
 import IADetailPanel from "@/components/ias/IADetailPanel";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -152,6 +153,7 @@ const IAsSetoriais = () => {
   const [activeOpen, setActiveOpen] = useState(true);
   const [inactiveOpen, setInactiveOpen] = useState(false);
   const [selectedSectorId, setSelectedSectorId] = useState<string | null>(null);
+  const [showWizard, setShowWizard] = useState(false);
 
   const selectedSector = sectors.find(s => s.id === selectedSectorId) || null;
 
@@ -208,7 +210,7 @@ const IAsSetoriais = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
-                onClick={() => toast.info("Assistente de criação em breve!")}
+                onClick={() => setShowWizard(true)}
                 className="group rounded-xl border border-border bg-muted/20 p-5 text-left transition-all hover:border-primary/30 hover:bg-primary/5"
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -326,6 +328,30 @@ const IAsSetoriais = () => {
             </CollapsibleContent>
           </Collapsible>
         </div>
+
+        {showWizard && (
+          <CreationWizard
+            onClose={() => setShowWizard(false)}
+            onFinish={(wizardData) => {
+              const newSector: SectorIA = {
+                id: Date.now().toString(),
+                name: wizardData.nomeAgente || "Novo Agente",
+                icon: DollarSign,
+                description: `IA para ${wizardData.segmento || wizardData.segmentoCustom || "atendimento"}`,
+                prompt: wizardData.mensagemBoasVindas,
+                tone: (wizardData.tom as "formal" | "amigavel" | "tecnico") || "amigavel",
+                active: true,
+                triggers: false,
+                rules: wizardData.regras.filter(r => r).length > 0,
+                steps: false,
+                faq: wizardData.faqInicial.filter(f => f.pergunta).length > 0,
+                connectionId: null,
+              };
+              setSectors(prev => [...prev, newSector]);
+              setShowWizard(false);
+            }}
+          />
+        )}
       </ProGate>
     </AppLayout>
   );
