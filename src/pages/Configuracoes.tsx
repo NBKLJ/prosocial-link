@@ -2,7 +2,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
-  Smartphone, QrCode, CheckCircle2, XCircle, Tag, Plus, X, Crown, Users, Mail, Lock, Pencil, Trash2, CreditCard, Wifi, Settings, Check, Plug, Key, ShieldCheck, Loader2, ExternalLink, FileSignature,
+  Smartphone, QrCode, CheckCircle2, XCircle, Tag, Plus, X, Crown, Users, Pencil, Trash2, CreditCard, Wifi, Settings, Check, Plug, Key, ShieldCheck, Loader2, ExternalLink, FileSignature, Building2, Upload, Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getTagStore, setTagStore, tagColors, type TagItem } from "@/lib/tagStore";
@@ -11,19 +11,42 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-type TabKey = "assinatura" | "conexoes" | "etiquetas" | "usuarios" | "integracoes";
+type TabKey = "assinatura" | "conexoes" | "etiquetas" | "usuarios" | "integracoes" | "departamentos";
 
 const tabs: { key: TabKey; label: string; icon: typeof CreditCard }[] = [
   { key: "assinatura", label: "Assinatura", icon: CreditCard },
   { key: "conexoes", label: "Conexões", icon: Wifi },
   { key: "integracoes", label: "Integrações", icon: Plug },
   { key: "etiquetas", label: "Etiquetas", icon: Tag },
+  { key: "departamentos", label: "Departamentos", icon: Building2 },
   { key: "usuarios", label: "Usuários", icon: Users },
 ];
 
 const conexoes = [
   { id: "1", number: "BR 6699665813", name: "Comercial", description: "Serviços Comerciais...", status: "connected" as const, lastSync: "19/02/26 11:44" },
   { id: "2", number: "BR 2188885678", name: "Suporte", description: "Atendimento ao cliente...", status: "disconnected" as const, lastSync: "18/02/26 09:30" },
+];
+
+interface Department {
+  id: string;
+  name: string;
+  color: string;
+  membersCount: number;
+}
+
+const defaultDepartments: Department[] = [
+  { id: "1", name: "Gestão", color: "#6366f1", membersCount: 1 },
+  { id: "2", name: "Suporte", color: "#f59e0b", membersCount: 1 },
+  { id: "3", name: "Vendas", color: "#10b981", membersCount: 1 },
+  { id: "4", name: "Financeiro", color: "#ef4444", membersCount: 0 },
+  { id: "5", name: "Jurídico", color: "#8b5cf6", membersCount: 0 },
+];
+
+const avatarColors = [
+  "#ef4444", "#f87171", "#a855f7", "#7c3aed", "#6366f1",
+  "#3b82f6", "#06b6d4", "#22d3ee", "#14b8a6", "#10b981",
+  "#22c55e", "#84cc16", "#eab308", "#f59e0b",
+  "#f97316", "#fb923c", "#78716c", "#6b7280",
 ];
 
 interface UserItem {
@@ -33,12 +56,16 @@ interface UserItem {
   setor: string;
   role: string;
   avatar: string;
+  avatarColor?: string;
+  phone?: string;
+  conexao?: string;
+  restricaoHorario?: boolean;
 }
 
 const initialUsers: UserItem[] = [
-  { id: "1", name: "Admin Principal", email: "admin@empresa.com", setor: "Gestão", role: "Administrador", avatar: "AP" },
-  { id: "2", name: "Ana Paula", email: "ana@empresa.com", setor: "Suporte", role: "Atendente", avatar: "AP" },
-  { id: "3", name: "Carlos Silva", email: "carlos@empresa.com", setor: "Vendas", role: "Atendente", avatar: "CS" },
+  { id: "1", name: "Admin Principal", email: "admin@empresa.com", setor: "Gestão", role: "Administrador", avatar: "AP", avatarColor: "#6366f1" },
+  { id: "2", name: "Ana Paula", email: "ana@empresa.com", setor: "Suporte", role: "Atendente", avatar: "AP", avatarColor: "#f59e0b" },
+  { id: "3", name: "Carlos Silva", email: "carlos@empresa.com", setor: "Vendas", role: "Atendente", avatar: "CS", avatarColor: "#10b981" },
 ];
 
 const plans = [
@@ -83,10 +110,20 @@ const Configuracoes = () => {
   const [users, setUsers] = useState<UserItem[]>(initialUsers);
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
-  const [userForm, setUserForm] = useState({ name: "", email: "", password: "", setor: "", role: "Atendente" });
+  const [userForm, setUserForm] = useState({
+    name: "", email: "", password: "", setor: "", role: "Usuário comum",
+    phone: "", avatarColor: avatarColors[0], conexao: "", restricaoHorario: false,
+  });
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [editingTag, setEditingTag] = useState<string | null>(null);
   const [editTagColor, setEditTagColor] = useState("");
+
+  // Departments state
+  const [departments, setDepartments] = useState<Department[]>(defaultDepartments);
+  const [newDeptName, setNewDeptName] = useState("");
+  const [newDeptColor, setNewDeptColor] = useState(avatarColors[0]);
+  const [editingDept, setEditingDept] = useState<string | null>(null);
+  const [editDeptName, setEditDeptName] = useState("");
 
   // Get current user plan
   const userDataStr = localStorage.getItem("zapprobr_user");
@@ -105,21 +142,62 @@ const Configuracoes = () => {
     setEditingTag(null);
   };
 
-  const openNewUser = () => { setEditingUser(null); setUserForm({ name: "", email: "", password: "", setor: "", role: "Atendente" }); setShowUserModal(true); };
-  const openEditUser = (user: UserItem) => { setEditingUser(user); setUserForm({ name: user.name, email: user.email, password: "", setor: user.setor, role: user.role }); setShowUserModal(true); };
+  // Department functions
+  const addDepartment = () => {
+    if (newDeptName.trim() && !departments.some(d => d.name === newDeptName.trim())) {
+      setDepartments([...departments, { id: Date.now().toString(), name: newDeptName.trim(), color: newDeptColor, membersCount: 0 }]);
+      setNewDeptName("");
+      setNewDeptColor(avatarColors[0]);
+      toast.success("Departamento criado");
+    }
+  };
+  const removeDepartment = (id: string) => {
+    setDepartments(departments.filter(d => d.id !== id));
+    toast.success("Departamento removido");
+  };
+  const saveDeptEdit = (id: string) => {
+    if (editDeptName.trim()) {
+      setDepartments(departments.map(d => d.id === id ? { ...d, name: editDeptName.trim() } : d));
+      setEditingDept(null);
+      toast.success("Departamento atualizado");
+    }
+  };
+
+  const openNewUser = () => {
+    setEditingUser(null);
+    setUserForm({ name: "", email: "", password: "", setor: "", role: "Usuário comum", phone: "", avatarColor: avatarColors[0], conexao: "", restricaoHorario: false });
+    setShowUserModal(true);
+  };
+  const openEditUser = (user: UserItem) => {
+    setEditingUser(user);
+    setUserForm({
+      name: user.name, email: user.email, password: "", setor: user.setor, role: user.role,
+      phone: user.phone || "", avatarColor: user.avatarColor || avatarColors[0],
+      conexao: user.conexao || "", restricaoHorario: user.restricaoHorario || false,
+    });
+    setShowUserModal(true);
+  };
   const saveUser = () => {
     if (!userForm.name.trim() || !userForm.email.trim()) return;
     if (editingUser) {
-      setUsers(users.map((u) => u.id === editingUser.id ? { ...u, name: userForm.name, email: userForm.email, setor: userForm.setor, role: userForm.role } : u));
+      setUsers(users.map((u) => u.id === editingUser.id ? {
+        ...u, name: userForm.name, email: userForm.email, setor: userForm.setor,
+        role: userForm.role, avatarColor: userForm.avatarColor, phone: userForm.phone,
+        conexao: userForm.conexao, restricaoHorario: userForm.restricaoHorario,
+      } : u));
       toast.success("Usuário atualizado");
     } else {
-      const newUser = {
+      const newUser: UserItem = {
         id: Date.now().toString(),
         name: userForm.name,
         email: userForm.email,
         setor: userForm.setor,
         role: userForm.role,
         avatar: userForm.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase(),
+        avatarColor: userForm.avatarColor,
+        phone: userForm.phone,
+        conexao: userForm.conexao,
+        restricaoHorario: userForm.restricaoHorario,
       };
       setUsers([...users, newUser]);
 
@@ -152,13 +230,13 @@ const Configuracoes = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-muted/50 p-1 rounded-xl">
+        <div className="flex gap-1 bg-muted/50 p-1 rounded-xl overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
+                "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap",
                 activeTab === tab.key
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -268,10 +346,9 @@ const Configuracoes = () => {
         {/* ===== INTEGRAÇÕES ===== */}
         {activeTab === "integracoes" && <IntegracaoZapSign />}
 
-        {/* ===== ETIQUETAS (Professional list layout) ===== */}
+        {/* ===== ETIQUETAS ===== */}
         {activeTab === "etiquetas" && (
           <div className="glass-card rounded-xl p-5 space-y-4">
-            {/* Add tag form */}
             <div className="space-y-3">
               <div className="flex gap-2">
                 <input type="text" placeholder="Nome da etiqueta..." value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTag()}
@@ -294,14 +371,11 @@ const Configuracoes = () => {
                 )}
               </div>
             </div>
-
-            {/* Tag list (professional layout) */}
             <div className="space-y-1">
               {tags.map((tag) => (
                 <div key={tag.name} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors group">
                   <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: tag.color }} />
                   <span className="text-sm font-medium text-foreground flex-1">{tag.name}</span>
-
                   {editingTag === tag.name ? (
                     <div className="flex gap-1">
                       {tagColors.map(c => (
@@ -323,6 +397,88 @@ const Configuracoes = () => {
                 </div>
               ))}
               {tags.length === 0 && <p className="text-sm text-muted-foreground text-center py-6">Nenhuma etiqueta criada</p>}
+            </div>
+          </div>
+        )}
+
+        {/* ===== DEPARTAMENTOS ===== */}
+        {activeTab === "departamentos" && (
+          <div className="space-y-4">
+            <div className="glass-card rounded-xl p-5 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Gerenciar Departamentos</h3>
+                <p className="text-xs text-muted-foreground mt-1">Crie departamentos para organizar sua equipe. Ao adicionar um usuário, você poderá vinculá-lo a um departamento.</p>
+              </div>
+
+              {/* Add department */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Nome do departamento..."
+                  value={newDeptName}
+                  onChange={(e) => setNewDeptName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addDepartment()}
+                  className="flex-1 bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+                />
+                <button onClick={addDepartment} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
+                  <Plus className="w-4 h-4" /> Adicionar
+                </button>
+              </div>
+
+              {/* Color selector */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Cor:</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  {avatarColors.slice(0, 14).map((c) => (
+                    <button key={c} onClick={() => setNewDeptColor(c)} className={cn("w-7 h-7 rounded-full transition-all flex items-center justify-center", newDeptColor === c ? "ring-2 ring-offset-2 ring-offset-card scale-110" : "hover:scale-110")} style={{ backgroundColor: c }}>
+                      {newDeptColor === c && <Check className="w-3.5 h-3.5 text-white" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Department list */}
+              <div className="space-y-1 mt-2">
+                {departments.map((dept) => (
+                  <div key={dept.id} className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted/50 transition-colors group">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: dept.color + "20" }}>
+                      <Building2 className="w-5 h-5" style={{ color: dept.color }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {editingDept === dept.id ? (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={editDeptName}
+                            onChange={(e) => setEditDeptName(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && saveDeptEdit(dept.id)}
+                            className="flex-1 bg-muted/50 border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            autoFocus
+                          />
+                          <button onClick={() => saveDeptEdit(dept.id)} className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium">Salvar</button>
+                          <button onClick={() => setEditingDept(null)} className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:bg-muted">Cancelar</button>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-sm font-medium text-foreground">{dept.name}</p>
+                          <p className="text-xs text-muted-foreground">{dept.membersCount} {dept.membersCount === 1 ? "membro" : "membros"}</p>
+                        </>
+                      )}
+                    </div>
+                    {editingDept !== dept.id && (
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => { setEditingDept(dept.id); setEditDeptName(dept.name); }} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Editar">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => removeDepartment(dept.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="Remover">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {departments.length === 0 && <p className="text-sm text-muted-foreground text-center py-6">Nenhum departamento criado</p>}
+              </div>
             </div>
           </div>
         )}
@@ -351,12 +507,12 @@ const Configuracoes = () => {
                     <tr key={user.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full gradient-green flex items-center justify-center text-xs font-bold text-primary-foreground">{user.avatar}</div>
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: user.avatarColor || "#6366f1" }}>{user.avatar}</div>
                           <span className="text-sm font-medium text-foreground">{user.name}</span>
                         </div>
                       </td>
                       <td className="px-5 py-4 text-sm text-muted-foreground">{user.email}</td>
-                      <td className="px-5 py-4"><span className="text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground">{user.setor}</span></td>
+                      <td className="px-5 py-4"><span className="text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground">{user.setor || "—"}</span></td>
                       <td className="px-5 py-4">
                         <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", user.role === "Administrador" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{user.role}</span>
                       </td>
@@ -375,54 +531,169 @@ const Configuracoes = () => {
         )}
       </div>
 
-      {/* Modal Usuário */}
+      {/* ===== MODAL ADICIONAR USUÁRIO (matching reference) ===== */}
       {showUserModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-card rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl space-y-5">
+          <div className="bg-card rounded-2xl p-6 w-full max-w-2xl mx-4 shadow-xl space-y-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground">{editingUser ? "Editar Usuário" : "Novo Usuário"}</h2>
+              <h2 className="text-lg font-semibold text-foreground">{editingUser ? "Editar usuário" : "Adicionar usuário"}</h2>
               <button onClick={() => setShowUserModal(false)} className="p-1 rounded-lg hover:bg-muted transition-colors"><X className="w-5 h-5 text-muted-foreground" /></button>
             </div>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Nome completo</label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input type="text" value={userForm.name} onChange={(e) => setUserForm({ ...userForm, name: e.target.value })} placeholder="Nome do usuário" className="w-full bg-muted/50 border border-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all" />
+
+            <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6">
+              {/* Left: Avatar + Color Picker */}
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-28 h-28 rounded-full flex items-center justify-center border-2 border-border" style={{ backgroundColor: userForm.avatarColor + "20" }}>
+                  {userForm.name ? (
+                    <span className="text-3xl font-bold" style={{ color: userForm.avatarColor }}>
+                      {userForm.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                    </span>
+                  ) : (
+                    <Users className="w-12 h-12 text-muted-foreground/40" />
+                  )}
                 </div>
+                <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold uppercase tracking-wider hover:bg-primary/90 transition-colors">
+                  <Upload className="w-3.5 h-3.5" /> Upload Avatar
+                </button>
+
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Cor Padrão</p>
+                  <div className="grid grid-cols-7 gap-1.5">
+                    {avatarColors.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => setUserForm({ ...userForm, avatarColor: color })}
+                        className={cn(
+                          "w-7 h-7 rounded-full transition-all",
+                          userForm.avatarColor === color ? "ring-2 ring-offset-2 ring-offset-card scale-110" : "hover:scale-110"
+                        )}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Login time restriction */}
+                <label className="flex items-start gap-2 mt-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={userForm.restricaoHorario}
+                    onChange={(e) => setUserForm({ ...userForm, restricaoHorario: e.target.checked })}
+                    className="mt-0.5 rounded border-border"
+                  />
+                  <span className="text-xs text-muted-foreground leading-tight">Restrição de horários login do usuário</span>
+                </label>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">E-mail</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input type="email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} placeholder="email@empresa.com" className="w-full bg-muted/50 border border-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all" />
+
+              {/* Right: Form Fields */}
+              <div className="space-y-4">
+                {/* Name + Password */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-primary">Nome</label>
+                    <input
+                      type="text"
+                      value={userForm.name}
+                      onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                      placeholder="Nome do usuário"
+                      className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Senha</label>
+                    <input
+                      type="password"
+                      value={userForm.password}
+                      onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                      placeholder="••••••••"
+                      className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">{editingUser ? "Nova senha (deixe vazio para manter)" : "Senha"}</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input type="password" value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} placeholder="••••••••" className="w-full bg-muted/50 border border-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all" />
+
+                {/* Email */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Email</label>
+                  <input
+                    type="email"
+                    value={userForm.email}
+                    onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                    placeholder="email@empresa.com"
+                    className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+                  />
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Setor</label>
-                  <input type="text" value={userForm.setor} onChange={(e) => setUserForm({ ...userForm, setor: e.target.value })} placeholder="Ex: Vendas" className="w-full bg-muted/50 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all" />
+
+                {/* Celular */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Celular</label>
+                  <input
+                    type="tel"
+                    value={userForm.phone}
+                    onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })}
+                    placeholder="(00) 00000-0000"
+                    className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+                  />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Função</label>
-                  <select value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })} className="w-full bg-muted/50 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all">
-                    <option value="Atendente">Atendente</option>
-                    <option value="Administrador">Administrador</option>
+
+                {/* Setores (Departamento) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Setores</label>
+                  <select
+                    value={userForm.setor}
+                    onChange={(e) => setUserForm({ ...userForm, setor: e.target.value })}
+                    className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+                  >
+                    <option value="">Selecione um setor...</option>
+                    {departments.map(d => (
+                      <option key={d.id} value={d.name}>{d.name}</option>
+                    ))}
                   </select>
+                </div>
+
+                {/* Grupo de Permissões + Conexão padrão */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Grupo de Permissões</label>
+                    <select
+                      value={userForm.role}
+                      onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
+                      className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+                    >
+                      <option value="Usuário comum">Usuário comum</option>
+                      <option value="Administrador">Administrador</option>
+                      <option value="Supervisor">Supervisor</option>
+                      <option value="Atendente">Atendente</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                      Conexão(ões) padrão
+                      <button className="text-muted-foreground/50 hover:text-muted-foreground" title="Selecione a conexão WhatsApp padrão deste usuário">
+                        <Info className="w-3.5 h-3.5" />
+                      </button>
+                    </label>
+                    <select
+                      value={userForm.conexao}
+                      onChange={(e) => setUserForm({ ...userForm, conexao: e.target.value })}
+                      className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+                    >
+                      <option value="">Conexão(ões) padrão</option>
+                      {conexoes.map(c => (
+                        <option key={c.id} value={c.name}>{c.name} - {c.number}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="flex gap-3 justify-end pt-2">
-              <button onClick={() => setShowUserModal(false)} className="px-4 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">Cancelar</button>
-              <button onClick={saveUser} className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
-                {editingUser ? "Salvar Alterações" : "Criar Usuário"}
+
+            {/* Actions */}
+            <div className="flex gap-3 justify-end pt-2 border-t border-border">
+              <button onClick={() => setShowUserModal(false)} className="px-5 py-2.5 rounded-lg text-sm font-bold uppercase tracking-wider text-muted-foreground border border-border hover:bg-muted transition-colors">
+                Cancelar
+              </button>
+              <button onClick={saveUser} className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold uppercase tracking-wider hover:bg-primary/90 transition-colors">
+                {editingUser ? "Salvar" : "Adicionar"}
               </button>
             </div>
           </div>
@@ -514,7 +785,6 @@ function IntegracaoZapSign() {
 
   return (
     <div className="space-y-5">
-      {/* ZapSign Card */}
       <div className="glass-card rounded-xl p-6 space-y-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
@@ -542,80 +812,43 @@ function IntegracaoZapSign() {
           </a>
         </div>
 
-        {/* API Key */}
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground flex items-center gap-2">
               <Key className="w-4 h-4 text-muted-foreground" /> API Key
             </label>
-            <input
-              type="password"
-              value={apiKey}
-              onChange={(e) => { setApiKey(e.target.value); setStatus("disconnected"); setSaved(false); }}
-              placeholder="Cole sua API Key da ZapSign aqui..."
-              className="w-full bg-muted/50 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all font-mono"
-            />
+            <input type="password" value={apiKey} onChange={(e) => { setApiKey(e.target.value); setStatus("disconnected"); setSaved(false); }} placeholder="Cole sua API Key da ZapSign aqui..."
+              className="w-full bg-muted/50 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all font-mono" />
           </div>
-
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-muted-foreground" /> Client ID <span className="text-xs text-muted-foreground font-normal">(opcional)</span>
             </label>
-            <input
-              type="text"
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              placeholder="Client ID (se necessário)"
-              className="w-full bg-muted/50 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all font-mono"
-            />
+            <input type="text" value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="Client ID (se necessário)"
+              className="w-full bg-muted/50 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all font-mono" />
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={testConnection}
-            disabled={status === "testing" || !apiKey.trim()}
-            className={cn(
-              "flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all",
-              status === "testing"
-                ? "bg-muted text-muted-foreground cursor-wait"
-                : "border border-border text-foreground hover:bg-muted"
-            )}
-          >
-            {status === "testing" ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Testando...</>
-            ) : status === "connected" ? (
-              <><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Conexão OK</>
-            ) : (
-              <>Testar Conexão</>
-            )}
+          <button onClick={testConnection} disabled={status === "testing" || !apiKey.trim()}
+            className={cn("flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all", status === "testing" ? "bg-muted text-muted-foreground cursor-wait" : "border border-border text-foreground hover:bg-muted")}>
+            {status === "testing" ? (<><Loader2 className="w-4 h-4 animate-spin" /> Testando...</>) : status === "connected" ? (<><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Conexão OK</>) : (<>Testar Conexão</>)}
           </button>
-          <button
-            onClick={saveConfig}
-            disabled={status !== "connected"}
-            className={cn(
-              "flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all",
-              status === "connected"
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : "bg-muted text-muted-foreground cursor-not-allowed"
-            )}
-          >
+          <button onClick={saveConfig} disabled={status !== "connected"}
+            className={cn("flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all", status === "connected" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed")}>
             {saved ? <><CheckCircle2 className="w-4 h-4" /> Salvo</> : <>Salvar Configurações</>}
           </button>
         </div>
 
-        {/* Security info */}
         <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
           <ShieldCheck className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
           <div>
             <p className="text-xs font-medium text-foreground">Armazenamento Seguro</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Suas credenciais são criptografadas e armazenadas com segurança no servidor. Logs de acesso são registrados automaticamente.</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Suas credenciais são criptografadas e armazenadas com segurança no servidor.</p>
           </div>
         </div>
       </div>
 
-      {/* Webhook info */}
       <div className="glass-card rounded-xl p-6 space-y-4">
         <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
           <Plug className="w-4 h-4 text-muted-foreground" /> Webhook de Atualização
@@ -630,19 +863,6 @@ function IntegracaoZapSign() {
               Copiar
             </button>
           </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { label: "Documento visualizado", status: "Ativo", ok: true },
-            { label: "Documento assinado", status: "Ativo", ok: true },
-            { label: "Documento recusado", status: "Ativo", ok: true },
-            { label: "Lembrete automático", status: "Ativo", ok: true },
-          ].map((wh) => (
-            <div key={wh.label} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/50">
-              <span className="text-xs text-foreground">{wh.label}</span>
-              <span className="text-[10px] font-medium text-emerald-400">●&nbsp;{wh.status}</span>
-            </div>
-          ))}
         </div>
       </div>
     </div>
