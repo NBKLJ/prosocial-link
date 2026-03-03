@@ -32,7 +32,14 @@ const menuItems: MenuItem[] = [
   },
   { title: "Contatos", url: "/contatos", icon: Users },
   { title: "Automações", url: "/automacoes", icon: Bot },
-  { title: "Agendamentos", url: "/agendamentos", icon: CalendarDays },
+  {
+    title: "Agenda", url: "/agenda", icon: CalendarDays, expandable: true,
+    subItems: [
+      { title: "Agenda", url: "/agenda", icon: CalendarRange },
+      { title: "Agendamentos", url: "/agendamentos", icon: Clock },
+      { title: "Configurações", url: "/agenda/configuracoes", icon: Settings },
+    ],
+  },
   { title: "IAs Setoriais", url: "/ias-setoriais", icon: Brain, proBadge: true },
   { title: "Contratos", url: "/contratos", icon: FileText, proBadge: true },
   {
