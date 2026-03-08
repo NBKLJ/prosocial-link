@@ -3,9 +3,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   Smartphone, QrCode, CheckCircle2, XCircle, Tag, Plus, X, Crown, Users, Pencil, Trash2,
-  CreditCard, Wifi, Settings, Check, Plug, Key, ShieldCheck, Loader2, ExternalLink,
-  FileSignature, Building2, Upload, Info, ChevronRight, Shield, Zap, Globe, Bell,
-  BarChart3, Lock, Mail, Phone, UserPlus, Palette, Search,
+  CreditCard, Wifi, Check, Plug, Key, ShieldCheck, Loader2, ExternalLink,
+  FileSignature, Building2, Upload, Info, ChevronRight, Shield, Zap, Globe,
+  BarChart3, UserPlus, Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getTagStore, setTagStore, tagColors, type TagItem } from "@/lib/tagStore";
