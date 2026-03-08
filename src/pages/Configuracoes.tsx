@@ -118,7 +118,7 @@ const Configuracoes = () => {
   });
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [editingTag, setEditingTag] = useState<string | null>(null);
-  const [editTagColor, setEditTagColor] = useState("");
+  const [_editTagColor, setEditTagColor] = useState("");
   const [departments, setDepartments] = useState<Department[]>(defaultDepartments);
   const [newDeptName, setNewDeptName] = useState("");
   const [newDeptColor, setNewDeptColor] = useState(avatarColors[0]);
