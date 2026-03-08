@@ -452,7 +452,7 @@ const Configuracoes = () => {
                       </div>
                       {tags.map((tag) => (
                         <div key={tag.name} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors group">
-                          <div className="w-3.5 h-3.5 rounded-full flex-shrink-0 ring-2 ring-offset-2 ring-offset-card" style={{ backgroundColor: tag.color, ringColor: tag.color + "40" }} />
+                          <div className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{ backgroundColor: tag.color }} />
                           <span className="text-sm font-medium text-foreground flex-1">{tag.name}</span>
                           {editingTag === tag.name ? (
                             <div className="flex gap-1">
