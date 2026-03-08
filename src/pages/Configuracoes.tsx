@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getTagStore, setTagStore, tagColors, type TagItem } from "@/lib/tagStore";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
