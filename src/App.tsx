@@ -32,6 +32,7 @@ import GestaoProdutividade from "./pages/GestaoProdutividade";
 import Financeiro from "./pages/Financeiro";
 import ProcessosPainel from "./pages/ProcessosPainel";
 import ProcessosAcompanhamento from "./pages/ProcessosAcompanhamento";
+import ImpostoDeRenda from "./pages/ImpostoDeRenda";
 
 const queryClient = new QueryClient();
 

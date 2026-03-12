@@ -1,30 +1,25 @@
 
 
-## Plano: Módulo Pastas → Imposto de Renda
+## Plan: Fix and Improve Configurações de Agendamento
 
-### O que será construído
+### Problems Identified
 
-1. **Novo item "Pastas" no menu lateral** com sub-item "Imposto de Renda" (expandível, com ícone `FolderOpen`/`Receipt`)
+1. **Layout issue**: 7 weekday cards in a `grid-cols-4` grid creates an uneven last row (4 + 3)
+2. **Duplicate comment** on lines 7-9
+3. **No remove slot button** - users can add slots but never remove them
+4. **Overall visual quality** needs polish per user feedback
 
-2. **Nova página `/pastas/imposto-de-renda`** com seção "Distribuição de Lucros e Pró-labore" contendo:
-   - Botão "Exportar Planilha" no topo
-   - Ao clicar, expande um painel de filtro com dois date pickers (Data Inicial / Data Final) usando Popover + Calendar do shadcn (com `pointer-events-auto`)
-   - Botão "Exportar" que gera e baixa um arquivo `.csv` com as empresas que tiveram movimentação no período, organizadas em colunas (Empresa, CNPJ, Tipo, Valor, Data, etc.)
+### Changes (single file: `src/pages/AgendaConfiguracoes.tsx`)
 
-3. **Dados mock** de empresas com movimentações de distribuição de lucros e pró-labore para demonstração
+1. **Top settings row** - Keep the 3-column grid (Agenda Padrao, Duracao, Limite) but improve card styling with icons and better spacing
 
-### Alterações por arquivo
+2. **Weekly schedule grid** - Change from `grid-cols-4` to a cleaner `grid-cols-7` single-row layout with compact day columns. Each column shows the day abbreviation, a toggle, and the time range selects vertically. This avoids the broken 4+3 layout
 
-| Arquivo | Ação |
-|---|---|
-| `src/components/AppSidebar.tsx` | Adicionar item "Pastas" expandível com sub-item "Imposto de Renda" (ícones `FolderOpen`, `Receipt`) |
-| `src/pages/ImpostoDeRenda.tsx` | Criar página com seção de distribuição, botão exportar, filtro de datas e lógica de geração CSV |
-| `src/App.tsx` | Registrar rota `/pastas/imposto-de-renda` protegida |
+3. **Add slot removal** - Add an X button next to each extra time slot so users can remove them
 
-### Detalhes técnicos
+4. **Reminders section** - Keep the current toggle + 5-option grid, but clean up spacing and ensure consistent card sizing
 
-- **Date pickers**: Dois Popover+Calendar (shadcn) com `pointer-events-auto`, formatados com `date-fns` em pt-BR (dd/MM/yyyy)
-- **Exportação CSV**: Geração client-side filtrando movimentações pelo período, criando Blob e disparando download via `URL.createObjectURL`
-- **Dados mock**: Array de empresas com array de movimentações (tipo: "Distribuição de Lucros" | "Pró-labore", valor, data), filtrados pelo range de datas
-- **Layout**: Segue o padrão `AppLayout` já usado nas outras páginas, com ProGate se necessário
+5. **General polish** - Remove duplicate comment, ensure consistent border-radius and padding, use the project's `glass-card` utility consistently
+
+6. **Single save button** - Remove the duplicate save button (currently at top AND bottom), keep only the top one in the header
 
