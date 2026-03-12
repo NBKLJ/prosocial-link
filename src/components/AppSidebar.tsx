@@ -17,7 +17,7 @@ interface SubItem { title: string; url: string; icon: typeof Send; }
 interface MenuItem { title: string; url: string; icon: typeof MessageCircle; count?: number; expandable?: boolean; subItems?: SubItem[]; proBadge?: boolean; }
 
 const menuItems: MenuItem[] = [
-  { title: "Relatórios", url: "/relatorios", icon: PieChart, proBadge: true },
+  { title: "Relatórios", url: "/relatorios", icon: PieChart },
   { title: "Conversas", url: "/conversas", icon: MessageCircle, count: 6 },
   { title: "Grupos", url: "/grupos", icon: Users },
   { title: "CRM", url: "/crm", icon: BarChart3 },
@@ -41,18 +41,18 @@ const menuItems: MenuItem[] = [
       { title: "Configurações", url: "/agenda/configuracoes", icon: Settings },
     ],
   },
-  { title: "IAs Setoriais", url: "/ias-setoriais", icon: Brain, proBadge: true },
+  { title: "IAs Setoriais", url: "/ias-setoriais", icon: Brain },
   {
-    title: "Processos", url: "/processos/painel", icon: Scale, expandable: true, proBadge: true,
+    title: "Processos", url: "/processos/painel", icon: Scale, expandable: true,
     subItems: [
       { title: "Painel de Gestão", url: "/processos/painel", icon: Layers },
       { title: "Acompanhamento", url: "/processos/acompanhamento", icon: ClipboardList },
     ],
   },
-  { title: "Contratos", url: "/contratos", icon: FileText, proBadge: true },
-  { title: "Financeiro", url: "/financeiro", icon: DollarSign, proBadge: true },
+  { title: "Contratos", url: "/contratos", icon: FileText },
+  { title: "Financeiro", url: "/financeiro", icon: DollarSign },
   {
-    title: "Gestão", url: "/gestao/tarefas", icon: Briefcase, expandable: true, proBadge: true,
+    title: "Gestão", url: "/gestao/tarefas", icon: Briefcase, expandable: true,
     subItems: [
       { title: "Tarefas", url: "/gestao/tarefas", icon: ListTodo },
       { title: "Calendários", url: "/gestao/calendarios", icon: CalendarRange },
