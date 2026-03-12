@@ -49,10 +49,10 @@ const menuItems: MenuItem[] = [
       { title: "Acompanhamento", url: "/processos/acompanhamento", icon: ClipboardList },
     ],
   },
-  { title: "Contratos", url: "/contratos", icon: FileText, proBadge: true },
-  { title: "Financeiro", url: "/financeiro", icon: DollarSign, proBadge: true },
+  { title: "Contratos", url: "/contratos", icon: FileText },
+  { title: "Financeiro", url: "/financeiro", icon: DollarSign },
   {
-    title: "Gestão", url: "/gestao/tarefas", icon: Briefcase, expandable: true, proBadge: true,
+    title: "Gestão", url: "/gestao/tarefas", icon: Briefcase, expandable: true,
     subItems: [
       { title: "Tarefas", url: "/gestao/tarefas", icon: ListTodo },
       { title: "Calendários", url: "/gestao/calendarios", icon: CalendarRange },
