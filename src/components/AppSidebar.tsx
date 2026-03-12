@@ -17,7 +17,7 @@ interface SubItem { title: string; url: string; icon: typeof Send; }
 interface MenuItem { title: string; url: string; icon: typeof MessageCircle; count?: number; expandable?: boolean; subItems?: SubItem[]; proBadge?: boolean; }
 
 const menuItems: MenuItem[] = [
-  { title: "Relatórios", url: "/relatorios", icon: PieChart, proBadge: true },
+  { title: "Relatórios", url: "/relatorios", icon: PieChart },
   { title: "Conversas", url: "/conversas", icon: MessageCircle, count: 6 },
   { title: "Grupos", url: "/grupos", icon: Users },
   { title: "CRM", url: "/crm", icon: BarChart3 },
