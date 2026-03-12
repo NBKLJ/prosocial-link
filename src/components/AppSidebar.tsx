@@ -43,7 +43,7 @@ const menuItems: MenuItem[] = [
   },
   { title: "IAs Setoriais", url: "/ias-setoriais", icon: Brain },
   {
-    title: "Processos", url: "/processos/painel", icon: Scale, expandable: true, proBadge: true,
+    title: "Processos", url: "/processos/painel", icon: Scale, expandable: true,
     subItems: [
       { title: "Painel de Gestão", url: "/processos/painel", icon: Layers },
       { title: "Acompanhamento", url: "/processos/acompanhamento", icon: ClipboardList },
