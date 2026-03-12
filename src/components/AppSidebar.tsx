@@ -41,7 +41,7 @@ const menuItems: MenuItem[] = [
       { title: "Configurações", url: "/agenda/configuracoes", icon: Settings },
     ],
   },
-  { title: "IAs Setoriais", url: "/ias-setoriais", icon: Brain, proBadge: true },
+  { title: "IAs Setoriais", url: "/ias-setoriais", icon: Brain },
   {
     title: "Processos", url: "/processos/painel", icon: Scale, expandable: true, proBadge: true,
     subItems: [
