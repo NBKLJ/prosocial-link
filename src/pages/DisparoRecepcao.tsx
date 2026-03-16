@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import {
-  MessageSquarePlus, Save, Mic, Type, Upload, Plus, X, Megaphone, Smartphone,
+  MessageSquarePlus, Save, Mic, Type, Upload, Plus, X, Smartphone,
   Brain, Sparkles, Image, ChevronDown, ChevronUp, Trash2, Timer, GripVertical,
-  Power, PowerOff, FileText, File,
+  Power, PowerOff, FileText, File, ToggleLeft, ToggleRight, Edit2, Eye, EyeOff,
+  MessageCircle, Zap, Copy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -13,17 +14,20 @@ import { ProBadge } from "@/components/ui/ProBadge";
 // ─── Types ───
 type ContentType = "texto" | "audio" | "imagem" | "pdf" | "word";
 
-interface WelcomeItem {
+interface SequenceItem {
   id: string;
   type: ContentType;
   content: string;
   delaySeconds: number;
 }
 
-interface AdRule {
+interface WelcomeRule {
   id: string;
-  keyword: string;
-  welcomeSequence: WelcomeItem[];
+  name: string;
+  keywords: string[];
+  active: boolean;
+  sequence: SequenceItem[];
+  conexaoId: string;
 }
 
 // ─── Constants ───
@@ -48,20 +52,49 @@ const DELAY_OPTIONS = [
   { value: 15, label: "15s" },
   { value: 30, label: "30s" },
   { value: 60, label: "1min" },
+  { value: 120, label: "2min" },
 ];
 
-const getIcon = (type: ContentType) => CONTENT_OPTIONS.find(o => o.value === type)?.icon || Type;
+const getContentIcon = (type: ContentType) => CONTENT_OPTIONS.find(o => o.value === type)?.icon || Type;
+const getContentLabel = (type: ContentType) => CONTENT_OPTIONS.find(o => o.value === type)?.label || type;
 
-// ─── Sequence Builder (reusable) ───
-function SequenceBuilder({
-  items,
-  onUpdate,
-  compact = false,
-}: {
-  items: WelcomeItem[];
-  onUpdate: (items: WelcomeItem[]) => void;
-  compact?: boolean;
-}) {
+const INITIAL_RULES: WelcomeRule[] = [
+  {
+    id: "r1",
+    name: "Saudação Geral",
+    keywords: ["olá", "oi", "bom dia", "boa tarde", "boa noite", "tudo bem"],
+    active: true,
+    conexaoId: "1",
+    sequence: [
+      { id: "s1", type: "texto", content: "Olá! 😊 Obrigado por entrar em contato. Em breve um de nossos atendentes irá te responder!", delaySeconds: 0 },
+    ],
+  },
+  {
+    id: "r2",
+    name: "Consulta de Auxílio",
+    keywords: ["auxílio", "benefício", "ajuda financeira"],
+    active: true,
+    conexaoId: "1",
+    sequence: [
+      { id: "s2a", type: "audio", content: "orientacao-auxilio.mp3", delaySeconds: 0 },
+      { id: "s2b", type: "texto", content: "Para dar andamento à sua consulta sobre auxílio, precisamos de alguns dados. Por favor, envie seu CPF e nome completo.", delaySeconds: 5 },
+      { id: "s2c", type: "imagem", content: "documentos-necessarios.jpg", delaySeconds: 3 },
+    ],
+  },
+  {
+    id: "r3",
+    name: "Promoção / Desconto",
+    keywords: ["promo", "promoção", "desconto", "oferta"],
+    active: false,
+    conexaoId: "2",
+    sequence: [
+      { id: "s3", type: "texto", content: "Obrigado pelo interesse! 🎉 Temos condições especiais este mês. Um consultor entrará em contato em instantes.", delaySeconds: 0 },
+    ],
+  },
+];
+
+// ─── Inline Sequence Builder ───
+function SequenceBuilder({ items, onUpdate }: { items: SequenceItem[]; onUpdate: (items: SequenceItem[]) => void }) {
   const [addingType, setAddingType] = useState<ContentType | null>(null);
   const [addingContent, setAddingContent] = useState("");
 
@@ -69,8 +102,7 @@ function SequenceBuilder({
     if (!addingType) return;
     const content = addingType === "texto" ? addingContent.trim() : (addingContent.trim() || `arquivo.${addingType === "audio" ? "mp3" : addingType === "imagem" ? "jpg" : addingType}`);
     if (addingType === "texto" && !content) return;
-    const newItem: WelcomeItem = { id: Date.now().toString(), type: addingType, content, delaySeconds: items.length === 0 ? 0 : 3 };
-    onUpdate([...items, newItem]);
+    onUpdate([...items, { id: Date.now().toString(), type: addingType, content, delaySeconds: items.length === 0 ? 0 : 5 }]);
     setAddingType(null);
     setAddingContent("");
   };
@@ -94,58 +126,51 @@ function SequenceBuilder({
 
   return (
     <div className="space-y-3">
-      {/* Content type buttons */}
-      <div className={cn("grid gap-1.5", compact ? "grid-cols-5" : "grid-cols-5")}>
+      {/* Add buttons */}
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] font-medium text-muted-foreground mr-1">Adicionar:</span>
         {CONTENT_OPTIONS.map(opt => (
           <button
             key={opt.value}
             onClick={() => { setAddingType(opt.value); setAddingContent(""); }}
             className={cn(
-              "flex flex-col items-center gap-1 p-2.5 rounded-lg border transition-all",
-              addingType === opt.value ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/50 hover:border-primary/20"
+              "flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[10px] font-medium transition-all",
+              addingType === opt.value ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" : "border-border text-muted-foreground hover:bg-muted/50 hover:border-primary/20"
             )}
           >
-            <opt.icon className={cn("w-4 h-4", addingType === opt.value ? "text-primary" : "text-muted-foreground")} />
-            <span className={cn("text-[10px] font-medium", addingType === opt.value ? "text-primary" : "text-muted-foreground")}>{opt.label}</span>
+            <opt.icon className="w-3 h-3" />
+            {opt.label}
           </button>
         ))}
       </div>
 
       {/* Add form */}
       {addingType && (
-        <div className="space-y-2 p-3 rounded-lg border border-primary/20 bg-primary/[0.02]">
+        <div className="p-3 rounded-lg border border-primary/20 bg-primary/[0.02] space-y-2">
           {addingType === "texto" ? (
-            <textarea
-              value={addingContent}
-              onChange={e => setAddingContent(e.target.value)}
-              placeholder="Digite a mensagem..."
-              rows={2}
-              className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
-              autoFocus
-            />
+            <textarea value={addingContent} onChange={e => setAddingContent(e.target.value)} placeholder="Digite a mensagem..." rows={2} className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none" autoFocus />
           ) : (
             <button className="w-full flex items-center gap-2 py-4 border-2 border-dashed border-border rounded-lg hover:border-primary/30 hover:bg-primary/5 transition-all justify-center cursor-pointer">
               <Upload className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Enviar {CONTENT_OPTIONS.find(o => o.value === addingType)?.label} • {CONTENT_OPTIONS.find(o => o.value === addingType)?.hint}</span>
+              <span className="text-xs text-muted-foreground">Enviar {getContentLabel(addingType)} • {CONTENT_OPTIONS.find(o => o.value === addingType)?.hint}</span>
             </button>
           )}
           <div className="flex gap-2 justify-end">
-            <button onClick={() => { setAddingType(null); setAddingContent(""); }} className="px-2.5 py-1 rounded-md text-xs text-muted-foreground hover:bg-muted transition-colors">Cancelar</button>
-            <button onClick={addItem} className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors">Adicionar</button>
+            <button onClick={() => { setAddingType(null); setAddingContent(""); }} className="px-2.5 py-1 rounded-md text-xs text-muted-foreground hover:bg-muted">Cancelar</button>
+            <button onClick={addItem} className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90">Adicionar</button>
           </div>
         </div>
       )}
 
       {/* Sequence list */}
-      {items.length > 0 && (
+      {items.length > 0 ? (
         <div className="space-y-0">
           {items.map((item, index) => {
-            const Icon = getIcon(item.type);
+            const Icon = getContentIcon(item.type);
             return (
               <div key={item.id}>
-                {/* Delay between items */}
                 {index > 0 && (
-                  <div className="flex items-center gap-2 py-1 pl-4">
+                  <div className="flex items-center gap-2 py-1 pl-5">
                     <div className="w-px h-3 bg-border" />
                     <Timer className="w-3 h-3 text-muted-foreground" />
                     <select value={item.delaySeconds} onChange={e => updateDelay(item.id, Number(e.target.value))} className="text-[10px] bg-muted/50 border border-border rounded px-1.5 py-0.5 text-muted-foreground focus:outline-none">
@@ -158,6 +183,7 @@ function SequenceBuilder({
                     <span className="text-[9px] font-bold text-primary">{index + 1}</span>
                   </div>
                   <Icon className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-primary/70">{getContentLabel(item.type)}</span>
                   <p className="text-xs text-foreground flex-1 truncate">{item.content}</p>
                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={() => move(index, "up")} disabled={index === 0} className="p-0.5 rounded hover:bg-muted disabled:opacity-30"><ChevronUp className="w-3 h-3 text-muted-foreground" /></button>
@@ -169,273 +195,347 @@ function SequenceBuilder({
             );
           })}
         </div>
-      )}
-
-      {items.length === 0 && !addingType && (
-        <div className="flex items-center gap-2 py-4 justify-center text-muted-foreground/50">
+      ) : !addingType ? (
+        <div className="flex items-center gap-2 py-3 justify-center text-muted-foreground/40">
           <GripVertical className="w-4 h-4" />
-          <span className="text-xs">Clique acima para adicionar conteúdo</span>
+          <span className="text-xs">Nenhum conteúdo na sequência</span>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
 
 // ─── Main Component ───
 const DisparoRecepcao = () => {
-  const [active, setActive] = useState(true);
-  const [selectedConexao, setSelectedConexao] = useState(CONEXOES[0].id);
+  const [globalActive, setGlobalActive] = useState(true);
+  const [rules, setRules] = useState<WelcomeRule[]>(INITIAL_RULES);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showNewForm, setShowNewForm] = useState(false);
 
-  // Welcome sequence (replaces the old single text/audio)
-  const [welcomeSequence, setWelcomeSequence] = useState<WelcomeItem[]>([
-    { id: "w1", type: "texto", content: "Olá! Obrigado por entrar em contato. Em breve um de nossos atendentes irá te responder. 😊", delaySeconds: 0 },
-  ]);
-
-  // Ad rules
-  const [adRules, setAdRules] = useState<AdRule[]>([
-    { id: "1", keyword: "promo", welcomeSequence: [{ id: "ar1", type: "texto", content: "Obrigado pelo interesse na promoção! Um consultor entrará em contato.", delaySeconds: 0 }] },
-  ]);
-  const [showAdForm, setShowAdForm] = useState(false);
-  const [adKeyword, setAdKeyword] = useState("");
-  const [adSequence, setAdSequence] = useState<WelcomeItem[]>([]);
-  const [expandedRule, setExpandedRule] = useState<string | null>(null);
+  // New rule form
+  const [newName, setNewName] = useState("");
+  const [newKeywords, setNewKeywords] = useState("");
+  const [newConexao, setNewConexao] = useState(CONEXOES[0].id);
+  const [newSequence, setNewSequence] = useState<SequenceItem[]>([]);
 
   // IA state
   const [iaActive, setIaActive] = useState(false);
   const [iaSetor, setIaSetor] = useState<"comercial" | "financeiro" | "suporte">("comercial");
 
-  const addAdRule = () => {
-    if (!adKeyword.trim()) return;
-    if (adSequence.length === 0) { toast.error("Adicione pelo menos uma mensagem"); return; }
-    setAdRules([...adRules, { id: Date.now().toString(), keyword: adKeyword.trim(), welcomeSequence: adSequence }]);
-    setAdKeyword(""); setAdSequence([]); setShowAdForm(false);
-    toast.success("Regra adicionada");
+  const toggleRule = (id: string) => setRules(rules.map(r => r.id === id ? { ...r, active: !r.active } : r));
+  const deleteRule = (id: string) => { setRules(rules.filter(r => r.id !== id)); if (editingId === id) setEditingId(null); };
+  const duplicateRule = (id: string) => {
+    const rule = rules.find(r => r.id === id);
+    if (!rule) return;
+    const dup: WelcomeRule = { ...rule, id: Date.now().toString(), name: `${rule.name} (cópia)`, active: false, sequence: rule.sequence.map(s => ({ ...s, id: `${s.id}-${Date.now()}` })) };
+    setRules([...rules, dup]);
+    toast.success("Regra duplicada");
+  };
+
+  const updateRuleSequence = (ruleId: string, seq: SequenceItem[]) => {
+    setRules(rules.map(r => r.id === ruleId ? { ...r, sequence: seq } : r));
+  };
+
+  const createRule = () => {
+    if (!newName.trim()) { toast.error("Informe o nome da regra"); return; }
+    if (!newKeywords.trim()) { toast.error("Informe pelo menos uma palavra-chave"); return; }
+    if (newSequence.length === 0) { toast.error("Adicione pelo menos um item à sequência"); return; }
+    const rule: WelcomeRule = {
+      id: Date.now().toString(),
+      name: newName.trim(),
+      keywords: newKeywords.split(",").map(k => k.trim()).filter(Boolean),
+      active: true,
+      conexaoId: newConexao,
+      sequence: newSequence,
+    };
+    setRules([...rules, rule]);
+    setNewName(""); setNewKeywords(""); setNewConexao(CONEXOES[0].id); setNewSequence([]);
+    setShowNewForm(false);
+    toast.success(`Regra "${rule.name}" criada`);
   };
 
   const iaPreviewMessages: Record<string, string> = {
-    comercial: "Olá! 👋 Sou a IA Comercial. Vi que você demonstrou interesse. Posso ajudá-lo a encontrar a solução ideal para seu negócio.",
-    financeiro: "Boa tarde. Sou o assistente financeiro. Posso ajudar com informações sobre faturas, prazos ou negociação de pagamento.",
-    suporte: "Olá! Sou o assistente de suporte. Descreva o problema que está enfrentando e vou buscar a solução mais rápida.",
+    comercial: "Olá! 👋 Sou a IA Comercial. Vi que você demonstrou interesse. Posso ajudá-lo a encontrar a solução ideal.",
+    financeiro: "Boa tarde. Sou o assistente financeiro. Posso ajudar com faturas, prazos ou pagamento.",
+    suporte: "Olá! Sou o assistente de suporte. Descreva o problema e vou buscar a solução mais rápida.",
   };
+
+  const activeCount = rules.filter(r => r.active).length;
 
   return (
     <AppLayout>
-      <div className="space-y-6 animate-fade-in max-w-4xl">
+      <div className="space-y-6 animate-fade-in">
         {/* ─── Header ─── */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Recepção Automática</h1>
-            <p className="text-muted-foreground mt-1">Resposta automática para novos atendimentos</p>
+            <p className="text-muted-foreground mt-1">Configure respostas automáticas com base no assunto da mensagem recebida</p>
           </div>
-          <button
-            onClick={() => setActive(!active)}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border",
-              active
-                ? "bg-primary/10 text-primary border-primary/20"
-                : "bg-muted text-muted-foreground border-border"
-            )}
-          >
-            {active ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
-            {active ? "Ativo" : "Desativado"}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setGlobalActive(!globalActive)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border",
+                globalActive ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground border-border"
+              )}
+            >
+              {globalActive ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
+              {globalActive ? "Ativo" : "Desativado"}
+            </button>
+          </div>
         </div>
 
-        {!active && (
-          <div className="glass-card rounded-xl p-8 flex flex-col items-center justify-center text-center">
-            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-3">
-              <PowerOff className="w-6 h-6 text-muted-foreground" />
+        {!globalActive ? (
+          <div className="glass-card rounded-xl p-12 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+              <PowerOff className="w-7 h-7 text-muted-foreground" />
             </div>
-            <h3 className="text-sm font-semibold text-foreground mb-1">Recepção desativada</h3>
-            <p className="text-xs text-muted-foreground max-w-sm">Ative para enviar respostas automáticas quando novos contatos chegarem.</p>
+            <h3 className="text-base font-semibold text-foreground mb-1">Recepção desativada</h3>
+            <p className="text-sm text-muted-foreground max-w-md">Ative para enviar respostas automáticas quando novos contatos chegarem.</p>
           </div>
-        )}
-
-        {active && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* ═══════════════════════════════ */}
-            {/* LEFT COLUMN                     */}
-            {/* ═══════════════════════════════ */}
-            <div className="space-y-5">
-              {/* ─── 1. Conexão ─── */}
-              <div className="glass-card rounded-xl p-5 space-y-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <Smartphone className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-semibold text-foreground">Conexão</h3>
+        ) : (
+          <>
+            {/* ─── Stats Row ─── */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="glass-card rounded-xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <MessageCircle className="w-5 h-5 text-primary" />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {CONEXOES.map(c => (
-                    <button
-                      key={c.id}
-                      onClick={() => setSelectedConexao(c.id)}
-                      className={cn(
-                        "flex items-center gap-2.5 p-3 rounded-xl border transition-all text-left",
-                        selectedConexao === c.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60"
-                      )}
-                    >
-                      <Smartphone className={cn("w-4 h-4", selectedConexao === c.id ? "text-primary" : "text-muted-foreground")} />
-                      <div>
-                        <span className={cn("text-xs font-semibold block", selectedConexao === c.id ? "text-primary" : "text-foreground")}>{c.name}</span>
-                        <span className="text-[10px] text-muted-foreground">{c.number}</span>
+                <div>
+                  <p className="text-lg font-bold text-foreground">{rules.length}</p>
+                  <p className="text-xs text-muted-foreground">Regras criadas</p>
+                </div>
+              </div>
+              <div className="glass-card rounded-xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-foreground">{activeCount}</p>
+                  <p className="text-xs text-muted-foreground">Ativas</p>
+                </div>
+              </div>
+              <div className="glass-card rounded-xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                  <EyeOff className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-foreground">{rules.length - activeCount}</p>
+                  <p className="text-xs text-muted-foreground">Inativas</p>
+                </div>
+              </div>
+            </div>
+
+            {/* ─── New Rule Button ─── */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-foreground">Mensagens de Boas-vindas</h2>
+              <button
+                onClick={() => { setShowNewForm(!showNewForm); setNewName(""); setNewKeywords(""); setNewSequence([]); }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Nova Regra
+              </button>
+            </div>
+
+            {/* ─── New Rule Form ─── */}
+            {showNewForm && (
+              <div className="glass-card rounded-xl p-6 space-y-5 border-2 border-primary/20">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Plus className="w-4 h-4 text-primary" /> Criar Nova Regra
+                  </h3>
+                  <button onClick={() => setShowNewForm(false)} className="p-1 rounded-lg hover:bg-muted"><X className="w-4 h-4 text-muted-foreground" /></button>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  {/* Left: config */}
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Nome da regra</label>
+                      <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ex: Saudação Geral, Consulta de Auxílio..." className="w-full bg-muted/50 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Palavras-chave (separadas por vírgula)</label>
+                      <input value={newKeywords} onChange={e => setNewKeywords(e.target.value)} placeholder="Ex: olá, bom dia, oi, tudo bem" className="w-full bg-muted/50 border border-border rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
+                      <p className="text-[10px] text-muted-foreground">Quando a mensagem do cliente contiver uma dessas palavras, esta regra será acionada.</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Conexão de envio</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {CONEXOES.map(c => (
+                          <button key={c.id} onClick={() => setNewConexao(c.id)} className={cn("flex items-center gap-2 p-2.5 rounded-xl border transition-all text-left", newConexao === c.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60")}>
+                            <Smartphone className={cn("w-4 h-4", newConexao === c.id ? "text-primary" : "text-muted-foreground")} />
+                            <div>
+                              <span className={cn("text-xs font-medium block", newConexao === c.id ? "text-primary" : "text-foreground")}>{c.name}</span>
+                              <span className="text-[10px] text-muted-foreground">{c.number}</span>
+                            </div>
+                          </button>
+                        ))}
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Right: sequence */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Sequência de respostas</label>
+                    <SequenceBuilder items={newSequence} onUpdate={setNewSequence} />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 justify-end pt-2 border-t border-border">
+                  <button onClick={() => setShowNewForm(false)} className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors">Cancelar</button>
+                  <button onClick={createRule} className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
+                    <Plus className="w-4 h-4" /> Criar Regra
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ─── Rules List ─── */}
+            <div className="space-y-3">
+              {rules.map(rule => {
+                const isEditing = editingId === rule.id;
+                const conexao = CONEXOES.find(c => c.id === rule.conexaoId);
+                return (
+                  <div key={rule.id} className={cn("glass-card rounded-xl overflow-hidden transition-all", isEditing && "ring-1 ring-primary/30")}>
+                    {/* Header row */}
+                    <div className="flex items-center gap-4 p-5">
+                      {/* Toggle */}
+                      <button onClick={() => toggleRule(rule.id)} className="flex-shrink-0">
+                        {rule.active ? (
+                          <ToggleRight className="w-7 h-7 text-primary" />
+                        ) : (
+                          <ToggleLeft className="w-7 h-7 text-muted-foreground" />
+                        )}
+                      </button>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className={cn("text-sm font-bold", rule.active ? "text-foreground" : "text-muted-foreground")}>{rule.name}</h3>
+                          <span className={cn("text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md", rule.active ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground")}>
+                            {rule.active ? "Ativa" : "Inativa"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {rule.keywords.map(kw => (
+                            <span key={kw} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-primary/5 text-primary border border-primary/10">{kw}</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Sequence preview badges */}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {rule.sequence.map((s, i) => {
+                          const SIcon = getContentIcon(s.type);
+                          return (
+                            <div key={i} className="w-7 h-7 rounded-lg bg-muted/80 flex items-center justify-center" title={getContentLabel(s.type)}>
+                              <SIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                            </div>
+                          );
+                        })}
+                        <span className="text-[10px] text-muted-foreground ml-1">
+                          {rule.sequence.length} {rule.sequence.length === 1 ? "msg" : "msgs"}
+                        </span>
+                      </div>
+
+                      {/* Conexão */}
+                      <div className="flex items-center gap-1.5 flex-shrink-0 px-2.5 py-1 rounded-lg bg-muted/50 border border-border">
+                        <Smartphone className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-[10px] font-medium text-muted-foreground">{conexao?.name}</span>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button onClick={() => setEditingId(isEditing ? null : rule.id)} className={cn("p-2 rounded-lg transition-colors", isEditing ? "bg-primary/10 text-primary" : "hover:bg-muted text-muted-foreground")} title="Editar sequência">
+                          {isEditing ? <EyeOff className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
+                        </button>
+                        <button onClick={() => duplicateRule(rule.id)} className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors" title="Duplicar">
+                          <Copy className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => deleteRule(rule.id)} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="Excluir">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Expanded sequence editor */}
+                    {isEditing && (
+                      <div className="border-t border-border p-5 bg-muted/[0.03]">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                          <div className="space-y-3">
+                            <label className="text-xs font-medium text-muted-foreground">Palavras-chave</label>
+                            <div className="flex flex-wrap gap-1.5">
+                              {rule.keywords.map(kw => (
+                                <span key={kw} className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-primary/5 text-primary border border-primary/10">{kw}</span>
+                              ))}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">
+                              Variáveis: <code className="bg-muted px-1 py-0.5 rounded text-primary text-[10px]">{"{{nome}}"}</code>{" "}
+                              <code className="bg-muted px-1 py-0.5 rounded text-primary text-[10px]">{"{{numero}}"}</code>
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-xs font-medium text-muted-foreground">Sequência de respostas</label>
+                            <SequenceBuilder items={rule.sequence} onUpdate={(seq) => updateRuleSequence(rule.id, seq)} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {rules.length === 0 && (
+                <div className="glass-card rounded-xl p-12 flex flex-col items-center justify-center text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-3">
+                    <MessageSquarePlus className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">Nenhuma regra criada</h3>
+                  <p className="text-xs text-muted-foreground max-w-sm">Crie regras de boas-vindas para responder automaticamente seus contatos.</p>
+                </div>
+              )}
+            </div>
+
+            {/* ─── IA de Recepção (PRO) ─── */}
+            <ProGate title="IA de Recepção Inteligente" description="IA que entende a necessidade do cliente. Disponível no Plano Pro.">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-primary" />
+                    <h3 className="text-sm font-semibold text-foreground">IA de Recepção</h3>
+                    <ProBadge />
+                  </div>
+                  <button onClick={() => setIaActive(!iaActive)} className={cn("flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors", iaActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                    {iaActive ? <Power className="w-3 h-3" /> : <PowerOff className="w-3 h-3" />}
+                    {iaActive ? "Ativo" : "Inativo"}
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {([{ value: "comercial" as const, label: "Comercial" }, { value: "financeiro" as const, label: "Financeiro" }, { value: "suporte" as const, label: "Suporte" }]).map(s => (
+                    <button key={s.value} onClick={() => setIaSetor(s.value)} className={cn("p-2.5 rounded-xl border text-center transition-all", iaSetor === s.value ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60")}>
+                      <span className={cn("text-xs font-medium", iaSetor === s.value ? "text-primary" : "text-muted-foreground")}>{s.label}</span>
                     </button>
                   ))}
                 </div>
-              </div>
-
-              {/* ─── 2. Mensagem de Boas-vindas ─── */}
-              <div className="glass-card rounded-xl p-5 space-y-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <MessageSquarePlus className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-semibold text-foreground">Mensagem de Boas-vindas</h3>
-                </div>
-                <p className="text-xs text-muted-foreground -mt-1">
-                  Monte a sequência de conteúdos enviados automaticamente. Combine texto, áudio, imagem e documentos.
-                </p>
-
-                <SequenceBuilder items={welcomeSequence} onUpdate={setWelcomeSequence} />
-
-                <div className="pt-2 border-t border-border">
-                  <p className="text-[10px] text-muted-foreground">
-                    Variáveis: <code className="bg-muted px-1 py-0.5 rounded text-primary text-[10px]">{"{{nome}}"}</code>{" "}
-                    <code className="bg-muted px-1 py-0.5 rounded text-primary text-[10px]">{"{{numero}}"}</code>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* ═══════════════════════════════ */}
-            {/* RIGHT COLUMN                    */}
-            {/* ═══════════════════════════════ */}
-            <div className="space-y-5">
-              {/* ─── 3. Respostas por Anúncio ─── */}
-              <div className="glass-card rounded-xl p-5 space-y-3">
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <Megaphone className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-semibold text-foreground">Respostas por Anúncio</h3>
-                  </div>
-                  <button
-                    onClick={() => setShowAdForm(!showAdForm)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-semibold hover:bg-primary/15 transition-colors"
-                  >
-                    <Plus className="w-3 h-3" /> Nova regra
-                  </button>
-                </div>
-                <p className="text-xs text-muted-foreground -mt-1">
-                  Respostas específicas quando o contato chega via anúncio com palavra-chave.
-                </p>
-
-                {/* Existing rules */}
-                <div className="space-y-2">
-                  {adRules.map(rule => (
-                    <div key={rule.id} className="border border-border rounded-xl overflow-hidden">
-                      <div
-                        className="flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/30 transition-colors"
-                        onClick={() => setExpandedRule(expandedRule === rule.id ? null : rule.id)}
-                      >
-                        <div className="w-7 h-7 rounded-lg bg-chart-4/10 flex items-center justify-center flex-shrink-0">
-                          <Megaphone className="w-3.5 h-3.5 text-chart-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-foreground">Gatilho:</span>
-                            <code className="bg-muted px-1.5 py-0.5 rounded text-primary text-[10px] font-mono">{rule.keyword}</code>
-                          </div>
-                          <span className="text-[10px] text-muted-foreground">{rule.welcomeSequence.length} {rule.welcomeSequence.length === 1 ? "mensagem" : "mensagens"} na sequência</span>
-                        </div>
-                        <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", expandedRule === rule.id && "rotate-180")} />
-                        <button onClick={(e) => { e.stopPropagation(); setAdRules(adRules.filter(r => r.id !== rule.id)); }} className="p-1 rounded hover:bg-destructive/10 transition-colors">
-                          <X className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
-                        </button>
-                      </div>
-                      {expandedRule === rule.id && (
-                        <div className="border-t border-border p-3 bg-muted/20">
-                          {rule.welcomeSequence.map((item, i) => {
-                            const Icon = getIcon(item.type);
-                            return (
-                              <div key={item.id} className="flex items-center gap-2 py-1">
-                                <div className="w-4 h-4 rounded bg-primary/10 flex items-center justify-center"><span className="text-[8px] font-bold text-primary">{i + 1}</span></div>
-                                <Icon className="w-3 h-3 text-primary" />
-                                <span className="text-[11px] text-foreground truncate">{item.content}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Add rule form */}
-                {showAdForm && (
-                  <div className="border border-primary/20 rounded-xl p-4 space-y-3 bg-primary/[0.02]">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-foreground">Palavra-chave / Gatilho</label>
-                      <input value={adKeyword} onChange={e => setAdKeyword(e.target.value)} placeholder="Ex: promo, desconto, oferta" className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-foreground">Sequência de resposta</label>
-                      <SequenceBuilder items={adSequence} onUpdate={setAdSequence} compact />
-                    </div>
-                    <div className="flex gap-2 justify-end pt-1">
-                      <button onClick={() => { setShowAdForm(false); setAdKeyword(""); setAdSequence([]); }} className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:bg-muted transition-colors">Cancelar</button>
-                      <button onClick={addAdRule} className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors">Adicionar</button>
-                    </div>
+                {iaActive && (
+                  <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
+                    <div className="flex items-center gap-1.5 mb-1.5"><Sparkles className="w-3 h-3 text-primary" /><span className="text-[10px] font-medium text-foreground">Preview ({iaSetor})</span></div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">{iaPreviewMessages[iaSetor]}</p>
                   </div>
                 )}
               </div>
+            </ProGate>
 
-              {/* ─── 4. IA de Recepção (PRO) ─── */}
-              <ProGate title="IA de Recepção Inteligente" description="IA que entende a necessidade do cliente. Disponível no Plano Pro.">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Brain className="w-4 h-4 text-primary" />
-                      <h3 className="text-sm font-semibold text-foreground">IA de Recepção</h3>
-                      <ProBadge />
-                    </div>
-                    <button onClick={() => setIaActive(!iaActive)} className={cn("flex items-center gap-2 text-[10px] font-semibold px-3 py-1.5 rounded-full transition-colors", iaActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
-                      {iaActive ? <Power className="w-3 h-3" /> : <PowerOff className="w-3 h-3" />}
-                      {iaActive ? "Ativo" : "Inativo"}
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    {([
-                      { value: "comercial" as const, label: "Comercial" },
-                      { value: "financeiro" as const, label: "Financeiro" },
-                      { value: "suporte" as const, label: "Suporte" },
-                    ]).map(s => (
-                      <button key={s.value} onClick={() => setIaSetor(s.value)} className={cn("p-2.5 rounded-xl border text-center transition-all", iaSetor === s.value ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60")}>
-                        <span className={cn("text-xs font-medium", iaSetor === s.value ? "text-primary" : "text-muted-foreground")}>{s.label}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {iaActive && (
-                    <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <Sparkles className="w-3 h-3 text-primary" />
-                        <span className="text-[10px] font-medium text-foreground">Preview ({iaSetor})</span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">{iaPreviewMessages[iaSetor]}</p>
-                    </div>
-                  )}
-                </div>
-              </ProGate>
+            {/* ─── Save ─── */}
+            <div className="flex justify-end">
+              <button onClick={() => toast.success("Configuração salva com sucesso")} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all shadow-sm hover:shadow-md">
+                <Save className="w-4 h-4" />
+                Salvar Configuração
+              </button>
             </div>
-          </div>
-        )}
-
-        {/* ─── Save ─── */}
-        {active && (
-          <div className="flex justify-end">
-            <button onClick={() => toast.success("Configuração salva com sucesso")} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all shadow-sm hover:shadow-md">
-              <Save className="w-4 h-4" />
-              Salvar Configuração
-            </button>
-          </div>
+          </>
         )}
       </div>
     </AppLayout>
