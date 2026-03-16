@@ -24,11 +24,9 @@ const menuItems: MenuItem[] = [
   {
     title: "Disparos", url: "/disparos", icon: Megaphone, expandable: true,
     subItems: [
-      { title: "Disparo de Mensagens", url: "/disparos", icon: Send },
+      { title: "Disparos", url: "/disparos", icon: Send },
       { title: "Recepção Automática", url: "/disparos/recepcao", icon: MessageSquarePlus },
-      { title: "Áudio Programado", url: "/disparos/audio", icon: Mic },
-      { title: "Mensagem Programada", url: "/disparos/mensagem", icon: MessageSquare },
-      { title: "Agendamento", url: "/disparos/agendamento", icon: Clock },
+      { title: "Mensagens Programadas", url: "/disparos/mensagens-programadas", icon: MessageSquare },
     ],
   },
   { title: "Contatos", url: "/contatos", icon: Users },
