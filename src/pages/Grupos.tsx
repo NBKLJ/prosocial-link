@@ -7,8 +7,8 @@ import {
 import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { getAudioStore } from "@/pages/DisparoAudio";
-import { getMensagemStore } from "@/pages/DisparoMensagem";
+import { getAudioStore } from "@/pages/MensagensProgramadas";
+import { getMensagemStore } from "@/pages/MensagensProgramadas";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
