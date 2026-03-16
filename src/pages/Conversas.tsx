@@ -8,8 +8,8 @@ import {
   Trash2, Pause, Play, CircleStop, ArrowRightLeft, ChevronDown, CircleX,
   Phone, Filter, Clock, User, MessageCircle, ListTodo, FileSignature,
 } from "lucide-react";
-import { getAudioStore } from "@/pages/DisparoAudio";
-import { getMensagemStore } from "@/pages/DisparoMensagem";
+import { getAudioStore } from "@/pages/MensagensProgramadas";
+import { getMensagemStore } from "@/pages/MensagensProgramadas";
 import { getTagColor, getTagStore } from "@/lib/tagStore";
 import { ClientDetailPanel } from "@/components/conversas/ClientDetailPanel";
 import { addTask, availableAssignees } from "@/lib/taskStore";

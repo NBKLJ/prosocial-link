@@ -10,9 +10,7 @@ import CRM from "./pages/CRM";
 import Conversas from "./pages/Conversas";
 import Disparos from "./pages/Disparos";
 import DisparoRecepcao from "./pages/DisparoRecepcao";
-import DisparoAudio from "./pages/DisparoAudio";
-import DisparoAgendamento from "./pages/DisparoAgendamento";
-import DisparoMensagem from "./pages/DisparoMensagem";
+import MensagensProgramadas from "./pages/MensagensProgramadas";
 import Contatos from "./pages/Contatos";
 import Configuracoes from "./pages/Configuracoes";
 import Login from "./pages/Login";
@@ -59,9 +57,7 @@ const App = () => (
           <Route path="/conversas" element={<ProtectedRoute><Conversas /></ProtectedRoute>} />
           <Route path="/disparos" element={<ProtectedRoute><Disparos /></ProtectedRoute>} />
           <Route path="/disparos/recepcao" element={<ProtectedRoute><DisparoRecepcao /></ProtectedRoute>} />
-          <Route path="/disparos/audio" element={<ProtectedRoute><DisparoAudio /></ProtectedRoute>} />
-          <Route path="/disparos/agendamento" element={<ProtectedRoute><DisparoAgendamento /></ProtectedRoute>} />
-          <Route path="/disparos/mensagem" element={<ProtectedRoute><DisparoMensagem /></ProtectedRoute>} />
+          <Route path="/disparos/mensagens-programadas" element={<ProtectedRoute><MensagensProgramadas /></ProtectedRoute>} />
           <Route path="/automacoes" element={<ProtectedRoute><Automacoes /></ProtectedRoute>} />
           <Route path="/agendamentos" element={<ProtectedRoute><Agendamentos /></ProtectedRoute>} />
           <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
@@ -72,6 +68,7 @@ const App = () => (
           <Route path="/financeiro" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
           <Route path="/processos/painel" element={<ProtectedRoute><ProcessosPainel /></ProtectedRoute>} />
           <Route path="/processos/acompanhamento" element={<ProtectedRoute><ProcessosAcompanhamento /></ProtectedRoute>} />
+          <Route path="/pastas/imposto-de-renda" element={<ProtectedRoute><ImpostoDeRenda /></ProtectedRoute>} />
           <Route path="/grupos" element={<ProtectedRoute><Grupos /></ProtectedRoute>} />
           <Route path="/gestao/tarefas" element={<ProtectedRoute><GestaoTarefas /></ProtectedRoute>} />
           <Route path="/gestao/tarefas/:id" element={<ProtectedRoute><TarefaDetalhe /></ProtectedRoute>} />
