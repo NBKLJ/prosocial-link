@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/AppLayout";
 import {
   MessageSquarePlus, Save, Mic, Type, Upload, Plus, X, Smartphone,
   Brain, Sparkles, Image, ChevronDown, ChevronUp, Trash2, Timer, GripVertical,
-  Power, PowerOff, FileText, File, ToggleLeft, ToggleRight, Edit2, Eye, EyeOff,
+  Power, PowerOff, FileText, File, ToggleLeft, ToggleRight, Edit2, EyeOff,
   MessageCircle, Zap, Copy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
