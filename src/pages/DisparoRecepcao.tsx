@@ -307,8 +307,8 @@ const DisparoRecepcao = () => {
                 </div>
               </div>
               <div className="glass-card rounded-xl p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-emerald-500" />
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-lg font-bold text-foreground">{activeCount}</p>
