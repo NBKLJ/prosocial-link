@@ -57,9 +57,7 @@ const App = () => (
           <Route path="/conversas" element={<ProtectedRoute><Conversas /></ProtectedRoute>} />
           <Route path="/disparos" element={<ProtectedRoute><Disparos /></ProtectedRoute>} />
           <Route path="/disparos/recepcao" element={<ProtectedRoute><DisparoRecepcao /></ProtectedRoute>} />
-          <Route path="/disparos/audio" element={<ProtectedRoute><DisparoAudio /></ProtectedRoute>} />
-          <Route path="/disparos/agendamento" element={<ProtectedRoute><DisparoAgendamento /></ProtectedRoute>} />
-          <Route path="/disparos/mensagem" element={<ProtectedRoute><DisparoMensagem /></ProtectedRoute>} />
+          <Route path="/disparos/mensagens-programadas" element={<ProtectedRoute><MensagensProgramadas /></ProtectedRoute>} />
           <Route path="/automacoes" element={<ProtectedRoute><Automacoes /></ProtectedRoute>} />
           <Route path="/agendamentos" element={<ProtectedRoute><Agendamentos /></ProtectedRoute>} />
           <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import {
   MessageCircle, BarChart3, Megaphone, Users, Settings, Search, ChevronDown,
-  Send, MessageSquarePlus, Mic, Clock, Bot, Brain, CalendarDays, MessageSquare,
+  Send, MessageSquarePlus, Clock, Bot, Brain, CalendarDays, MessageSquare,
   FileText, Briefcase, ListTodo, CalendarRange, UsersRound, Activity, DollarSign, PieChart,
-  Scale, Layers, ClipboardList, FolderOpen, Receipt,
+  Scale, Layers, ClipboardList,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
