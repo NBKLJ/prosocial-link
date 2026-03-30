@@ -1,9 +1,9 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState } from "react";
 import {
-  Megaphone, Plus, Clock, CheckCircle2, X, Type, Mic, Image, Users, Tag, Send, Smartphone,
+  Megaphone, Plus, Clock, CheckCircle2, Type, Mic, Image, Users, Tag, Send, Smartphone,
   CalendarDays, Trash2, FileText, File, ChevronUp, ChevronDown, Timer, GripVertical,
-  AlertCircle, History, UserRoundPen,
+  AlertCircle, History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
