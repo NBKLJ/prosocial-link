@@ -274,13 +274,13 @@ const Disparos = () => {
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">Destinatários</label>
                   <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => { setTargetType("todos"); setSelectedTags([]); }} className={cn("flex items-center gap-2 p-2.5 rounded-xl border transition-all", targetType === "todos" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60")}>
-                      <Users className={cn("w-4 h-4", targetType === "todos" ? "text-primary" : "text-muted-foreground")} />
-                      <span className={cn("text-xs font-medium", targetType === "todos" ? "text-primary" : "text-muted-foreground")}>Todos</span>
-                    </button>
-                    <button onClick={() => setTargetType("tags")} className={cn("flex items-center gap-2 p-2.5 rounded-xl border transition-all", targetType === "tags" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60")}>
+                    <button onClick={() => { setTargetType("tags"); setSelectedContactIds([]); }} className={cn("flex items-center gap-2 p-2.5 rounded-xl border transition-all", targetType === "tags" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60")}>
                       <Tag className={cn("w-4 h-4", targetType === "tags" ? "text-primary" : "text-muted-foreground")} />
-                      <span className={cn("text-xs font-medium", targetType === "tags" ? "text-primary" : "text-muted-foreground")}>Por tags</span>
+                      <span className={cn("text-xs font-medium", targetType === "tags" ? "text-primary" : "text-muted-foreground")}>Tags</span>
+                    </button>
+                    <button onClick={() => { setTargetType("manual"); setSelectedTags([]); }} className={cn("flex items-center gap-2 p-2.5 rounded-xl border transition-all", targetType === "manual" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60")}>
+                      <Users className={cn("w-4 h-4", targetType === "manual" ? "text-primary" : "text-muted-foreground")} />
+                      <span className={cn("text-xs font-medium", targetType === "manual" ? "text-primary" : "text-muted-foreground")}>Enviar manualmente</span>
                     </button>
                   </div>
                   {targetType === "tags" && (
@@ -291,6 +291,9 @@ const Disparos = () => {
                         </button>
                       ))}
                     </div>
+                  )}
+                  {targetType === "manual" && (
+                    <ContactSelector selectedIds={selectedContactIds} onSelectionChange={setSelectedContactIds} />
                   )}
                 </div>
               </div>
