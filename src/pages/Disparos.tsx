@@ -1,13 +1,14 @@
 import { AppLayout } from "@/components/AppLayout";
 import { useState } from "react";
 import {
-  Megaphone, Plus, Clock, CheckCircle2, X, Type, Mic, Image, Users, Tag, Send, Smartphone,
+  Megaphone, Plus, Clock, CheckCircle2, Type, Mic, Image, Users, Tag, Send, Smartphone,
   CalendarDays, Trash2, FileText, File, ChevronUp, ChevronDown, Timer, GripVertical,
   AlertCircle, History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getTagStore } from "@/lib/tagStore";
+import ContactSelector from "@/components/disparos/ContactSelector";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -93,8 +94,9 @@ const Disparos = () => {
   // ── New dispatch form state ──
   const [title, setTitle] = useState("");
   const [selectedConexao, setSelectedConexao] = useState(CONEXOES[0].id);
-  const [targetType, setTargetType] = useState<"todos" | "tags">("todos");
+  const [targetType, setTargetType] = useState<"tags" | "manual">("tags");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState("09:00");
   const [sequence, setSequence] = useState<SequenceItem[]>([]);
@@ -150,8 +152,8 @@ const Disparos = () => {
   };
 
   const resetForm = () => {
-    setTitle(""); setSelectedConexao(CONEXOES[0].id); setTargetType("todos");
-    setSelectedTags([]); setDate(undefined); setTime("09:00"); setSequence([]);
+    setTitle(""); setSelectedConexao(CONEXOES[0].id); setTargetType("tags");
+    setSelectedTags([]); setSelectedContactIds([]); setDate(undefined); setTime("09:00"); setSequence([]);
     setAddingType(null); setAddingContent("");
   };
 
@@ -166,7 +168,7 @@ const Disparos = () => {
       sequence: sequence.map(s => ({ type: s.type, content: s.content })),
       date: format(date, "dd/MM/yyyy"),
       time,
-      target: targetType === "todos" ? "Todos os contatos" : selectedTags.join(", "),
+      target: targetType === "tags" ? (selectedTags.length > 0 ? selectedTags.join(", ") : "Todas as tags") : `${selectedContactIds.length} contatos selecionados`,
       conexao: CONEXOES.find(c => c.id === selectedConexao)?.name || "",
       status: "agendado",
     };
@@ -272,13 +274,13 @@ const Disparos = () => {
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">Destinatários</label>
                   <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => { setTargetType("todos"); setSelectedTags([]); }} className={cn("flex items-center gap-2 p-2.5 rounded-xl border transition-all", targetType === "todos" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60")}>
-                      <Users className={cn("w-4 h-4", targetType === "todos" ? "text-primary" : "text-muted-foreground")} />
-                      <span className={cn("text-xs font-medium", targetType === "todos" ? "text-primary" : "text-muted-foreground")}>Todos</span>
-                    </button>
-                    <button onClick={() => setTargetType("tags")} className={cn("flex items-center gap-2 p-2.5 rounded-xl border transition-all", targetType === "tags" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60")}>
+                    <button onClick={() => { setTargetType("tags"); setSelectedContactIds([]); }} className={cn("flex items-center gap-2 p-2.5 rounded-xl border transition-all", targetType === "tags" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60")}>
                       <Tag className={cn("w-4 h-4", targetType === "tags" ? "text-primary" : "text-muted-foreground")} />
-                      <span className={cn("text-xs font-medium", targetType === "tags" ? "text-primary" : "text-muted-foreground")}>Por tags</span>
+                      <span className={cn("text-xs font-medium", targetType === "tags" ? "text-primary" : "text-muted-foreground")}>Tags</span>
+                    </button>
+                    <button onClick={() => { setTargetType("manual"); setSelectedTags([]); }} className={cn("flex items-center gap-2 p-2.5 rounded-xl border transition-all", targetType === "manual" ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/60")}>
+                      <Users className={cn("w-4 h-4", targetType === "manual" ? "text-primary" : "text-muted-foreground")} />
+                      <span className={cn("text-xs font-medium", targetType === "manual" ? "text-primary" : "text-muted-foreground")}>Enviar manualmente</span>
                     </button>
                   </div>
                   {targetType === "tags" && (
@@ -289,6 +291,9 @@ const Disparos = () => {
                         </button>
                       ))}
                     </div>
+                  )}
+                  {targetType === "manual" && (
+                    <ContactSelector selectedIds={selectedContactIds} onSelectionChange={setSelectedContactIds} />
                   )}
                 </div>
               </div>
