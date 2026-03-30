@@ -168,7 +168,7 @@ const Disparos = () => {
       sequence: sequence.map(s => ({ type: s.type, content: s.content })),
       date: format(date, "dd/MM/yyyy"),
       time,
-      target: targetType === "todos" ? "Todos os contatos" : selectedTags.join(", "),
+      target: targetType === "tags" ? (selectedTags.length > 0 ? selectedTags.join(", ") : "Todas as tags") : `${selectedContactIds.length} contatos selecionados`,
       conexao: CONEXOES.find(c => c.id === selectedConexao)?.name || "",
       status: "agendado",
     };
