@@ -152,8 +152,8 @@ const Disparos = () => {
   };
 
   const resetForm = () => {
-    setTitle(""); setSelectedConexao(CONEXOES[0].id); setTargetType("todos");
-    setSelectedTags([]); setDate(undefined); setTime("09:00"); setSequence([]);
+    setTitle(""); setSelectedConexao(CONEXOES[0].id); setTargetType("tags");
+    setSelectedTags([]); setSelectedContactIds([]); setDate(undefined); setTime("09:00"); setSequence([]);
     setAddingType(null); setAddingContent("");
   };
 
