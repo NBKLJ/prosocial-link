@@ -3,11 +3,12 @@ import { useState } from "react";
 import {
   Megaphone, Plus, Clock, CheckCircle2, X, Type, Mic, Image, Users, Tag, Send, Smartphone,
   CalendarDays, Trash2, FileText, File, ChevronUp, ChevronDown, Timer, GripVertical,
-  AlertCircle, History,
+  AlertCircle, History, UserRoundPen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getTagStore } from "@/lib/tagStore";
+import ContactSelector from "@/components/disparos/ContactSelector";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
