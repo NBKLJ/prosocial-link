@@ -94,8 +94,9 @@ const Disparos = () => {
   // ── New dispatch form state ──
   const [title, setTitle] = useState("");
   const [selectedConexao, setSelectedConexao] = useState(CONEXOES[0].id);
-  const [targetType, setTargetType] = useState<"todos" | "tags">("todos");
+  const [targetType, setTargetType] = useState<"tags" | "manual">("tags");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState("09:00");
   const [sequence, setSequence] = useState<SequenceItem[]>([]);
