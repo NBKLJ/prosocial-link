@@ -17,7 +17,11 @@ const Login = () => {
     { email: "basic@email.com", password: "123456", plan: "basic" },
     { email: "pro@email.com", password: "123456", plan: "pro" },
     { email: "premium@email.com", password: "123456", plan: "premium" },
+    { email: "basic@birdly.com", password: "123456", plan: "basic" },
+    { email: "pro@birdly.com", password: "123456", plan: "pro" },
+    { email: "premium@birdly.com", password: "123456", plan: "premium" },
   ];
+
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
